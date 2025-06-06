@@ -94,6 +94,36 @@ Il est pensé pour etre disponible en permanence à recevoir et répondre à des
 
 ***Apache*** et ***Nginx*** sont les deux logiciels les plus utilisés en tant que serveur *HTTP*. Mais il est préférable de se baser sur le comportement (configuration, syntaxe et mot-clés) de *Nginx*.
 
+### Anatomie d'une requete HTTP
+
+![http-request-message](Media/documentation/request_http.png)
+
+Une requete HTTP est un message suivant un certain format :
+
+- 1. **Request line** = *method + target request + protocol + CRLF*
+	- `<method>` : Indique le but de la requete. Par exemple `GET` signifie que le client attend une ressource en retour. `POST` indique que le client envoie des donnée au serveur. [(Liste complète des méthodes ici)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods).
+	- `<request-target>` : Attend `URI`, une chaine qui fait référence à une ressource, peut etre une **URL**, chemin de  la ressource sur le serveur, exemple : */index.html*, un seul slash "/" designe *index*.
+	- `<protocol>` : Attend la version de *HTTP* voulue.
+
+- 2. **Header** = Zéro, un ou plusieurs messages indicatifs sur la requete + CRLF
+
+- 3. CRLF (empty line)
+
+- 4. **Optional message body** = Contient des données associées avec le message, dans le cas d'un `POST` par exemple on signifie ce que l'on souhaite transmettre au serveur comme data.
+
+CRLF = saut de ligne comme ca `\r\n`.
+
+### Anatomie d'une réponse HTTP
+
+Après avoir recu une requete HTTP, le serveur écrit et envoie une réponse :
+
+- **Status line** = 
+
+
+
+
+
+
 
 ### Ressources en brol
 * [https://www.youtube.com/watch?v=9J1nJOivdyw](https://www.youtube.com/watch?v=9J1nJOivdyw)

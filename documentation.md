@@ -113,7 +113,7 @@ Une requete HTTP est un message suivant un certain format :
 
 - 3. CRLF (empty line)
 
-- 4. **Optional message body** = Contient des données associées avec le message, dans le cas d'un `POST` par exemple on signifie ce que l'on souhaite transmettre au serveur comme data.
+- 4. **Optional message body** = Contient des données associées avec la requete, dans le cas d'un `POST` par exemple on signifie ce que l'on souhaite transmettre au serveur comme data.
 
 CRLF = saut de ligne comme ca `\r\n`.
 
@@ -132,12 +132,42 @@ Après avoir recu une requete HTTP, le serveur écrit et envoie une réponse :
 ### Etapes du processus HTTP
 
 Lorsqu'un client souhaite communiquer avec le serveur, voici les différentes étapes :
--	1. **Opening a TCP connection:** la connection doit etre établie pour transmettre/recevoir les requetes/réponses depuis le serveur.
+-	1. **Opening a TCP connection:** la connection doit etre établie pour transmettre/recevoir les requetes/réponses depuis le serveur. 
 -	2. **Send an HTTP request:** Le client envoie une requete HTTP à travers la connexion *TCP* suivant le bon format de requete.
 -	3. **Receive an HTTP response:** Le serveur interprette la requete HTTP et prepare une reponse, puis l'envoie selon le bon format.
 -	4. **Close the TCP connection:**
 
+The client enters the *URL* and the *browser* constructs an HTTP request.
 
+## Sockets and Useful Network Functions
+
+- Source :
+* [Programmation réseau via socket en C](https://www.codequoi.com/programmation-reseau-via-socket-en-c/)
+* [Inner workings of the Webserver](https://hackmd.io/@laian/SJZHcOsmT#Sockets-and-Useful-Network-Functions)
+
+The connection between clients and servers are facilitated by sockets, which are the *communication link between two processes on a network*.
+
+A ***socket is a file descriptor created using this function*** :
+
+```cpp
+int	socket(int, domain, int type, int protocol);
+```
+- `domain` = refers to the communication domain. [Domain list here](https://linux.die.net/man/2/socket)
+- `type` = type of socket.
+- `protocol` = refers to a particular protocol to be used with sockets, usually is **0**.
+
+#### Types of sockets
+
+- **Stream Sockets** -> `SOCK_STREAM`
+-> are reliable two-way connected communication streams which uses TCP. These sockets are usually used by HTTP when speed is not the priority, but data quality is.
+
+- **Datagram Sockets** -> `SOCK_DGRAM`
+-> are connectionless sockets that use the UDP (User Datagram Protocol). So when data is sent, it may not arrive. These sockets are commonly used by games/video/audio where speed is priority.
+
+Once we have a socket descriptor, we need to ***bind it to a port on the computer*** with:
+```cpp
+int	bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+```
 
 
 ### Ressources en brol

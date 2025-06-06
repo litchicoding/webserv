@@ -168,7 +168,22 @@ Once we have a socket descriptor, we need to ***bind it to a port on the compute
 ```cpp
 int	bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 ```
+## Web Request flow
 
+- 1. entering the URL
+	- User is entering the URL in the browser
+	- Browser quickly parse the URL
+- 2. DNS Resolution
+	- returns the IP address of the domain
+- 3. Establishing the Connection
+	- with an IP address, the browser can now connect to a Web Server
+	- the connection is made with TCP (Transmission Control Protocol) or UDP (User Datagram Protocol)
+	- The client sends a SYN (Synchronize packet) packet to the server to request a connection.
+	- The server answers with a SYN/ACK (Sync Acknowledge Packet).
+	- At this point TCP connection is done.
+- 4. Sending th HTTP Request
+	- send a GET request to fetch HTML Document from server, according to the HTTP request
+	- HTTP request contains many important data in headers like the user-agent, describes which browser is being used. Or can contains Cookies, website data stored on our local machine.
 
 ### Ressources en brol
 * [https://www.youtube.com/watch?v=9J1nJOivdyw](https://www.youtube.com/watch?v=9J1nJOivdyw)

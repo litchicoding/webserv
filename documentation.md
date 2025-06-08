@@ -1,3 +1,9 @@
+# Webserv Documentation
+
+**Sommaire** :
+* [Server HTTP](#quest-ce-quun-serveur-http-)
+* [Connexion Clien-Server avec Sockets](#sockets---connection-between-client-server)
+* [CGI]()
 
 ## Comment fonctionne un site internet ?
 
@@ -72,7 +78,7 @@ Pour mieux comprendre :
 * [Routage (adresses IPv4 et submask)](https://www.codequoi.com/adresses-ipv4-routage-et-masques-de-sous-reseau/)
 
 
-## Qu'est-ce qu'un serveur HTTP ? 
+# Qu'est-ce qu'un serveur HTTP ? 
 
 Sources :
 * [Glossaire MDN : définitions des termes du Web](https://developer.mozilla.org/fr/docs/Web/HTTP)
@@ -131,19 +137,23 @@ Après avoir recu une requete HTTP, le serveur écrit et envoie une réponse :
 
 ### Etapes du processus HTTP
 
+***The client enters the *URL* and the *browser* constructs an HTTP request.***
+
 Lorsqu'un client souhaite communiquer avec le serveur, voici les différentes étapes :
 -	1. **Opening a TCP connection:** la connection doit etre établie pour transmettre/recevoir les requetes/réponses depuis le serveur. 
 -	2. **Send an HTTP request:** Le client envoie une requete HTTP à travers la connexion *TCP* suivant le bon format de requete.
--	3. **Receive an HTTP response:** Le serveur interprette la requete HTTP et prepare une reponse, puis l'envoie selon le bon format.
+-	3. **Receive an HTTP response:** Le serveur interprete la requete HTTP et prepare une reponse, puis l'envoie selon le bon format.
 -	4. **Close the TCP connection:**
 
-The client enters the *URL* and the *browser* constructs an HTTP request.
-
-## Sockets and Useful Network Functions
+# Sockets - connection between Client-Server
 
 - Source :
-* [Programmation réseau via socket en C](https://www.codequoi.com/programmation-reseau-via-socket-en-c/)
+* [Programmation réseau via socket](https://www.codequoi.com/programmation-reseau-via-socket-en-c/)
+* [Video Sockets d'1h](https://www.youtube.com/watch?v=oYBgV474Udc)
+* [Socket Programming GeeksForGeeks](https://www.geeksforgeeks.org/socket-programming-cc/)
 * [Inner workings of the Webserver](https://hackmd.io/@laian/SJZHcOsmT#Sockets-and-Useful-Network-Functions)
+* [Handling sockets with C++](https://ncona.com/2019/04/building-a-simple-server-with-cpp/)
+* [Video d'1h - Network Programming - C++ Sockets](https://www.youtube.com/watch?v=gntyAFoZp-E)
 
 The connection between clients and servers are facilitated by sockets, which are the *communication link between two processes on a network*.
 
@@ -168,7 +178,11 @@ Once we have a socket descriptor, we need to ***bind it to a port on the compute
 ```cpp
 int	bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 ```
-## Web Request flow
+
+#
+
+### Web Request flow
+Source : [video here](https://www.youtube.com/watch?v=hWyBeEF3CqQ)
 
 - 1. entering the URL
 	- User is entering the URL in the browser
@@ -184,6 +198,19 @@ int	bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 - 4. Sending th HTTP Request
 	- send a GET request to fetch HTML Document from server, according to the HTTP request
 	- HTTP request contains many important data in headers like the user-agent, describes which browser is being used. Or can contains Cookies, website data stored on our local machine.
+	- caching is re-susing data that was previously dowloaded
+- 5. The server recieves the request
+	- the server uses its data base, call API or uses scripts to customize a response to the request.
+- 6. Backend Processing (optional)
+- 7. Generating the response
+	- Prepares a HTTP response (status code, mesasge, headers with content, the body contains the html page)
+- 8. Sending the HTTP Response
+	- Responses goes through routers to the machine
+- 9. Receiving the response
+	- Load the web page nad all the data associated (content, cookies, policies...) because the data arrives in packets... and the browser renders  the page and displays it
+- 10. HTML Parsing
+	- DOM = document object model.
+- 11. and so on with the engine details
 
 ### Ressources en brol
 * [https://www.youtube.com/watch?v=9J1nJOivdyw](https://www.youtube.com/watch?v=9J1nJOivdyw)

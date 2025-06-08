@@ -4,6 +4,8 @@
 * [Server HTTP](#quest-ce-quun-serveur-http-)
 * [Connexion Clien-Server avec Sockets](#sockets---connection-between-client-server)
 * [CGI]()
+* [Non-Blocking]()
+* [Server Configuration](#server-configuration)
 
 ## Comment fonctionne un site internet ?
 
@@ -179,7 +181,100 @@ Once we have a socket descriptor, we need to ***bind it to a port on the compute
 int	bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 ```
 
-#
+## Polling - Server Non-Blocking
+
+- Source : [polling](https://hackmd.io/@laian/SJZHcOsmT#Polling)
+
+When we try to read from a socket without any data into it, it is **blocking the server**.
+
+**Polling** is telling the system to let us know which sockets have the data ready, and we can perform operations on them.
+
+```cpp
+int poll(struct pollfd fds[], nfds_t nfds, int timeout);
+```
+
+See more in article above.
+
+## Qu'est-ce que le CGI ?
+
+**CGI (Common Gateway Interface)** : interface standardisée qui permet aux serveurs web d'exécuter des programmes externes pour traiter les requetes HTTP des utilisateurs cote client. 
+
+Le *CGI* permet donc un échange de données entre des applications externes et les sevreurs web.
+
+Fonctionnement du CGI :
+- **Interaction Utilisateur** : Lorsqu'un utilisateur remplit un formulaire sur une page web et le soumet, les données du formulaire sont envoyées au serveur web via une requete HTTP.
+- **Traitement par le serveur** : Le serveur recoit cette requete et lance un programme CGI, souvent ecrit avec un langage de script comme Python.
+- **Execution du script CGI** :Le script CGI traite les données recues, effectue les operations necessaires (comme l'accès à une base de données) et génère une réponse.
+- **Reponse au client** : Le serveur renvoie la réponse générée par le script CGI u client, généralement sous forme d'une page HTML.
+
+
+# Server Configuration
+
+Configuration is based on *Nginx*'s server configuration format.
+
+Two types of blocks are supported, **server** and **location** blocks.
+
+*Every block must be respectivily defined in the following format* :
+
+```cpp
+server {
+	...
+}
+
+// Inside a server block there are also location blocks
+// It defines how the webserver handles requests to specific URI's
+location <URI> {
+	...
+}
+```
+
+Inside blocks, there exists directives :
+
+- `listen` = Defines the port number to listen to
+```html
+port <port_number>;
+port 80;
+```
+
+- `root` : Sets the root directory for requests.
+```html
+root <path>;
+root html;
+```
+
+- `index` : Defines files that will be used as an index.
+```html
+index <file 1> <file 2> <file 3>;
+index index.html;
+```
+
+- `error_page` : Defines optential error pages.
+```html
+error_page <error_code> <error_page>;
+eroor_page 404 404.html;
+```
+
+- `autoindex` : Automatically generates a directory listing if an index page isnt specified.
+```html
+autodindex on | off;
+```
+
+- `allowed_methods` : Defines the allowed request methods dor a specific location.
+```html
+allowed_methods POST GET DELETE;
+```
+
+- `return` : Defines a specific URI / page to return to the client.
+```html
+return <URI>;
+return https://google.com;
+```
+
+- `client_max_body_size` : Defines the max size of a client request body.
+```html
+client_max_body_size <size>; # B, MB, KB, GB
+client_max_body_size 1MB;
+```
 
 ### Web Request flow
 Source : [video here](https://www.youtube.com/watch?v=hWyBeEF3CqQ)

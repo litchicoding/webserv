@@ -307,6 +307,39 @@ Source : [video here](https://www.youtube.com/watch?v=hWyBeEF3CqQ)
 	- DOM = document object model.
 - 11. and so on with the engine details
 
+### Tutoriels, guides et documentation de références
+
+https://www.youtube.com/watch?v=-v5vCLLsqbA
+
+https://beej.us/guide/bgnet/pdf/bgnet_usl_c_1.pdf
+
+https://bousk.developpez.com/cours/reseau-c++/TCP/08-premier-serveur-mini-serveur/
+
+https://www.youtube.com/watch?v=s3o5tixMFho
+
+https://github.com/Dungyichao/http_server
+
+https://en.wikipedia.org/wiki/HTTP
+
+http://vidalc.chez.com/lf/socket.html
+
+https://github.com/Tablerase/42_WebServ/wiki/Home/ed1da06241dbecd510ffb702094d7af7fff191bf
+
+https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
+
+https://www.youtube.com/watch?v=P9csgxBgaZ8
+
+https://www.youtube.com/watch?v=N49UyTlUXp4
+
+https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines C++
+
+https://www.ibm.com/docs/fr/was-nd/8.5.5?topic=icwspi-configuring-web-server-application-server-profile-same-machine
+
+
+https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
+
+https://developer.mozilla.org/fr/docs/Web/HTTP/Guides/Overview
+
 ### Ressources en brol
 * [https://www.youtube.com/watch?v=9J1nJOivdyw](https://www.youtube.com/watch?v=9J1nJOivdyw)
 * [https://hackmd.io/@laian/SJZHcOsmT](https://hackmd.io/@laian/SJZHcOsmT)

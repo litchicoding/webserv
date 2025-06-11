@@ -3,8 +3,6 @@
 **Sommaire** :
 * [Server HTTP](#quest-ce-quun-serveur-http-)
 * [Connexion Clien-Server avec Sockets](#sockets---connection-between-client-server)
-* [CGI]()
-* [Non-Blocking]()
 * [Server Configuration](#server-configuration)
 
 ## Comment fonctionne un site internet ?
@@ -251,7 +249,7 @@ index index.html;
 - `error_page` : Defines optential error pages.
 ```html
 error_page <error_code> <error_page>;
-eroor_page 404 404.html;
+error_page 404 404.html;
 ```
 
 - `autoindex` : Automatically generates a directory listing if an index page isnt specified.

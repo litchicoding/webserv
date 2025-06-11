@@ -311,6 +311,8 @@ https://www.youtube.com/watch?v=-v5vCLLsqbA
 
 https://beej.us/guide/bgnet/pdf/bgnet_usl_c_1.pdf
 
+https://github.com/Kaydooo/Webserv_42
+
 https://bousk.developpez.com/cours/reseau-c++/TCP/08-premier-serveur-mini-serveur/
 
 https://www.youtube.com/watch?v=s3o5tixMFho

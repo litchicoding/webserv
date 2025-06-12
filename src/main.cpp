@@ -1,5 +1,7 @@
 # include "webserv.hpp"
 
+Server	*g_server_instance = NULL;
+
 int	main(int ac, char **av)
 {
 	if (ac == 2 && av[1])

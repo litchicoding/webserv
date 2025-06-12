@@ -14,7 +14,14 @@
 # include <cstring>
 # include <cstdlib>
 # include <cstdio>
+# include <csignal>
 
 # include "Server.hpp"
+
+class	Server;
+
+extern Server	*g_server_instance;
+
+void	signal_handler(int signal);
 
 #endif

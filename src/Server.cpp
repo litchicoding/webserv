@@ -16,14 +16,16 @@ Server::Server()
 	}
 	std::memset(&_serv_addr, 0, sizeof(_serv_addr));
 	_serv_addr.sin_family = AF_INET;
-	_serv_addr.sin_port = htons(8080); // HARDCODED value (must change later)
+	_serv_addr.sin_port = htons(8080); // HARDCODED value (must change it later)
 	_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	g_server_instance = this;
 }
 
 Server::Server(const std::string &config_file)
 {
 	std::cout << GREEN << "*** Server construction ***" << std::endl;
 	std::cout << "[Configuration file : " << config_file << "]" << RESET << std::endl;
+	g_server_instance = this;
 	// Must parse the config file and assign struct with all the data needed...
 	std::cout << RED << "Error: No function to parse config file yet!" << RESET << std::endl;
 }
@@ -43,7 +45,7 @@ Server&	Server::operator=(const Server &copy)
 /*****************************************************************************/
 /* Deconstructor *************************************************************/
 
-Server::~Server() {}
+Server::~Server() {} // freeaddrinfo() ?
 
 /*****************************************************************************/
 /* Member Functions **********************************************************/
@@ -55,7 +57,6 @@ void	Server::start()
 
 	if (bind(_socket_fd, reinterpret_cast<sockaddr*>(&_serv_addr), sizeof(_serv_addr)) != OK)
 	{
-		std::cout << RED << "Error: bind()" << RESET << std::endl;
 		stop("bind");
 		return ;
 	}
@@ -76,6 +77,8 @@ void	Server::update()
 		struct sockaddr_in  client_addr;
         socklen_t           client_addr_len = sizeof(client_addr);
         
+		signal(SIGINT, &signal_handler);
+
 		int socket_client = accept(_socket_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_addr_len);
 		
 		if (socket_client < 0) {
@@ -93,7 +96,6 @@ void	Server::update()
                 std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
                 // Ici lire la requete dans une fonction a part qui switch entre GET POST DELETE ERROR
                 write(socket_client, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 50 \r\nConnection: close\r\n\r\nWebserv", 92);
-				stop("");
 			}
         }
         close(socket_client);
@@ -102,10 +104,11 @@ void	Server::update()
 
 void	Server::stop(const std::string &msg)
 {
+	if (_socket_fd == INVALID)
+		return ;
 	if (!msg.empty())
 		std::cout << RED << "Error: " << msg << "()" << RESET << std::endl;
-	if (_socket_fd != INVALID)
-		close(_socket_fd);
+	close(_socket_fd);
 	_socket_fd = INVALID;
    	std::cout << GREEN << "🛑 Connexion fermée." << RESET << std::endl;
 }

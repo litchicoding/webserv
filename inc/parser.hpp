@@ -33,7 +33,8 @@ enum class TokenType
 	O_BRACE,
 	C_BRACE,
 	SEMICOLON,
-	ARG
+	ARG,
+	END
 };
 
 struct	TokenConfigFile

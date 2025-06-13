@@ -145,6 +145,37 @@ Lorsqu'un client souhaite communiquer avec le serveur, voici les différentes é
 -	3. **Receive an HTTP response:** Le serveur interprete la requete HTTP et prepare une reponse, puis l'envoie selon le bon format.
 -	4. **Close the TCP connection:**
 
+### Web Request flow
+Source : [video here](https://www.youtube.com/watch?v=hWyBeEF3CqQ)
+
+- 1. entering the URL
+	- User is entering the URL in the browser
+	- Browser quickly parse the URL
+- 2. DNS Resolution
+	- returns the IP address of the domain
+- 3. Establishing the Connection
+	- with an IP address, the browser can now connect to a Web Server
+	- the connection is made with TCP (Transmission Control Protocol) or UDP (User Datagram Protocol)
+	- The client sends a SYN (Synchronize packet) packet to the server to request a connection.
+	- The server answers with a SYN/ACK (Sync Acknowledge Packet).
+	- At this point TCP connection is done.
+- 4. Sending th HTTP Request
+	- send a GET request to fetch HTML Document from server, according to the HTTP request
+	- HTTP request contains many important data in headers like the user-agent, describes which browser is being used. Or can contains Cookies, website data stored on our local machine.
+	- caching is re-susing data that was previously dowloaded
+- 5. The server recieves the request
+	- the server uses its data base, call API or uses scripts to customize a response to the request.
+- 6. Backend Processing (optional)
+- 7. Generating the response
+	- Prepares a HTTP response (status code, mesasge, headers with content, the body contains the html page)
+- 8. Sending the HTTP Response
+	- Responses goes through routers to the machine
+- 9. Receiving the response
+	- Load the web page nad all the data associated (content, cookies, policies...) because the data arrives in packets... and the browser renders  the page and displays it
+- 10. HTML Parsing
+	- DOM = document object model.
+- 11. and so on with the engine details
+
 # Sockets - connection between Client-Server
 
 - Source :
@@ -242,8 +273,6 @@ server {
 }
 ```
 
-
-
 ### Comment décider quel block traitera quelle Request ?
 
 Étant donné que Nginx permet à l'administrateur de définir plusieurs *server block** qui fonctionnent comme des instances de ***serveurs web virtuels distincts***, il a besoin d'une procédure pour déterminer lequel de ces blocs de serveurs sera utilisé pour répondre à une demande.
@@ -254,91 +283,43 @@ Les principales directives du bloc serveur dont se préoccupe Nginx au cours de 
 
 #### Parsing `listen` to find possible matches
 
--	**1.** Tout d'abord, Nginx examine l'*IP address* et le *port* de la request. Il les compare à la directive `listen` de chaque serveur afin de dresser une liste des *server blocks* susceptibles de répondre à la demande.
-	-	Cette directive définit généralement l'IP address et le port auxquels le sereveur répondra. Mais si rien n'est spécifié alors
+Cette directive définit généralement l'IP address et le port auquel le serveur répondra. Mais si rien n'est spécifié alors **par défaut le serveur se voit attribuer :** `0.0.0.0:80` (ou `0.0.0.0:8080` si n'est pas exécuté en mode `root`)
 
+**listen** peut etre définit comme : 
+-	un combo IP/port 
+-	IP address unique sans port définit = donc port par défaut 80
+-	port unique sans IpP = donc par défaut 0.0.0.0 
+-	le chemin vers un socket Unix (have implications when passing requests between different servers)
 
+Tout d'abord, Nginx examine l'*IP address* et le *port* de la request. Il les compare à la directive `listen` de chaque serveur afin de dresser une liste des *server blocks* susceptibles de répondre à la request.
 
+- **Step 1**: Nginx traduit toutes les directives *listen* "incomplètes" en remplacant les valeurs manquantes par leurs valeurs par défaut afin que chaque bloc puisse etre évalué par son IP address et son port.
+- **Step 2**: Nginx tente de rassembler une liste des server blocks  qui correspondent le plus précisément à la request, en se basant sur l'IP + le port. Le port doit etre exactement pareil pour matcher. Et pour une addresse IP spcifique de la request, un bloc avec 0.0.0.0 ne sera pas choisi il existe une autre addresse IP qui match spécifiquement.
+- **Step 3**: Si il y a seul un *match* spécifique, c'est ce block qui est choisi. Si il y a plusieurs match alors Nginx commence à évaluer la directive `server_name`
 
+#### Example
 
-Inside blocks, there exists directives :
+```cpp
+server {
+	listen 192.168.1.10;
+	...
+}
 
-- `listen` = Defines the port number to listen to
-```html
-port <port_number>;
-port 80;
+server {
+	listen 80;
+	server_name example.com;
+	...
+}
 ```
+-	Request : example.com is hosted on port 80 of 192.168.1.10
+-	After translation : 
+	-	first block = 192.168.1.10:80
+	-	second block = 0.0.0.0:80
+-	**First block is selected** because specific match with IP/port, even if the second block matches with the server_name it's not selected.
 
-- `root` : Sets the root directory for requests.
-```html
-root <path>;
-root html;
-```
+#### Parsing `server_name` to choose a match
 
-- `index` : Defines files that will be used as an index.
-```html
-index <file 1> <file 2> <file 3>;
-index index.html;
-```
-
-- `error_page` : Defines optential error pages.
-```html
-error_page <error_code> <error_page>;
-error_page 404 404.html;
-```
-
-- `autoindex` : Automatically generates a directory listing if an index page isnt specified.
-```html
-autodindex on | off;
-```
-
-- `allowed_methods` : Defines the allowed request methods dor a specific location.
-```html
-allowed_methods POST GET DELETE;
-```
-
-- `return` : Defines a specific URI / page to return to the client.
-```html
-return <URI>;
-return https://google.com;
-```
-
-- `client_max_body_size` : Defines the max size of a client request body.
-```html
-client_max_body_size <size>; # B, MB, KB, GB
-client_max_body_size 1MB;
-```
-
-### Web Request flow
-Source : [video here](https://www.youtube.com/watch?v=hWyBeEF3CqQ)
-
-- 1. entering the URL
-	- User is entering the URL in the browser
-	- Browser quickly parse the URL
-- 2. DNS Resolution
-	- returns the IP address of the domain
-- 3. Establishing the Connection
-	- with an IP address, the browser can now connect to a Web Server
-	- the connection is made with TCP (Transmission Control Protocol) or UDP (User Datagram Protocol)
-	- The client sends a SYN (Synchronize packet) packet to the server to request a connection.
-	- The server answers with a SYN/ACK (Sync Acknowledge Packet).
-	- At this point TCP connection is done.
-- 4. Sending th HTTP Request
-	- send a GET request to fetch HTML Document from server, according to the HTTP request
-	- HTTP request contains many important data in headers like the user-agent, describes which browser is being used. Or can contains Cookies, website data stored on our local machine.
-	- caching is re-susing data that was previously dowloaded
-- 5. The server recieves the request
-	- the server uses its data base, call API or uses scripts to customize a response to the request.
-- 6. Backend Processing (optional)
-- 7. Generating the response
-	- Prepares a HTTP response (status code, mesasge, headers with content, the body contains the html page)
-- 8. Sending the HTTP Response
-	- Responses goes through routers to the machine
-- 9. Receiving the response
-	- Load the web page nad all the data associated (content, cookies, policies...) because the data arrives in packets... and the browser renders  the page and displays it
-- 10. HTML Parsing
-	- DOM = document object model.
-- 11. and so on with the engine details
+### 
 
 ### Tutoriels, guides et documentation de références
 

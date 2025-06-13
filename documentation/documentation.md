@@ -208,23 +208,58 @@ Fonctionnement du CGI :
 
 # Server Configuration
 
+Sources : 
+-	global understanding :
+	* [Understanding Nginx Server and Location Block Selection Algorithms](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms)
+	* [Nginx documentation](https://nginx.org/en/docs/index.html)
+-	listen directive :
+	* [How Nginx processes a request](https://nginx.org/en/docs/index.html)
+	* [Listen documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen)
+-	autoindex directive :
+	* [Explaining the Nginx directory index file](https://www.keycdn.com/support/nginx-directory-index#:~:text=By%20default%2C%20Nginx%20tries%20to,is%20if%20it%20has%20permissions)
+-	server_name directive :
+	* [Server names documentation](https://nginx.org/en/docs/http/server_names.html)
+
 Configuration is based on *Nginx*'s server configuration format.
 
-Two types of blocks are supported, **server** and **location** blocks.
+-	Les instructions de configurations sont dans des blocks qui suivent une structure hierarchique.
 
-*Every block must be respectivily defined in the following format* :
+-	Le fichier peut contenir plusieurs **server blocks** contenants des **directives** et des **location blocks** qui eux aussi contiennent des directives.
+
+Nginx lance un ***processus qui determine quel block de configuration devrait etre utilisé pour gerer une requete***.
+
+-	L'administrateur configure souvent plusieurs *server blocks* et décide quel block devra gérer telle connexion selon le **doamin name**, le **port** et l'**IP address**.
+
+-	Le *location block* est utilisé pour définir comment Nginx doit traiter les demandes de différentes ressources et **URI** pour le serveur parent. L'espace *URI* peut être subdivisé comme l'administrateur le souhaite à l'aide de ces blocks.
+
 
 ```cpp
 server {
 	...
-}
-
-// Inside a server block there are also location blocks
-// It defines how the webserver handles requests to specific URI's
-location <URI> {
-	...
+	location <URI> {
+		...
+	}
 }
 ```
+
+
+
+### Comment décider quel block traitera quelle Request ?
+
+Étant donné que Nginx permet à l'administrateur de définir plusieurs *server block** qui fonctionnent comme des instances de ***serveurs web virtuels distincts***, il a besoin d'une procédure pour déterminer lequel de ces blocs de serveurs sera utilisé pour répondre à une demande.
+
+Pour ce faire, il utilise un ***système défini de vérifications*** afin de trouver la meilleure correspondance possible.
+
+Les principales directives du bloc serveur dont se préoccupe Nginx au cours de ce processus sont la directive **listen** et la directive **server_name**.
+
+#### Parsing `listen` to find possible matches
+
+-	**1.** Tout d'abord, Nginx examine l'*IP address* et le *port* de la request. Il les compare à la directive `listen` de chaque serveur afin de dresser une liste des *server blocks* susceptibles de répondre à la demande.
+	-	Cette directive définit généralement l'IP address et le port auxquels le sereveur répondra. Mais si rien n'est spécifié alors
+
+
+
+
 
 Inside blocks, there exists directives :
 

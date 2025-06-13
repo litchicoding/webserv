@@ -3,10 +3,8 @@
 
 # include <iostream>
 # include <string>
-# include <fstream>
 # include <unistd.h>
-# include <sstream>
-# include <netinet/in.h>
+# include <netinet/in.h> // sockaddr_in
 # include <sys/socket.h>
 
 # include "webserv.hpp"

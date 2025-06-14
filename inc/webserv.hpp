@@ -2,6 +2,7 @@
 # define WEBSERV_HPP
 
 # define OK 0
+# define SUCCESS 0
 # define ERROR -1
 # define INVALID -1
 
@@ -16,12 +17,24 @@
 # include <cstdio>
 # include <csignal>
 
-# include "Server.hpp"
+# include <fstream>
+# include <sstream>
+# include <vector>
+# include <map>
+# include <sys/socket.h>
 
-class	Server;
 
-extern Server	*g_server_instance;
+#include <unistd.h>
+#include <netinet/in.h>
 
-void	signal_handler(int signal);
+
+// # include "Server.hpp"
+
+// class	Server;
+class   Client;
+
+// extern Server	*g_server_instance;
+
+// void	signal_handler(int signal);
 
 #endif

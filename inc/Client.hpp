@@ -1,0 +1,39 @@
+#pragma once
+
+#include "webserv.hpp"
+
+class Client {
+private:
+	int									socket_fd;
+	std::string							method;
+	std::string							URI;
+	std::string							version;
+	std::string							request;
+	std::string							body;
+	std::map<std::string, std::string>	headersMap;
+	struct sockaddr_in					client_addr;
+
+public:
+	Client(int client_fd, sockaddr_in client_adrr);
+	~Client();
+
+	void			start();
+	void			init();
+	std::string		collect_request();
+
+	// setter
+	void    setSocketFd(int set);
+	void    setMethod(std::string set);
+	void    setURI(std::string set);
+	void    setVersion(std::string set);
+	void    setRequest(std::string set);
+
+	// getter
+	int         getSocketFd(void);
+	std::string getMethod();
+	std::string getURI();
+	std::string getVersion();
+	std::string getRequest();
+
+
+};

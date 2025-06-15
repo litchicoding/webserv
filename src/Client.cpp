@@ -12,27 +12,20 @@ Client::Client(int client_fd, sockaddr_in client_adrr) {
 
 Client::~Client() {}
 
-void Client::parseRequest() {
-	if (METHOD)
-
-	if (URI)
-
-	if (VERSION)
-
-	if (HEADERS)
-	
-}
-
+/******************************************************************************/
+/******************************************************************************/
 
 void Client::start() {
 	try {
-		init();
-		// parseRequest();
-		// buildResponse();
+		parseRawRequest(); // recupere et initialise le tout 
+		buildResponse();
 	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 	}
 }
+
+/******************************************************************************/
+/******************************************************************************/
 
 std::string	Client::collect_request() {
 	std::string		newRequest;
@@ -53,45 +46,81 @@ std::string	Client::collect_request() {
 	return newRequest;
 }
 
-void	Client::init() {
-	this->request = collect_request();
-	std::string line;
-	std::istringstream  iss(this->request);
+void	Client::handleHeaders(std::string& line)
+{
+	size_t delimiterPos = line.find(':');
+	if (delimiterPos != std::string::npos) {
+		std::string key = line.substr(0, delimiterPos);
+		if (key.empty())
+			throw std::runtime_error("Error 400: Header without key");
+		std::string value = line.substr(delimiterPos + 1);
+		this->headersMap[key] = value;
+	}
+	else
+		throw std::runtime_error("Error 400: Malformed header");
+}
+
+void	Client::handleMethodLine(std::string& line)
+{
+	std::istringstream  iss(line);
 	iss >> this->method >> this->URI >> this->version;
+
+	if (method != "GET" && method != "POST" && method != "DELETE") {
+		handleError(405);
+		return ;
+	}
+	if (URI.empty() || URI[0] != '/') {
+		handleError(400);
+		return ;
+	}
+	if (URI.find("..") != std::string::npos) {
+		handleError(403);
+		return ;
+	}
+	if (version != "HTTP/1.1") {
+		handleError(505);
+		return ;
+	}
+	// rajouter si fichier sors du root du config ?? 403
+	// rajouter verifications des headers
+	// verification fichier si existe et si on peux le lire ! 404 403
+
+}
+
+void	Client::parseRawRequest() {
+	this->request = collect_request();
+	std::istringstream  iss(this->request);
+	std::string line;
 	bool isFirstLine = true;
 	bool headers = true;
+
 	while (std::getline(iss, line))
 	{
 		if (!line.empty() && line[line.length() - 1] == '\r')
 			line.erase(line.length() - 1, 1);
 		if (isFirstLine)
+		{
+			handleMethodLine(line);
 			isFirstLine = false;
+		}
 		else if (line.empty())
 			headers = false;
 		else if (headers)
-		{
-			size_t delimiterPos = line.find(':');
-			if (delimiterPos != std::string::npos) {
-				std::string key = line.substr(0, delimiterPos);
-				std::string value = line.substr(delimiterPos + 1);
-				this->headersMap[key] = value;
-			}
-		}
+			handleHeaders(line);
 		else
 			this->body.append(line + "\n");
 	}
 
 	// Pour tester !!!
-
-	std::cout << "Method = " << this->method << std::endl;
-	std::cout << "URI = " << this->URI << std::endl;
-	std::cout << "version = " << this->version << std::endl;
-	std::cout << "request = \n" << this->request << std::endl;
-	std::cout << "Headers:" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = this->headersMap.begin(); it != this->headersMap.end(); ++it) {
-		std::cout << it->first << ": " << it->second << std::endl;
-	}
-	std::cout << "Body : \n" << this->body << std::endl;
+	// std::cout << "Method = " << this->method << std::endl;
+	// std::cout << "URI = " << this->URI << std::endl;
+	// std::cout << "version = " << this->version << std::endl;
+	// std::cout << "request = \n" << this->request << std::endl;
+	// std::cout << "Headers:" << std::endl;
+	// for (std::map<std::string, std::string>::const_iterator it = this->headersMap.begin(); it != this->headersMap.end(); ++it) {
+	// 	std::cout << it->first << ": " << it->second << std::endl;
+	// }
+	// std::cout << "Body : \n" << this->body << std::endl;
 }
 
 

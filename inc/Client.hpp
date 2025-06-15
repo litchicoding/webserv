@@ -12,13 +12,17 @@ private:
 	std::string							body;
 	std::map<std::string, std::string>	headersMap;
 	struct sockaddr_in					client_addr;
+	void handleError(int code);
 
 public:
 	Client(int client_fd, sockaddr_in client_adrr);
 	~Client();
 
 	void			start();
-	void			init();
+	void			parseRawRequest();
+	void			handleMethodLine(std::string& line);
+	void			handleHeaders(std::string& line);
+	void			parseRequest();
 	std::string		collect_request();
 
 	// setter
@@ -34,6 +38,4 @@ public:
 	std::string getURI();
 	std::string getVersion();
 	std::string getRequest();
-
-
 };

@@ -3,7 +3,7 @@
 
 #include "inc/Client.hpp" // main pour test a supprimer plus tard !
 
-// g++  g++ -std=c++98 -Wall -Wextra -Werror main_test.cpp src/Client.cpp
+// g++ -std=c++98 -Wall -Wextra -Werror main_test.cpp src/Client.cpp
 
 int main()
 {

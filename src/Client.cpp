@@ -67,21 +67,21 @@ void	Client::buildResponse() {
 		std::ostringstream	body;
 		body << file.rdbuf();
 
-		std::string contentType = URI;
-		if (URI.find(".html") != std::string::npos)
-			contentType = "text/html";
-		else if (URI.find(".jpg") != std::string::npos)
-			contentType = "image/jpeg";
-		else if (URI.find(".png") != std::string::npos)
-			contentType = "icon/png";
-		else if (URI.find(".ttf") != std::string::npos)
-			contentType = "font/ttf";
-		else if (URI.find(".js") != std::string::npos)
-			contentType = "tet/javascript";
-		else if (URI.find(".css") != std::string::npos)
-			contentType = "text/css";
-		else
-			contentType = "text/txt";
+		// std::string contentType = URI;
+		// if (URI.find(".html") != std::string::npos)
+		// 	contentType = "text/html";
+		// else if (URI.find(".jpg") != std::string::npos)
+		// 	contentType = "image/jpeg";
+		// else if (URI.find(".png") != std::string::npos)
+		// 	contentType = "icon/png";
+		// else if (URI.find(".ttf") != std::string::npos)
+		// 	contentType = "font/ttf";
+		// else if (URI.find(".js") != std::string::npos)
+		// 	contentType = "tet/javascript";
+		// else if (URI.find(".css") != std::string::npos)
+		// 	contentType = "text/css";
+		// else
+		// 	contentType = "text/txt";
 		
 		this->response = "HTTP/1.1 200 OK\r\n";
 		this->response += "Content-Type: " + MIME + "\r\n";
@@ -92,7 +92,16 @@ void	Client::buildResponse() {
 		return ;
 	}
 	else if (method == "POST") {
-
+		std::ofstream	outfile(URI, std::ios::binary); //Indique que pas de transformation. on garde en binaire car la conversion pourrais modifier le contenu du file.
+		if (!outfile.is_open()) { // access // stat
+			std::cerr << "In buildResponse() file not open."
+			handleError(500); // pas sur du code !
+		}
+		outfile.write(body.c_str(), body.size());
+		outfile.close();
+		this->response = "HTTP/1.1 201 Created\r\n";
+		this->response += "Content-Length: 0\r\n";
+		this->response += "Connection: keep-alive\r\n\r\n";
 	}
 	else if (method == "DELETE") {
 

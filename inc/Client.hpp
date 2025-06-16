@@ -12,18 +12,20 @@ private:
 	std::string							body;
 	std::map<std::string, std::string>	headersMap;
 	struct sockaddr_in					client_addr;
-	void handleError(int code);
+	std::string							response;
+	void			handleError(int code);
+	void			buildResponse();
+	void			parseRawRequest();
+	void			handleMethodLine(std::string& line);
+	void			handleHeaders(std::string& line);
+	void			parseRequest();
+	std::string		collect_request();
 
 public:
 	Client(int client_fd, sockaddr_in client_adrr);
 	~Client();
 
 	void			start();
-	void			parseRawRequest();
-	void			handleMethodLine(std::string& line);
-	void			handleHeaders(std::string& line);
-	void			parseRequest();
-	std::string		collect_request();
 
 	// setter
 	void    setSocketFd(int set);

@@ -8,6 +8,7 @@ Client::Client(int client_fd, sockaddr_in client_adrr) {
 	this->URI = "";
 	this->version = "";
 	this->body = "";
+	this->response = "";
 }
 
 Client::~Client() {}
@@ -16,16 +17,88 @@ Client::~Client() {}
 /******************************************************************************/
 
 void Client::start() {
-	try {
-		parseRawRequest(); // recupere et initialise le tout 
-		buildResponse();
-	} catch (std::exception &e) {
-		std::cerr << e.what() << std::endl;
-	}
+	parseRawRequest();
+	buildResponse();
+	sendResponse();
 }
 
 /******************************************************************************/
 /******************************************************************************/
+
+void	Client::handleError(int code) {
+	std::string	message, filePath;
+
+	switch (code) {
+		case 400:
+			message = "400 Bad Request";
+			filePath = "";
+			break;
+		case 403:
+		case 404:
+		case 405:
+		case 500:
+		case 505:
+
+	}
+	std::ifstream 		file(filePath);
+	if (!file.is_open()) {
+		std::cerr << "In handleError() file not open.";
+		return ;
+	}
+	std::ostringstream	body;
+	body << file.rdbuf();
+
+	this->response = "HTTP/1.1 " + message + "\r\n";
+	this->response += "Content-Type: text/html\r\n";
+
+	this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
+	this->response += "\r\n";
+	this->response += body.str();
+	// Rajouter d'autres headers ?? Date ? Server ? Connection ?
+}
+
+void	Client::buildResponse() {
+	if (method == "GET") {
+		std::ifstream	file(URI);
+		if (!file.is_open()) {
+			std::cerr << "In buildResponse() file not open."
+			handleError(403); // pas sur du code !
+		}
+		std::ostringstream	body;
+		body << file.rdbuf();
+
+		std::string contentType = URI;
+		if (URI.find(".html") != std::string::npos)
+			contentType = "text/html";
+		else if (URI.find(".jpg") != std::string::npos)
+			contentType = "image/jpeg";
+		else if (URI.find(".png") != std::string::npos)
+			contentType = "icon/png";
+		else if (URI.find(".ttf") != std::string::npos)
+			contentType = "font/ttf";
+		else if (URI.find(".js") != std::string::npos)
+			contentType = "tet/javascript";
+		else if (URI.find(".css") != std::string::npos)
+			contentType = "text/css";
+		else
+			contentType = "text/txt";
+		
+		this->response = "HTTP/1.1 200 OK\r\n";
+		this->response += "Content-Type: " + MIME + "\r\n";
+		this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
+		this->response += "Connection: keep-alive\r\n";
+		this->response += "\r\n";
+		this->response += body.str();
+		return ;
+	}
+	else if (method == "POST") {
+
+	}
+	else if (method == "DELETE") {
+
+	}
+}
+
 
 std::string	Client::collect_request() {
 	std::string		newRequest;

@@ -16,10 +16,16 @@
 # include <cstdio>
 # include <csignal>
 # include <vector>
+# include <fstream>
+# include <string>
 
 # include "Server.hpp"
+# include "parser.hpp"
 
 class	Server;
+
+// typedef enum tokenType t_tokenType; 
+// typedef struct tokenConfig t_tokenConfig;
 
 extern Server	*g_server_instance;
 

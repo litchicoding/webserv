@@ -15,23 +15,23 @@ typedef struct	s_listen
 {
 	int	port;
 	int	ip;
-}				listen;
+}				t_listen;
 
 typedef struct	s_location
 {
 	std::string											path;
 	std::map<std::string, std::vector<std::string> >	directives;
-}				location;
+}				t_location;
 
 class	Server
 {
 private :
 	int													_socket_fd;
 	struct sockaddr_in									_serv_addr;
-	std::vector<listen>									_listen;
+	std::vector<t_listen>								_listen;
 	std::vector<std::string>							_server_name;
 	std::map<std::string, std::vector<std::string> >	_directives;
-	std::vector<location>								_locations;
+	std::vector<t_location>								_locations;
 
 public :
 	Server();

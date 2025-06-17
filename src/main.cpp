@@ -9,26 +9,26 @@ int	main(int ac, char **av)
 	if (ac == 2 && av[1])
 		parse_config_file(av[1]);
 	else if (ac == 1)
-		parse_config_file("default.conf");
+		parse_config_file("./config/default.conf");
 	else {
 		std::cout << RED << "Error: Too much argument" <<  RESET << std::endl;
 		return ERROR;
 	}
 	// webserv loop = for each server in the serv_group start and update
-	std::vector<Server>::iterator it = serv_group.begin();
-	while (it != serv_group.end())
-	{
-		it->start();
-		it++;
-	}
-	while (true)
-	{
-		std::vector<Server>::iterator it = serv_group.begin();
-		while (it != serv_group.end())
-		{
-			it->update();
-			it++;
-		}
-	}
+	// std::vector<Server>::iterator it = serv_group.begin();
+	// while (it != serv_group.end())
+	// {
+	// 	it->start();
+	// 	it++;
+	// }
+	// while (true)
+	// {
+	// 	std::vector<Server>::iterator it = serv_group.begin();
+	// 	while (it != serv_group.end())
+	// 	{
+	// 		it->update();
+	// 		it++;
+	// 	}
+	// }
 	return EXIT_SUCCESS;
 }

@@ -25,7 +25,13 @@ server = "server"
 
 */
 
-enum class TokenType
+# define SERV_LEN 6
+# define LOC_LEN 8
+
+# define MISSING_ARG 10
+# define INVALID_ARG 11
+
+typedef enum tokenType
 {
 	SERVER,
 	LOCATION,
@@ -35,12 +41,17 @@ enum class TokenType
 	SEMICOLON,
 	ARG,
 	END
-};
+}					t_tokenType;
 
-struct	TokenConfigFile
+typedef struct	tokenConfig
 {
-	TokenType	type;
+	tokenType	type;
 	std::string	data;	
-};
+}				t_tokenConfig;
+
+int		parse_config_file(const std::string &config_file);
+int		tokenize_config_file(std::ifstream &file, std::vector<t_tokenConfig> *tokenList);
+int		parsing_error(const std::string &msg, int code_error);
+size_t	skip_white_spaces(const std::string &line, size_t index);
 
 #endif

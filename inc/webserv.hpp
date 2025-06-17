@@ -15,6 +15,7 @@
 # include <cstdlib>
 # include <cstdio>
 # include <csignal>
+# include <vector>
 
 # include "Server.hpp"
 

@@ -8,14 +8,15 @@
 # include <sys/socket.h>
 # include <vector>
 # include <map>
+#include <sys/epoll.h>
 
 # include "webserv.hpp"
 
-typedef struct	s_listen
-{
-	int	port;
-	int	ip;
-}				listen;
+// typedef struct	s_listen
+// {
+// 	int	port;
+// 	int	ip;
+// }				listen;
 
 typedef struct	s_location
 {
@@ -28,10 +29,11 @@ class	Server
 private :
 	int													_socket_fd;
 	struct sockaddr_in									_serv_addr;
-	std::vector<listen>									_listen;
+	// std::vector<listen>									_listen;
 	std::vector<std::string>							_server_name;
 	std::map<std::string, std::vector<std::string> >	_directives;
 	std::vector<location>								_locations;
+	int													_epoll_fd;
 
 public :
 	Server();

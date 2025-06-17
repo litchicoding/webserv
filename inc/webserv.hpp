@@ -4,6 +4,8 @@
 # define OK 0
 # define ERROR -1
 # define INVALID -1
+# define MAX_EVENTS 10
+# define TIMEOUT -1
 
 # define RED "\e[31m"
 # define GREEN "\e[32m"
@@ -15,6 +17,7 @@
 # include <cstdlib>
 # include <cstdio>
 # include <csignal>
+#include <fcntl.h>
 
 # include "Server.hpp"
 
@@ -23,5 +26,6 @@ class	Server;
 extern Server	*g_server_instance;
 
 void	signal_handler(int signal);
+int		add_fd_to_epoll(int epoll_fd, int fd);
 
 #endif

@@ -34,9 +34,13 @@ void	Client::handleError(int code) {
 			filePath = "";
 			break;
 		case 403:
+
 		case 404:
+
 		case 405:
+
 		case 500:
+
 		case 505:
 
 	}
@@ -57,46 +61,40 @@ void	Client::handleError(int code) {
 	// Rajouter d'autres headers ?? Date ? Server ? Connection ?
 }
 
-void	Client::buildResponse() {
-	if (method == "GET") {
-		std::ifstream	file(URI);
-		if (!file.is_open()) {
-			std::cerr << "In buildResponse() file not open."
-			handleError(403); // pas sur du code !
-		}
-		std::ostringstream	body;
-		body << file.rdbuf();
+void	Client::handleGet() {
+	if (access(URI.c_str(), F_OK) != 0)
+		handleError(404);
+	if (access(URI.c_str(), R_OK) != 0)
+		handleError(403);
+	if (HeadersCorrect("GET") != OK)
+		handleError(???);
+	std::ifstream	file(URI);
+	if (!file.is_open())
+		handleError(500);
+	std::ostringstream	body;
+	body << file.rdbuf();
+	
+	std::string MIME = getMIME(URI);
+	
+	this->response = "HTTP/1.1 200 OK\r\n";
+	this->response += "Content-Type: " + MIME + "\r\n";
+	this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
+	this->response += "Connection: keep-alive\r\n";
+	this->response += "\r\n";
+	this->response += body.str();
+	return ;
+}
 
-		// std::string contentType = URI;
-		// if (URI.find(".html") != std::string::npos)
-		// 	contentType = "text/html";
-		// else if (URI.find(".jpg") != std::string::npos)
-		// 	contentType = "image/jpeg";
-		// else if (URI.find(".png") != std::string::npos)
-		// 	contentType = "icon/png";
-		// else if (URI.find(".ttf") != std::string::npos)
-		// 	contentType = "font/ttf";
-		// else if (URI.find(".js") != std::string::npos)
-		// 	contentType = "tet/javascript";
-		// else if (URI.find(".css") != std::string::npos)
-		// 	contentType = "text/css";
-		// else
-		// 	contentType = "text/txt";
-		
-		this->response = "HTTP/1.1 200 OK\r\n";
-		this->response += "Content-Type: " + MIME + "\r\n";
-		this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
-		this->response += "Connection: keep-alive\r\n";
-		this->response += "\r\n";
-		this->response += body.str();
-		return ;
-	}
+void	Client::buildResponse() {
+	if (method == "GET")
+		handleGet();
 	else if (method == "POST") {
-		std::ofstream	outfile(URI, std::ios::binary); //Indique que pas de transformation. on garde en binaire car la conversion pourrais modifier le contenu du file.
-		if (!outfile.is_open()) { // access // stat
-			std::cerr << "In buildResponse() file not open."
-			handleError(500); // pas sur du code !
-		}
+		if (access(URI.c_str(), F_OK | W_OK) != 0)
+			handleError();
+		std::ofstream	outfile(URI);
+		if (!outfile.is_open())
+			handleError(500);
+		
 		outfile.write(body.c_str(), body.size());
 		outfile.close();
 		this->response = "HTTP/1.1 201 Created\r\n";
@@ -130,16 +128,14 @@ std::string	Client::collect_request() {
 
 void	Client::handleHeaders(std::string& line)
 {
-	size_t delimiterPos = line.find(':');
-	if (delimiterPos != std::string::npos) {
-		std::string key = line.substr(0, delimiterPos);
-		if (key.empty())
-			throw std::runtime_error("Error 400: Header without key");
-		std::string value = line.substr(delimiterPos + 1);
-		this->headersMap[key] = value;
-	}
-	else
-		throw std::runtime_error("Error 400: Malformed header");
+    size_t delimiterPos = line.find(':');
+    if (delimiterPos == std::string::npos)
+        handleError(400);
+    std::string key = line.substr(0, delimiterPos);
+    std::string value = line.substr(delimiterPos + 1);
+    if (key.empty())
+        handleError(400);
+    this->headersMap[key] = value;
 }
 
 void	Client::handleMethodLine(std::string& line)
@@ -147,26 +143,15 @@ void	Client::handleMethodLine(std::string& line)
 	std::istringstream  iss(line);
 	iss >> this->method >> this->URI >> this->version;
 
-	if (method != "GET" && method != "POST" && method != "DELETE") {
+	if (method != "GET" && method != "POST" && method != "DELETE")
 		handleError(405);
-		return ;
-	}
-	if (URI.empty() || URI[0] != '/') {
+	if (URI.empty() || URI[0] != '/')
 		handleError(400);
-		return ;
-	}
-	if (URI.find("..") != std::string::npos) {
+	if (URI.find("..") != std::string::npos)
 		handleError(403);
-		return ;
-	}
-	if (version != "HTTP/1.1") {
+	if (version != "HTTP/1.1")
 		handleError(505);
-		return ;
-	}
 	// rajouter si fichier sors du root du config ?? 403
-	// rajouter verifications des headers
-	// verification fichier si existe et si on peux le lire ! 404 403
-
 }
 
 void	Client::parseRawRequest() {
@@ -197,7 +182,6 @@ void	Client::parseRawRequest() {
 	// std::cout << "Method = " << this->method << std::endl;
 	// std::cout << "URI = " << this->URI << std::endl;
 	// std::cout << "version = " << this->version << std::endl;
-	// std::cout << "request = \n" << this->request << std::endl;
 	// std::cout << "Headers:" << std::endl;
 	// for (std::map<std::string, std::string>::const_iterator it = this->headersMap.begin(); it != this->headersMap.end(); ++it) {
 	// 	std::cout << it->first << ": " << it->second << std::endl;

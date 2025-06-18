@@ -18,8 +18,8 @@ private:
 	void			parseRawRequest();
 	void			handleMethodLine(std::string& line);
 	void			handleHeaders(std::string& line);
-	void			parseRequest();
 	std::string		collect_request();
+	void			handleGet();
 
 public:
 	Client(int client_fd, sockaddr_in client_adrr);

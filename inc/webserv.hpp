@@ -22,11 +22,8 @@
 # include <vector>
 # include <map>
 # include <sys/socket.h>
-
-
-#include <unistd.h>
-#include <netinet/in.h>
-
+# include <unistd.h>
+# include <netinet/in.h>
 
 // # include "Server.hpp"
 

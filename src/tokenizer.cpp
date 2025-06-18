@@ -68,10 +68,6 @@ static bool	is_directive_line(const std::string &line, size_t start)
 	std::cout << line << std::endl;
 	for (size_t i = 0; i < directive->size() + 1; ++i)
 	{
-		for (size_t j = start; j < end; j++)
-			std::cout << RED << line[j];
-		std::cout << RESET << std::endl;
-		std::cout << directive[i] << std::endl;
 		if (!line.compare(start, end - start, directive[i]))
 			return true;
 	}
@@ -133,6 +129,7 @@ int	tokenize_config_file(std::ifstream &file, std::vector<t_tokenConfig> *tokenL
 		if (status != OK)
 			return ERROR;
 	}
+	tokenList->push_back(create_token("EOF", END));
 	return OK;
 }
 

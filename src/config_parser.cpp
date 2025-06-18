@@ -41,21 +41,23 @@ static int	parse_location_block(std::vector<t_tokenConfig>::iterator token, Serv
 	return OK;
 }
 
-static int	parse_server_block(std::vector<t_tokenConfig>::iterator token, std::vector<Server> *serv_group)
+static int	parse_server_block(std::vector<t_tokenConfig>::iterator *token, std::vector<Server> *serv_group)
 {
-	if (token->type != SERVER)
-		return parsing_error("parse_server_block", MISSING_ARG);
+	// if (token->type != SERVER)
+	// 	return parsing_error("parse_server_block", MISSING_ARG);
+	std::cout << (*token)->data << " " << (*token)->type << std::endl;
+
 	Server	newServer = Server();
-	token++;
-	if (token->type != O_BRACE)
+	*token++;
+	if ((*token)->type != O_BRACE)
 		return parsing_error("parse_server_block", MISSING_ARG);
-	while (token->type != C_BRACE)
+	while ((*token)->type != C_BRACE)
 	{
-		if (token->type == LOCATION && parse_location_block(token, newServer) != OK)
+		*token++;
+		if ((*token)->type == LOCATION && parse_location_block(*token, newServer) != OK)
 			return ERROR;
-		else if (token->type == IDENTIFIER && parse_directive(token, SERVER, newServer, "") != OK)
+		else if ((*token)->type == IDENTIFIER && parse_directive(*token, SERVER, newServer, "") != OK)
 			return ERROR;
-		token++;
 	}
 	serv_group->push_back(newServer);
 	return OK;
@@ -85,11 +87,13 @@ int	parse_config_file(const std::string &config_file, std::vector<Server> *serv_
 
 	// parse every token node and create new Server object accordingly, store them in serv_group
 	std::vector<t_tokenConfig>::iterator it = tokenList.begin();
-	while (it != tokenList.end())
+	while (it->type != END)
 	{
+		// std::cout << RED << it->data << " " << it->type << RESET << std::endl;
 		if (parse_server_block(it, serv_group) != OK)
 			return ERROR;
-		it++;
+		std::cout << RED << it->data << " " << it->type << RESET << std::endl;
+		// it++;
 	}
 
 	for (std::vector<Server>::iterator it = serv_group->begin(); it != serv_group->end(); it++)

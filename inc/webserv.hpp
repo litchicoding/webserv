@@ -24,9 +24,6 @@
 
 class	Server;
 
-// typedef enum tokenType t_tokenType; 
-// typedef struct tokenConfig t_tokenConfig;
-
 extern Server	*g_server_instance;
 
 void	signal_handler(int signal);

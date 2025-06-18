@@ -5,30 +5,31 @@
 
 Server::Server()
 {
-	std::cout << GREEN << "*** Server construction ***" << std::endl;
-	std::cout << "[Configuration file : default ]" << RESET << std::endl;
+	std::cout << GREEN << "*** Server construction ***" << RESET << std::endl;
 
-	_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_socket_fd < 0)
-	{
-		std::cout << RED << "Error: socket()" << RESET << std::endl;
-		return ;
-	}
+	// _socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	// if (_socket_fd < 0)
+	// {
+	// 	std::cout << RED << "Error: socket()" << RESET << std::endl;
+	// 	return ;
+	// }
 	std::memset(&_serv_addr, 0, sizeof(_serv_addr));
 	_serv_addr.sin_family = AF_INET;
 	_serv_addr.sin_port = htons(8080); // HARDCODED value (must change it later)
 	_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	g_server_instance = this;
+	_socket_fd = INVALID;
+	// _serv_addr = INVALID;
 }
 
-Server::Server(const std::string &config_file)
-{
-	std::cout << GREEN << "*** Server construction ***" << std::endl;
-	std::cout << "[Configuration file : " << config_file << "]" << RESET << std::endl;
-	g_server_instance = this;
-	// Must parse the config file and assign struct with all the data needed...
-	std::cout << RED << "Error: No function to parse config file yet!" << RESET << std::endl;
-}
+// Server::Server(const std::string &config_file)
+// {
+// 	std::cout << GREEN << "*** Server construction ***" << std::endl;
+// 	std::cout << "[Configuration file : " << config_file << "]" << RESET << std::endl;
+// 	g_server_instance = this;
+// 	// Must parse the config file and assign struct with all the data needed...
+// 	std::cout << RED << "Error: No function to parse config file yet!" << RESET << std::endl;
+// }
 
 Server::Server(const Server &copy) { *this = copy; }
 
@@ -45,7 +46,43 @@ Server&	Server::operator=(const Server &copy)
 /*****************************************************************************/
 /* Deconstructor *************************************************************/
 
-Server::~Server() {} // freeaddrinfo() ?
+Server::~Server() {} // must check that every container is cleaned
+
+/*****************************************************************************/
+/* Setters *******************************************************************/
+
+int	Server::setDirectives(const std::string &type, const std::vector<std::string> &arg)
+{
+	if (type.empty())
+		return ERROR;
+	_directives.insert(std::make_pair(type, arg));
+	return OK;
+}
+
+int	Server::setLocation(const std::string &loc_path, const std::string &type, const std::vector<std::string> &arg)
+{
+	if (loc_path.empty() || type.empty())
+		return ERROR;
+	std::vector<t_location>::iterator it = _locations.begin();
+	while (it != _locations.end())
+	{
+		if (it->path == loc_path)
+		{
+			it->directives.insert(std::make_pair(type, arg));
+			return OK;
+		}
+		it++;
+	}
+	if (it == _locations.end())
+	{
+		t_location	newLoc;
+		newLoc.path = loc_path;
+		newLoc.directives.insert(std::make_pair(type, arg));
+		_locations.push_back(newLoc);
+		return OK;
+	}
+	return ERROR;
+}
 
 /*****************************************************************************/
 /* Member Functions **********************************************************/
@@ -111,4 +148,43 @@ void	Server::stop(const std::string &msg)
 	close(_socket_fd);
 	_socket_fd = INVALID;
    	std::cout << GREEN << "🛑 Connexion fermée." << RESET << std::endl;
+}
+
+void	Server::print_server_class()
+{
+	std::cout << "----------------------------" << std::endl;
+	std::cout << "socket_fd = " << _socket_fd << std::endl;
+	
+	for (std::vector<std::string>::iterator it = _server_name.begin(); it != _server_name.end(); it++)
+		std::cout << "server_name = " << *it << std::endl;
+
+	std::map<std::string, std::vector<std::string> >::iterator it = _directives.begin();
+	while (it != _directives.end())
+	{
+		std::vector<std::string>::iterator ite = it->second.begin();
+		std::cout << it->first << " ";
+		while (ite != it->second.end())
+		{
+			std::cout << *ite << std::endl;
+			ite++;
+		}
+		it++;
+	}
+
+	for (std::vector<t_location>::iterator it = _locations.begin(); it < _locations.end(); it++)
+	{
+		std::cout << "location = " << it->path << std::endl;
+		std::map<std::string, std::vector<std::string> >::iterator a = it->directives.begin();
+		while (a != it->directives.end())
+		{
+			std::cout << a->first << " ";
+			std::vector<std::string>::iterator ite = a->second.begin();
+			while (ite != a->second.end())
+			{
+				std::cout << *ite << " " << std::endl;
+				ite++;
+			}
+			a++;
+		}
+	}
 }

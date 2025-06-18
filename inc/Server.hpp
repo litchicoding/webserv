@@ -35,14 +35,17 @@ private :
 
 public :
 	Server();
-	Server(const std::string &config_file);
 	Server(const Server &copy);
 	Server&	operator=(const Server &copy);
 	~Server();
 
+	int		setDirectives(const std::string &type, const std::vector<std::string> &arg);
+	int		setLocation(const std::string &loc_path, const std::string &type, const std::vector<std::string> &arg);
+
 	void	start();
 	void	stop(const std::string &msg);
 	void	update();
+	void	print_server_class();
 };
 
 #endif

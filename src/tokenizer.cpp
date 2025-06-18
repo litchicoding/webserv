@@ -31,22 +31,6 @@ static t_tokenConfig	create_token(const std::string &data, t_tokenType tokenType
 	return token;
 }
 
-int	parsing_error(const std::string &msg, int code_error)
-{
-	std::cout << RED << "Error: ";
-	switch (code_error)
-	{
-		case MISSING_ARG:
-			std::cout << msg << " - missing an argument" << std::endl;
-			break ;
-		case INVALID_ARG:
-			std::cout << msg << " - invalid argument detected" << std::endl;
-			break ;
-	}
-	std::cout << RESET;
-	return ERROR;
-}
-
 static int	tokenize_server_line(std::string &line, size_t start, std::vector<t_tokenConfig> *tokenList)
 {
 	tokenList->push_back(create_token("server", SERVER));
@@ -66,7 +50,6 @@ static int	tokenize_location_line(std::string &line, size_t start, std::vector<t
 	start = i;
 	while (line[i] && line[i] != '{' && !isspace(line[i]))
 		i++;
-	std::cout << line[i] << std::endl;
 	arg = line.substr(start, i - start);
 	tokenList->push_back(create_token(arg, LOCATION));
 	i = skip_white_spaces(line, i);
@@ -80,11 +63,16 @@ static int	tokenize_location_line(std::string &line, size_t start, std::vector<t
 static bool	is_directive_line(const std::string &line, size_t start)
 {
 	std::string	directive[] = { "listen", "server_name", "error_page", "client_max_body_size", "root", "autoindex", "index" };
-	size_t		end = get_end_word_index(line, start);
+	size_t		end = get_end_word_index(line, start) + 1;
 
-	for (size_t i = 0; i < directive->size(); i++)
+	std::cout << line << std::endl;
+	for (size_t i = 0; i < directive->size() + 1; ++i)
 	{
-		if (!line.compare(start, end, directive[i]))
+		for (size_t j = start; j < end; j++)
+			std::cout << RED << line[j];
+		std::cout << RESET << std::endl;
+		std::cout << directive[i] << std::endl;
+		if (!line.compare(start, end - start, directive[i]))
 			return true;
 	}
 	return false;
@@ -99,9 +87,23 @@ static int	tokenize_directive_line(std::string &line, size_t start, std::vector<
 	start = skip_white_spaces(line, end + 1);
 	end = start;
 	while (line[end] && line[end] != ';')
-		end++;
-	std::string	args = line.substr(start, end - start);
-	tokenList->push_back(create_token(args, ARG));
+	{
+		if (isspace(line[end])) {
+			std::string	args = line.substr(start, end - start);
+			tokenList->push_back(create_token(args, ARG));
+			start = end;
+			end = skip_white_spaces(line, end);
+		}
+		else if (line[end + 1] == ';') {
+			end++;
+			std::string	args = line.substr(start, end - start);
+			tokenList->push_back(create_token(args, ARG));
+			start = end;
+			end = skip_white_spaces(line, end);
+		}
+		else
+			end++;
+	}
 	if (line[end] && line[end] == ';')
 		tokenList->push_back(create_token(";", SEMICOLON));
 	else
@@ -132,4 +134,43 @@ int	tokenize_config_file(std::ifstream &file, std::vector<t_tokenConfig> *tokenL
 			return ERROR;
 	}
 	return OK;
+}
+
+void print_token_type(std::vector<t_tokenConfig> *tokenList)
+{
+	std::vector<t_tokenConfig>::iterator it = tokenList->begin();
+	while (it != tokenList->end())
+	{
+		std::cout << "data = " << it->data << std::endl;
+		std::cout << "type = ";
+		switch (it->type)
+		{
+			case SERVER:
+				std::cout << "server" << std::endl;
+				break ;
+			case LOCATION:
+				std::cout << "location" << std::endl;
+				break ;
+			case IDENTIFIER:
+				std::cout << "identifier" << std::endl;
+				break ;
+			case O_BRACE:
+				std::cout << "opening brace" << std::endl;
+				break ;
+			case C_BRACE:
+				std::cout << "closing brace" << std::endl;
+				break ;
+			case SEMICOLON:
+				std::cout << "semicolon" << std::endl;
+				break ;
+			case ARG:
+				std::cout << "arg" << std::endl;
+				break ;
+			case END:
+				std::cout << "end of file" << std::endl;
+				break ;
+		}
+		std::cout << "------------------------------------" << std::endl;
+		it++;
+	}
 }

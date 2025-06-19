@@ -152,33 +152,36 @@ void	Server::stop(const std::string &msg)
 
 void	Server::print_server_class()
 {
-	std::cout << "----------------------------" << std::endl;
+	std::cout << "SERVER BLOCK ----------------------------" << std::endl;
 	std::cout << "socket_fd = " << _socket_fd << std::endl;
 	
+	std::cout << "Directives = " << std::endl;
+
 	for (std::vector<std::string>::iterator it = _server_name.begin(); it != _server_name.end(); it++)
-		std::cout << "server_name = " << *it << std::endl;
+		std::cout << "	server_name = " << *it << std::endl;
 
 	std::map<std::string, std::vector<std::string> >::iterator it = _directives.begin();
-	
 	while (it != _directives.end())
 	{
 		std::vector<std::string>::iterator ite = it->second.begin();
-		std::cout << it->first << " ";
+		std::cout << "	" << it->first << " ";
 		while (ite != it->second.end())
 		{
-			std::cout << *ite << std::endl;
+			std::cout << *ite << " ";
 			ite++;
 		}
+		std::cout << std::endl;
 		it++;
 	}
 
 	for (std::vector<t_location>::iterator it = _locations.begin(); it < _locations.end(); it++)
 	{
-		std::cout << "location = " << it->path << std::endl;
+		std::cout << "Location block = " << std::endl << "URI = " << it->path << std::endl;
 		std::map<std::string, std::vector<std::string> >::iterator a = it->directives.begin();
+		std::cout << "Loc Directives = " << std::endl;
 		while (a != it->directives.end())
 		{
-			std::cout << a->first << " ";
+			std::cout << "	" << a->first << " ";
 			std::vector<std::string>::iterator ite = a->second.begin();
 			while (ite != a->second.end())
 			{

@@ -242,7 +242,11 @@ Fonctionnement du CGI :
 Sources : 
 -	global understanding :
 	* [Understanding Nginx Server and Location Block Selection Algorithms](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms)
+	* [Beginner's guide Nginx](https://nginx.org/en/docs/beginners_guide.html)
 	* [Nginx documentation](https://nginx.org/en/docs/index.html)
+	* [Basic rules](https://github.com/trimstray/nginx-admins-handbook/blob/master/doc/RULES.md#beginner-organising-nginx-configuration)
+	* [nginx configuration](https://www.solo.io/topics/nginx/nginx-configuration)
+	* [Webserv context configuration](https://github.com/tdameros/42-webserv/blob/main/docs/config_file.md)
 -	listen directive :
 	* [How Nginx processes a request](https://nginx.org/en/docs/index.html)
 	* [Listen documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen)

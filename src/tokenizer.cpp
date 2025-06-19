@@ -35,6 +35,7 @@ static int	tokenize_server_line(std::string &line, size_t start, std::vector<t_t
 {
 	tokenList->push_back(create_token("server", SERVER));
 	size_t	i = skip_white_spaces(line, start + SERV_LEN);
+
 	if (line[i] == '{' && line[i + 1] == '\0')
 		tokenList->push_back(create_token("{", O_BRACE));
 	else
@@ -65,7 +66,6 @@ static bool	is_directive_line(const std::string &line, size_t start)
 	std::string	directive[] = { "listen", "server_name", "error_page", "client_max_body_size", "root", "autoindex", "index" };
 	size_t		end = get_end_word_index(line, start) + 1;
 
-	std::cout << line << std::endl;
 	for (size_t i = 0; i < directive->size() + 1; ++i)
 	{
 		if (!line.compare(start, end - start, directive[i]))
@@ -79,6 +79,7 @@ static int	tokenize_directive_line(std::string &line, size_t start, std::vector<
 	size_t	end = get_end_word_index(line, start);
 	if (end == std::string::npos)
 		return ERROR;
+
 	tokenList->push_back(create_token(line.substr(start, end), IDENTIFIER));
 	start = skip_white_spaces(line, end + 1);
 	end = start;

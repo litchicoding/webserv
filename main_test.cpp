@@ -39,8 +39,7 @@ int main()
 		
 		Client* client = new Client(client_fd, client_addr);
 		client->start();
-		//vector en dessous !!!
-		// clients[client_fd] = client;
+
 	}
 
 	close(socket_serveur);

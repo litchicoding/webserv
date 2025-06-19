@@ -8,9 +8,10 @@
 # include <sys/socket.h>
 # include <vector>
 # include <map>
-#include <sys/epoll.h>
+# include <sys/epoll.h>
 
 # include "webserv.hpp"
+# include "Client.hpp"
 
 // typedef struct	s_listen
 // {
@@ -34,6 +35,7 @@ private :
 	std::map<std::string, std::vector<std::string> >	_directives;
 	std::vector<location>								_locations;
 	int													_epoll_fd;
+	std::map<int, Client*>								_clients;
 
 public :
 	Server();

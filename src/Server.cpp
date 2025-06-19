@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../inc/Server.hpp"
 
 /*****************************************************************************/
 /* Constructors **************************************************************/
@@ -104,28 +104,22 @@ void	Server::update()
 					perror("accept");
 					continue;
 				}
-
 				if (add_fd_to_epoll(_epoll_fd, socket_client) != OK)
 					continue;
+				Client* new_client = new Client(socket_client, client_addr);
+				new_client->start();
+				_clients[socket_client] = new_client;
+				std::cout << GREEN << "✅ Nouveau client connecté: " << new_client->getSocketFd()
+                          << RESET << std::endl;
 			}
 			else	//cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
 			{
 				int socket_client = events[i].data.fd;
-				char buffer[4064];
-				std::memset(buffer, 0, sizeof(buffer));
-
-				int bytes_read = read(socket_client, buffer, sizeof(buffer) - 1);
-            	if (bytes_read < 0)
-				{
-                	perror("read");
-            	}
-				else
-				{
-					std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
-					// Ici lire la requete dans une fonction a part qui switch entre GET POST DELETE ERROR
-					write(socket_client, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 50 \r\nConnection: close\r\n\r\nWebserv", 92);
-				}
-				close(socket_client);
+				Client* client = _clients[socket_client];
+				client->update();//to do
+				delete client;
+				_clients.erase(socket_client);
+				close(socket_client); // pas sur qu'on garde a voir !
 				epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, socket_client, NULL);
 			}
 		}

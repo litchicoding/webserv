@@ -16,7 +16,9 @@ On itinialise les attributs membres de la classe `Server`
 
 ## start()
 
-- On utilise `bind()`
+- `add_fd_to_epoll()` :On utilise `fcntl()` pour rendre la socket non bloquante puis `epoll_create1()` et 
+`epoll_ctl()` pour creer une instance d'epoll et lui donner la socket a surveiller
+- Puis `bind()`
 - Puis `listen()`
 
 Le serveur a maintenant une **socket** sur écoute!

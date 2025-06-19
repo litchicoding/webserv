@@ -21,7 +21,7 @@ RESET = \033[0;m
 ########### source files and objects ##########################################
 ###############################################################################
 
-SRC_FILES = main.cpp Server.cpp signal_handler.cpp
+SRC_FILES = main.cpp Server.cpp signal_handler.cpp utils.cpp
 
 OBJ = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 

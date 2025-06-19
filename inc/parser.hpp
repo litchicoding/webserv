@@ -32,7 +32,7 @@ typedef struct	tokenConfig
 
 /* config_parser.c *******************************************************************************/
 
-int		parse_config_file(const std::string &config_file, std::vector<Server> *serv_group);
+int		parse_config_file(const std::string &config_file, std::vector<Server*> &serv_group);
 int		parsing_error(const std::string &msg, int code_error);
 
 /* tokenizer.c ***********************************************************************************/

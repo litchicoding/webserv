@@ -159,6 +159,7 @@ void	Server::print_server_class()
 		std::cout << "server_name = " << *it << std::endl;
 
 	std::map<std::string, std::vector<std::string> >::iterator it = _directives.begin();
+	
 	while (it != _directives.end())
 	{
 		std::vector<std::string>::iterator ite = it->second.begin();

@@ -12,7 +12,7 @@
 
 class	Server;
 
-typedef enum tokenType
+typedef enum 	tokenType
 {
 	SERVER,
 	LOCATION,
@@ -22,7 +22,7 @@ typedef enum tokenType
 	SEMICOLON,
 	ARG,
 	END
-}					t_tokenType;
+}				t_tokenType;
 
 typedef struct	tokenConfig
 {

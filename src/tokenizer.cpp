@@ -63,7 +63,7 @@ static int	tokenize_location_line(std::string &line, size_t start, std::vector<t
 
 static bool	is_directive_line(const std::string &line, size_t start)
 {
-	std::string	directive[] = { "listen", "server_name", "error_page", "client_max_body_size", "root", "autoindex", "index" };
+	std::string	directive[] = { "listen", "server_name", "error_page", "client_max_body_size", "root", "autoindex", "index", "allow_method", "return" };
 	size_t		end = get_end_word_index(line, start) + 1;
 
 	for (size_t i = 0; i < directive->size() + 1; ++i)

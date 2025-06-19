@@ -30,5 +30,6 @@ int	main(int ac, char **av)
 	// 		it++;
 	// 	}
 	// }
+	Server::delete_server_group(serv_group);
 	return EXIT_SUCCESS;
 }

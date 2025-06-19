@@ -6,8 +6,6 @@ static int	parse_directive(std::vector<t_tokenConfig>::iterator &token, t_tokenT
 	std::vector<std::string>	directive_arg;
 
 	token++;
-	if (token->type != ARG)
-		return parsing_error("parse_directive", MISSING_ARG);
 	while (token->type != SEMICOLON)
 	{
 		if (token->type == ARG && !token->data.empty())
@@ -38,7 +36,6 @@ static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Ser
 			return ERROR;
 		token++;
 	}
-	// token++;
 	return OK;
 }
 
@@ -46,7 +43,6 @@ static int	parse_server_block(std::vector<t_tokenConfig>::iterator &token, std::
 {
 	if (token->type != SERVER)
 		return parsing_error("parse_server_block", MISSING_ARG);
-	// std::cout << token->data << " " << token->type << std::endl;
 
 	Server	*newServer = new Server();
 	token++;

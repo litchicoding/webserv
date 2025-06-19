@@ -247,13 +247,6 @@ Sources :
 	* [Basic rules](https://github.com/trimstray/nginx-admins-handbook/blob/master/doc/RULES.md#beginner-organising-nginx-configuration)
 	* [nginx configuration](https://www.solo.io/topics/nginx/nginx-configuration)
 	* [Webserv context configuration](https://github.com/tdameros/42-webserv/blob/main/docs/config_file.md)
--	listen directive :
-	* [How Nginx processes a request](https://nginx.org/en/docs/index.html)
-	* [Listen documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen)
--	autoindex directive :
-	* [Explaining the Nginx directory index file](https://www.keycdn.com/support/nginx-directory-index#:~:text=By%20default%2C%20Nginx%20tries%20to,is%20if%20it%20has%20permissions)
--	server_name directive :
-	* [Server names documentation](https://nginx.org/en/docs/http/server_names.html)
 
 Configuration is based on *Nginx*'s server configuration format.
 
@@ -263,7 +256,7 @@ Configuration is based on *Nginx*'s server configuration format.
 
 Nginx lance un ***processus qui determine quel block de configuration devrait etre utilisé pour gerer une requete***.
 
--	L'administrateur configure souvent plusieurs *server blocks* et décide quel block devra gérer telle connexion selon le **doamin name**, le **port** et l'**IP address**.
+-	L'administrateur configure souvent plusieurs *server blocks* et décide quel block devra gérer telle connexion selon le **domain name**, le **port** et l'**IP address**.
 
 -	Le *location block* est utilisé pour définir comment Nginx doit traiter les demandes de différentes ressources et **URI** pour le serveur parent. L'espace *URI* peut être subdivisé comme l'administrateur le souhaite à l'aide de ces blocks.
 
@@ -276,6 +269,166 @@ server {
 	}
 }
 ```
+
+## listen
+
+*	[Listen Documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen)
+
+***Sets the address and port for IP, or the path for a UNIX-domain socket on which the server will accept requests.***
+
+```
+Syntax:		listen address[:port] [default_server]
+Default:	listen *:80;
+Context:	server
+```
+- `localhost` can be given as an address.
+- if only `adress` is given, the port `80` is used.
+- if the directive is not present then :
+	- if server is runing with `root` = `*:80`; else `*:8000`
+- if `default_server` is present so this become the main server, otherwise it's the first server with the `adress`:`port` pair.
+
+```
+listen	127.0.0.1:8000;
+listen	127.0.0.1;
+listen	8000;
+listen	*:8000;
+listen	localhost:8000;
+```
+
+## server_name
+
+* [server_name Documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name)
+
+***Sets names of a virtual server.*** The first name becomes the primary server name.
+
+```
+Syntax:		server_name name ...;
+Default:	server_name "";
+Context:	server
+```
+
+- Server names can include an asterisk replacing tthe first or last part of a name :
+```
+server {
+	server_name	example.com *.example.com www.example.*;
+}
+```
+
+- It is possible to use regular expression preceding the name with a tilde. ex: `~^www\d+\.example\.com$;`
+- If the directive's paramater is set to `$hostname`, the machine's hostanme is inserted.
+
+## location
+
+*	[location Documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#location)
+
+***Sets configuration depending on a request URI.***
+
+```
+Syntax:		location [ = | ~ | ~* | ~^ ] uri { ... }
+			location @name { ... }
+Default:	----
+Context:	server, location
+```
+
+Se renseigner pour savoir si le sujet exige de pouvoir imbriquer les location block... et doit on implementer = ~ etc!!!
+
+## error_page
+
+*	[error_page Documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page)
+
+***Defines the URI that will be shown for the specified errors.***
+
+```
+Syntax:		error_page code ... [=[response]] uri;
+Default:	-----
+Context:	server, location
+```
+
+- A `uri` value can contain variables. This causes an internal redirect to the specified uri with the client request method changed to “GET”.
+- It is possible to change the response code to another using the “=response” syntax.
+- If uri processing leads to an error, the status code of the last occurred error is returned to the client.
+
+## root
+
+*	[root Documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#root)
+
+***Sets the root directory for requests.***
+
+```
+Syntax:		root path;
+Default:	root html;
+Context:	server, location
+```
+
+- The path value can contain variables.
+- A path to the file is constructed by merely adding a URI to the value of the root directive.
+
+## return
+
+*	[return Documentation](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#return)
+
+***Stops processing and returns the specified code to a client.***
+
+```
+Syntax:		return code [text];
+			return code URL;
+			return URL;
+Default:	----
+Context:	server, location
+```
+
+## index
+
+*	[index Documentation](https://nginx.org/en/docs/http/ngx_http_index_module.html#index)
+
+***Defines files that will be used as an index.***
+
+```
+Syntax:		index file ...;
+Default:	index index.html
+Context:	server, location
+```
+
+- The file name can contain variables.
+- Files are checked in the specified order. The last element of the list can be a file with an absolute path.
+
+## allow_methods
+
+```
+Syntax:		allow_methods method ...;
+Default:	allow_methods GET POST DELETE;
+Context:	server, location
+```
+
+## client_max_body_size
+
+*	[Documentation](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size)
+
+***Sets the maximum allowed size of the client request body.***
+If the size in a request exceeds the configured value, the 413 (Request Entity Too Large) error is returned to the client. Please be aware that browsers cannot correctly display this error. Setting size to 0 disables checking of client request body size.
+
+```
+Syntax:		client_max_vody_size size;
+Default:	client_max_body_size 1m;
+Context:	server, location
+```
+
+## autoindex
+
+*	[autoindex Documentation](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html)
+
+***Enables or disables the directory listing output.***
+
+```
+Syntax:		autoindex on | off;
+Default:	autodindex off;
+Context:	server, location
+```
+
+## cgi_param 
+
+must get information
+
 
 ### Comment décider quel block traitera quelle Request ?
 

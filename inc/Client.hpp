@@ -13,26 +13,24 @@ private:
 	std::map<std::string, std::string>	headersMap;
 	struct sockaddr_in					client_addr;
 	std::string							response;
+
 	void			handleError(int code);
 	void			buildResponse();
 	void			parseRawRequest();
 	void			handleMethodLine(std::string& line);
 	void			handleHeaders(std::string& line);
+	void			handleBody(std::string& line);
 	std::string		collect_request();
 	void			handleGet();
+	void			handlePost();
+	void			handleDelete();
+	std::string		getMIME(std::string& URI);
 
 public:
 	Client(int client_fd, sockaddr_in client_adrr);
 	~Client();
 
 	void			start();
-
-	// setter
-	void    setSocketFd(int set);
-	void    setMethod(std::string set);
-	void    setURI(std::string set);
-	void    setVersion(std::string set);
-	void    setRequest(std::string set);
 
 	// getter
 	int         getSocketFd(void);

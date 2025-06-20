@@ -175,7 +175,7 @@ void	Client::parseRawRequest() {
 		else if (headers)
 			handleHeaders(line);
 		else
-			this->body.append(line + "\n");
+			handleBody(line);
 	}
 
 	// Pour tester !!!
@@ -195,43 +195,6 @@ void	Client::parseRawRequest() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/***************************************************************/
-/**                      setter                               **/
-/***************************************************************/
-
-void    Client::setSocketFd(int set) {
-	this->socket_fd = set;
-}
-void    Client::setMethod(std::string set) {
-	this->method = set;
-}
-void    Client::setURI(std::string set) {
-	this->URI = set;
-}
-void    Client::setVersion(std::string set) {
-	this->version = set;
-}
-void    Client::setRequest(std::string set) {
-	this->request = set;
-}
 
 /***************************************************************/
 /**                      getter                               **/

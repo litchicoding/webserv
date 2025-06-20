@@ -115,9 +115,9 @@ void	Server::update()
 			else	//cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
 			{
 				int socket_client = events[i].data.fd;
-				Client* client = _clients[socket_client];
-				client->update();//to do
-				delete client;
+				Client* new_client = _clients[socket_client];
+				new_client->start();
+				delete new_client;
 				_clients.erase(socket_client);
 				close(socket_client); // pas sur qu'on garde a voir !
 				epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, socket_client, NULL);

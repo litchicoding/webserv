@@ -13,6 +13,8 @@
 # include "webserv.hpp"
 # include "Client.hpp"
 
+class	Client;
+
 // typedef struct	s_listen
 // {
 // 	int	port;

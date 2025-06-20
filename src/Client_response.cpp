@@ -2,38 +2,64 @@
 
 void	Client::handleGet() {
 	if (access(URI.c_str(), F_OK) != 0)
-		handleError(404);
+	{
+		std::cout << RED "ACCESS OUUUUU" RESET << std::endl;
+		return(handleError(404));
+	}
 	if (access(URI.c_str(), R_OK) != 0)
-		handleError(403);
-	if (HeadersCorrect("GET") != OK)
-		handleError(???);
-	std::ifstream	file(URI);
+		return(handleError(403));
+	// if (HeadersCorrect("GET") != OK)
+	// 	handleError(500); // changer car je ne sais pas quel code ici
+	std::ifstream	file(URI.c_str());
 	if (!file.is_open())
-		handleError(500);
+		return (handleError(500));
 	std::ostringstream	body;
 	body << file.rdbuf();
 	
 	std::string MIME = getMIME(URI);
 	
-	this->response = "HTTP/1.1 200 OK\r\n";
-	this->response += "Content-Type: " + MIME + "\r\n";
-	this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
-	this->response += "Connection: keep-alive\r\n";
-	this->response += "\r\n";
-	this->response += body.str();
+	std::cout << RED << "GET : Reussie !" << RESET << std::endl;
+	
+	// this->response = "HTTP/1.1 200 OK\r\n";
+	// this->response += "Content-Type: " + MIME + "\r\n";
+	// this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
+	// this->response += "Connection: keep-alive\r\n";
+	// this->response += "\r\n";
+	// this->response += body.str();
 	return ;
 }
 
-void    Client::handlePost() {
-    
+void	Client::handlePost() {
+	if (access(URI.c_str(), F_OK | W_OK) != 0)
+		return(handleError(404)); // pas sur du code ici !
+	std::ofstream	outfile(URI.c_str());
+	if (!outfile.is_open())
+		return(handleError(500));
+	
+	outfile.write(body.c_str(), body.size());
+	outfile.close();
+	this->response = "HTTP/1.1 201 Created\r\n";
+	this->response += "Content-Length: 0\r\n";
+	this->response += "Connection: keep-alive\r\n\r\n";
+	return ;
 }
 
-void    Client::handleDelete() {
-    if (access(URI.c_str(), F_OK) != 0)
-        handleError(404);
-    // comment faire sans unlink ?
-    /*
-    si reussie retour code 200 OK
-    sinon retour code 500
-    */
+void	Client::handleDelete() {
+	if (access(URI.c_str(), F_OK) != 0)
+		return(handleError(404));
+	if (std::remove(URI.c_str()) != 0)
+		return(handleError(500));
+		// headers
+	else
+	{
+		std::cout << RED << "DELETE : Reussie !" << RESET << std::endl;
+		
+		// this->response = "HTTP/1.1 200 OK\r\n";
+		// this->response += "Content-Type: " + MIME + "\r\n";
+		// this->response += "Content-Length: " + std::to_string(body.str().size()) + "\r\n";
+		// this->response += "Connection: keep-alive\r\n";
+		// this->response += "\r\n";
+		// this->response += body.str();
+		return ;
+	}
 }

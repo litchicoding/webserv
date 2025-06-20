@@ -13,6 +13,7 @@ private:
 	std::map<std::string, std::string>	headersMap;
 	struct sockaddr_in					client_addr;
 	std::string							response;
+	std::string							root;
 
 	void			handleError(int code);
 	void			buildResponse();

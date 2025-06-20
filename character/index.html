@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Test GET, POST, DELETE</title>
+</head>
+<body>
+  <h1>Requêtes HTTP (GET, POST, DELETE)</h1>
+
+  <!-- === GET via formulaire === -->
+  <h2>GET Request</h2>
+  <form action="/get-endpoint" method="GET">
+    <input type="text" name="query" placeholder="Recherche...">
+    <button type="submit">Envoyer GET</button>
+  </form>
+
+  <!-- === POST via formulaire === -->
+  <h2>POST Request</h2>
+  <form action="/post-endpoint" method="POST">
+    <input type="text" name="username" placeholder="Nom d'utilisateur">
+    <input type="password" name="password" placeholder="Mot de passe">
+    <button type="submit">Envoyer POST</button>
+  </form>
+
+  <!-- === DELETE via JavaScript === -->
+  <h2>DELETE Request (via JavaScript)</h2>
+  <button onclick="sendDelete()">Envoyer DELETE</button>
+
+  <script>
+    function sendDelete() {
+      fetch('/delete-endpoint', {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          alert("DELETE réussi !");
+        } else {
+          alert("Erreur DELETE");
+        }
+      })
+      .catch(error => {
+        console.error("Erreur réseau : ", error);
+      });
+    }
+  </script>
+
+</body>
+</html>

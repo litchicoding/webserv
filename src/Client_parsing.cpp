@@ -9,8 +9,8 @@ std::string	Client::collect_request() {
 		std::memset(buffer, 0, buffer_size);
 		ssize_t bytes_read = recv(this->getSocketFd(), buffer, buffer_size - 1, 0);
 		if (bytes_read < 0) {
-			throw std::runtime_error("Error: ..."); // ERROR numm ???
-		}
+            break ;
+        }
 		else if (bytes_read == 0)
 			break ;
 		else
@@ -25,25 +25,32 @@ void	Client::handleMethodLine(std::string& line)
 	iss >> this->method >> this->URI >> this->version;
     
 	if (method != "GET" && method != "POST" && method != "DELETE")
-    handleError(405);
+        return(handleError(405));
 	if (URI.empty() || URI[0] != '/')
-    handleError(400);
+        return(handleError(400));
+    // else
+    // {
+        path + root + URI
+    //     std::string tmp = URI;
+    //     this->URI = root + tmp;
+    // }
 	if (URI.find("..") != std::string::npos)
-    handleError(403);
+        return(handleError(403));
 	if (version != "HTTP/1.1")
-    handleError(505);
+        return(handleError(505));
 	// rajouter si fichier sors du root du config ?? 403
+    return ;
 }
 
 void	Client::handleHeaders(std::string& line)
 {
     size_t delimiterPos = line.find(':');
     if (delimiterPos == std::string::npos)
-        handleError(400);
+        return(handleError(400));
     std::string key = line.substr(0, delimiterPos);
     std::string value = line.substr(delimiterPos + 1);
     if (key.empty())
-        handleError(400);
+        return(handleError(400));
     this->headersMap[key] = value;
 }
 

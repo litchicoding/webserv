@@ -11,7 +11,7 @@ OBJ_DIR = ./obj/
 HEADER_DIR = ./inc/
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 -g
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
 RM = rm -f
 
 GREEN = \033[0;32m
@@ -21,7 +21,7 @@ RESET = \033[0;m
 ########### source files and objects ##########################################
 ###############################################################################
 
-SRC_FILES = main.cpp Server.cpp signal_handler.cpp
+SRC_FILES = main.cpp Server.cpp signal_handler.cpp config_parser.cpp tokenizer.cpp
 
 OBJ = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 

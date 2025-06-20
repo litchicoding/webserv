@@ -15,8 +15,12 @@
 # include <cstdlib>
 # include <cstdio>
 # include <csignal>
+# include <vector>
+# include <fstream>
+# include <string>
 
 # include "Server.hpp"
+# include "parser.hpp"
 
 class	Server;
 

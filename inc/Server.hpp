@@ -8,6 +8,7 @@
 # include <sys/socket.h>
 # include <vector>
 # include <map>
+#include <sys/epoll.h>
 
 # include "webserv.hpp"
 
@@ -48,6 +49,7 @@ private :
 	std::vector<std::string>							_server_name;
 	t_directives										_directives;
 	std::vector<t_location>								_locations;
+	int													_epoll_fd;
 
 public :
 	Server();

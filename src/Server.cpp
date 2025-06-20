@@ -166,6 +166,14 @@ void	Server::start()
 {
 	if (_socket_fd == INVALID)
 		return ;
+	
+	_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+
+	if (add_fd_to_epoll(_epoll_fd, _socket_fd) != OK)
+	{
+		stop("epoll_ctl");
+		return;
+	}
 
 	if (bind(_socket_fd, reinterpret_cast<sockaddr*>(&_serv_addr), sizeof(_serv_addr)) != OK)
 	{
@@ -184,34 +192,57 @@ void	Server::start()
 
 void	Server::update()
 {
+	epoll_event events[MAX_EVENTS];
 	while (_socket_fd != INVALID)
 	{
-		struct sockaddr_in  client_addr;
-        socklen_t           client_addr_len = sizeof(client_addr);
-        
 		signal(SIGINT, &signal_handler);
+		int nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
+		if (nfds == INVALID)
+		{
+			perror("epoll_wait");
+			break;
+		}
 
-		int socket_client = accept(_socket_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_addr_len);
-		
-		if (socket_client < 0) {
-			stop("accept");
-            return ;
-        }
-        else
-        {
-            char buffer[4064];
-            std::memset(buffer, 0, sizeof(buffer));
-            int bytes_read = read(socket_client, buffer, sizeof(buffer) - 1);
-            if (bytes_read < 0) {
-                perror("read");
-            } else {
-                std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
-                // Ici lire la requete dans une fonction a part qui switch entre GET POST DELETE ERROR
-                write(socket_client, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 50 \r\nConnection: close\r\n\r\nWebserv", 92);
+		for (int i=0; i < nfds; ++i)
+		{
+			if (events[i].data.fd == _socket_fd) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
+			{
+				struct sockaddr_in  client_addr;
+       			socklen_t           client_addr_len = sizeof(client_addr);
+
+				int socket_client = accept(_socket_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_addr_len);
+				if (socket_client == INVALID)
+				{
+					perror("accept");
+					continue;
+				}
+
+				if (add_fd_to_epoll(_epoll_fd, socket_client) != OK)
+					continue;
 			}
-        }
-        close(socket_client);
-	}
+			else	//cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
+			{
+				int socket_client = events[i].data.fd;
+				char buffer[4064];
+				std::memset(buffer, 0, sizeof(buffer));
+
+				int bytes_read = read(socket_client, buffer, sizeof(buffer) - 1);
+            	if (bytes_read < 0)
+				{
+                	perror("read");
+            	}
+				else
+				{
+					std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
+					// Ici lire la requete dans une fonction a part qui switch entre GET POST DELETE ERROR
+					write(socket_client, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 50 \r\nConnection: close\r\n\r\nWebserv", 92);
+				}
+				close(socket_client);
+				epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, socket_client, NULL);
+			}
+		}
+    }
+
 }
 
 void	Server::stop(const std::string &msg)

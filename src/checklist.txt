@@ -1,0 +1,44 @@
+┌────────────────────────────┐
+│   Lire la request-line     │ ← ex: "GET /index.html HTTP/1.1"
+└────────────┬───────────────┘
+             ▼
+  ┌───────────────────────────────┐
+  │ Vérifier method / URI / vers. │
+  └────┬─────────────┬────────────┘
+       ▼             ▼
+ [method valide ?] [URI vide / commence pas par "/" ?] → 400
+       │             │
+ [GET / POST / DELETE ?]          [contient ".." ?] → 403
+       │             │
+ [Sinon] → 405        [caractères invalides ?] → 400
+                     [trop long (>2048) ?] → 414
+                     [version ≠ HTTP/1.1 ?] → 505
+
+             ▼
+  ┌────────────────────────────┐
+  │     Headers obligatoires   │
+  └────────────┬───────────────┘
+               ▼
+    [Host manquant ?] → 400
+    [POST → Content-Length/Type manquants ?] → 411 / 400
+    [Content-Length + Transfer-Encoding ?] → 400
+
+               ▼
+  ┌────────────────────────────┐
+  │ Résolution de l’URI en path│
+  └────────────┬───────────────┘
+               ▼
+ [Fichier/dossier existe ?] → 404
+ [Pas un fichier ?] → 403
+ [Pas les droits (lecture/écriture) ?] → 403
+
+               ▼
+  ┌────────────────────────────┐
+  │     Lancer le handler GET/ │
+  │     POST/DELETE approprié │
+  └────────────────────────────┘
+
+               ▼
+  ┌────────────────────────────┐
+  │   Générer réponse (200 OK) │
+  └────────────────────────────┘

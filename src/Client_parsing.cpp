@@ -36,12 +36,14 @@ void	Client::handleMethodLine(std::string& line)
         return(handleError(414));
     if (version != "HTTP/1.1")
         return(handleError(505));
+    if (isDirectory(URI)) // TODO dois etre deplacer dans handleget post delete !
+        return(handleError(403));
     // else
     // {
     //     std::string tmp = URI;
     //     this->URI = root + tmp;
     // }
-        // stat pour dossier ?
+
 	// TODO : Ajouter protection contre les chemins hors root
     
     return ;

@@ -9,7 +9,7 @@ void	Client::handleGet() {
 	if (access(URI.c_str(), R_OK) != 0)
 		return(handleError(403));
 	// if (HeadersCorrect("GET") != OK)
-	// 	handleError(500); // changer car je ne sais pas quel code ici
+	// 	handleError(400);
 	std::ifstream	file(URI.c_str());
 	if (!file.is_open())
 		return (handleError(500));

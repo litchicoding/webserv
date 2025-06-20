@@ -27,3 +27,17 @@ std::string Client::getMIME(std::string& URI)
 		contentType = "text/plain";
     return contentType;
 }
+
+bool	Client::URI_Not_Printable(std::string& URI)
+{
+	for (size_t i = 0; i < URI.length(); i++)
+	{
+		char c = URI[i];
+		if (!(c == 95 ||
+			(c >= 45 && c <= 57) ||
+			(c >= 64 && c <= 90) ||
+			(c >= 97 && c <= 122)))
+			return true;
+	}
+	return false;
+}

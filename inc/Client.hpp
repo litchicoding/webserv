@@ -26,6 +26,7 @@ private:
 	void			handlePost();
 	void			handleDelete();
 	std::string		getMIME(std::string& URI);
+	bool			URI_Not_Printable(std::string& URI);
 
 public:
 	Client(int client_fd, sockaddr_in client_adrr);

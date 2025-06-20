@@ -22,23 +22,28 @@ std::string	Client::collect_request() {
 void	Client::handleMethodLine(std::string& line)
 {
     std::istringstream  iss(line);
-	iss >> this->method >> this->URI >> this->version;
-    
+	if (!(iss >> this->method >> this->URI >> this->version))
+        return(handleError(400));
 	if (method != "GET" && method != "POST" && method != "DELETE")
         return(handleError(405));
 	if (URI.empty() || URI[0] != '/')
         return(handleError(400));
+    if (URI.find("..") != std::string::npos)
+        return(handleError(403));
+    if (URI_Not_Printable(URI))
+        return(handleError(400));
+    if (URI.size() > 2048)
+        return(handleError(414));
+    if (version != "HTTP/1.1")
+        return(handleError(505));
     // else
     // {
-        path + root + URI
     //     std::string tmp = URI;
     //     this->URI = root + tmp;
     // }
-	if (URI.find("..") != std::string::npos)
-        return(handleError(403));
-	if (version != "HTTP/1.1")
-        return(handleError(505));
-	// rajouter si fichier sors du root du config ?? 403
+        // stat pour dossier ?
+	// TODO : Ajouter protection contre les chemins hors root
+    
     return ;
 }
 

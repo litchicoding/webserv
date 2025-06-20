@@ -263,11 +263,13 @@ void	Server::print_server_class()
 
 	std::cout << "	return_code = ";
 	for (std::map<int, std::string>::iterator it = _directives.return_code.begin(); it != _directives.return_code.end(); it++)
-		std::cout << it->first << " " << it->second << std::endl;
+		std::cout << it->first << " " << it->second;
+	std::cout << std::endl;
 
 	std::cout << "	error_page = ";
 	for (std::map<int, std::string>::iterator it = _directives.error_page.begin(); it != _directives.error_page.end(); it++)
-		std::cout << it->first << " " << it->second << std::endl;
+		std::cout << it->first << " " << it->second;
+	std::cout << std::endl;
 	
 	for (std::vector<t_location>::iterator it = _locations.begin(); it < _locations.end(); it++)
 	{

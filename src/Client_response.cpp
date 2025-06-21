@@ -1,11 +1,17 @@
 #include "../inc/Client.hpp"
 
+struct stat st;
+
 void	Client::handleGet() {
 	if (access(URI.c_str(), F_OK) != 0)
 	{
 		std::cout << RED "ACCESS OUUUUU" RESET << std::endl;
 		return(handleError(404));
 	}
+	if (stat(URI.c_str(), &st) != 0)
+		return(handleError(500));
+	if (!S_ISREG(st.st_mode))
+		return(handleError(404));
 	if (access(URI.c_str(), R_OK) != 0)
 		return(handleError(403));
 	// if (HeadersCorrect("GET") != OK)

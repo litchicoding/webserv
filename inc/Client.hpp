@@ -4,16 +4,16 @@
 
 class Client {
 private:
-	int									socket_fd;
-	std::string							method;
-	std::string							URI;
-	std::string							version;
-	std::string							request;
-	std::string							body;
-	std::map<std::string, std::string>	headersMap;
-	struct sockaddr_in					client_addr;
-	std::string							response;
-	std::string							root;
+	int									_socket_fd;
+	std::string							_method;
+	std::string							_URI;
+	std::string							_version;
+	std::string							_request;
+	std::string							_body;
+	std::map<std::string, std::string>	_headersMap;
+	struct sockaddr_in					_client_addr;
+	std::string							_response;
+	std::string							_root;
 
 	void			handleError(int code);
 	void			buildResponse();

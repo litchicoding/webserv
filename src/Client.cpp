@@ -1,8 +1,8 @@
 #include "../inc/Client.hpp"
 
 Client::Client(int client_fd, sockaddr_in client_adrr) {
-	this->socket_fd = client_fd;
-	this->client_addr = client_adrr;
+	this->_socket_fd = client_fd;
+	this->_client_addr = client_adrr;
 }
 
 Client::~Client() {}
@@ -63,19 +63,19 @@ void	Client::handleError(int code) {
 
 
 void	Client::buildResponse() {
-	if (method == "GET")
+	if (_method == "GET")
 		handleGet();
-	else if (method == "POST")
+	else if (_method == "POST")
 		handlePost();
-	else if (method == "DELETE") {
+	else if (_method == "DELETE") {
 		handleDelete();
 	}
 }
 
 
 void	Client::parseRawRequest() {
-	this->request = collect_request();
-	std::istringstream  iss(this->request);
+	this->_request = collect_request();
+	std::istringstream  iss(this->_request);
 	std::string line;
 	bool isFirstLine = true;
 	bool headers = true;
@@ -98,14 +98,14 @@ void	Client::parseRawRequest() {
 	}
 
 	// Pour tester !!!
-	std::cout << GREEN "Method = " << this->method << std::endl;
-	std::cout << "URI = " << this->URI << std::endl;
-	std::cout << "version = " << this->version << std::endl;
+	std::cout << GREEN "Method = " << this->_method << std::endl;
+	std::cout << "URI = " << this->_URI << std::endl;
+	std::cout << "version = " << this->_version << std::endl;
 	std::cout << "Headers:" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = this->headersMap.begin(); it != this->headersMap.end(); ++it) {
+	for (std::map<std::string, std::string>::const_iterator it = this->_headersMap.begin(); it != this->_headersMap.end(); ++it) {
 		std::cout << it->first << ": " << it->second << std::endl;
 	}
-	std::cout << "Body : \n" << this->body << RESET << std::endl;
+	std::cout << "Body : \n" << this->_body << RESET << std::endl;
 }
 
 
@@ -120,21 +120,21 @@ void	Client::parseRawRequest() {
 /***************************************************************/
 
 int	Client::getSocketFd() {
-	return this->socket_fd;
+	return this->_socket_fd;
 }
 
 std::string Client::getMethod() {
-	return this->method;
+	return this->_method;
 }
 
 std::string Client::getURI() {
-	return this->URI;
+	return this->_URI;
 }
 
 std::string Client::getVersion() {
-	return this->version;
+	return this->_version;
 }
 
 std::string Client::getRequest() {
-	return this->request;
+	return this->_request;
 }

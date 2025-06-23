@@ -22,26 +22,26 @@ std::string	Client::collect_request() {
 void	Client::handleMethodLine(std::string& line)
 {
     std::istringstream  iss(line);
-	if (!(iss >> this->method >> this->URI >> this->version))
+	if (!(iss >> this->_method >> this->_URI >> this->_version))
         return(handleError(400));
-	if (method != "GET" && method != "POST" && method != "DELETE")
+	if (_method != "GET" && _method != "POST" && _method != "DELETE")
         return(handleError(405));
-	if (URI.empty() || URI[0] != '/')
+	if (_URI.empty() || _URI[0] != '/')
         return(handleError(400));
-    if (URI.find("..") != std::string::npos)
+    if (_URI.find("..") != std::string::npos)
         return(handleError(403));
-    if (URI_Not_Printable(URI))
+    if (URI_Not_Printable(_URI))
         return(handleError(400));
-    if (URI.size() > 2048)
+    if (_URI.size() > 2048)
         return(handleError(414));
-    if (version != "HTTP/1.1")
+    if (_version != "HTTP/1.1")
         return(handleError(505));
-    if (isDirectory(URI)) // TODO dois etre deplacer dans handleget post delete !
-        return(handleError(403));
+    // if (isDirectory(_URI)) // TODO dois etre deplacer dans handleget post delete !
+    //     return(handleError(403));
     // else
     // {
     //     std::string tmp = URI;
-    //     this->URI = root + tmp;
+    //     this->_URI = root + tmp;
     // }
 
 	// TODO : Ajouter protection contre les chemins hors root
@@ -58,10 +58,10 @@ void	Client::handleHeaders(std::string& line)
     std::string value = line.substr(delimiterPos + 1);
     if (key.empty())
         return(handleError(400));
-    this->headersMap[key] = value;
+    this->_headersMap[key] = value;
 }
 
 void    Client::handleBody(std::string& line)
 {
-    this->body.append(line + "\n");
+    this->_body.append(line + "\n");
 }

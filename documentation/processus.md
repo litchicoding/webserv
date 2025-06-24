@@ -8,7 +8,17 @@ Source :
 Étapes :
 
 * [Configuration du serveur](#configuration-du-serveur)
+* [Établir une conexion TCP = Client-Server](#etablir-une-connexion-client-server-tcp)
+* [Traiter la requete - Théorie](#traiter-la-requete-http---théorie)
+* [Traiter la requete - Pratique](#traiter-la-requete-http---pratique)
 
+-Accepter les connexions sur chaque socket.
+
+-Lire "Host:" et "path" pour déterminer quel server et quel location appliquer.
+
+-Traiter la requete et répondre.
+
+-Gérer chaque requête de manière non-bloquante via epoll().
 
 ## Configuration du serveur
 
@@ -17,6 +27,41 @@ Source :
 Commencer par analyser le fichier de configuration, ce qui va nous aider à déterminer les paramètres de un ou plusieurs **virtual-server**.
 
 Pour chaque *server block* on instancie un object de la classe *Server* qui contiendra tout un tat d'informations nécessaires pour ensuite établir une connexion avec le client, recevoir une http request, la traiter et y répondre correctement.
+
+Chaque bloc server doit être associé à une ou plusieurs location!
+
+À creuser :
+->	Principe de serveur par défaut, c'est à dire avec un port/adresse mais aussi d'autres valeurs par défaut. Le fait est qu'un server peut etre définit explicitement comme serveur par défaut, donc propablement qu'on doit pas en set un en plus si c'est spécifié dans le fichier de config.
+
+
+#### Exemple contenu du fichier de configuration :
+```
+server {
+    listen 80;
+    server_name example.com;
+
+    location / {
+        root /var/www/html;
+        index index.html;
+    }
+
+    location /images/ {
+        root /data/images;
+    }
+}
+```
+
+#### Ce que ce fichier dit :
+📡 listen 80; → écoute sur le port 80
+
+🌐 server_name example.com; → ce bloc s’applique à ce nom de domaine
+
+📁 location / → quand un utilisateur accède à /, on va chercher dans /var/www/html
+
+📄 index index.html; → si l'utilisateur demande /, on sert /var/www/html/index.html
+
+🖼️ location /images/ → les URLs comme /images/cat.jpg chercheront le fichier /data/images/cat.jpg
+
 
 ### Tokenisation
 
@@ -175,7 +220,7 @@ Quand la communication prend fin, on ferme le socket du client, de la meme facon
 close(new_socket);
 ```
 
-## Traiter la requete HTTP
+## Traiter la requete HTTP - Théorie
 
 Nous sommes à présent au stade où :
 - Le client (par exemple un navigateur web, ou un terminal) envoie une requete HTTP au serveur HTTP.
@@ -193,7 +238,7 @@ Pour afficher la page, le navigateur va chercher le fichier `index.html` chez un
 
 Ainsi, si vous tapez `www.example.com` dans le navigateur web, celui-ci recompose l'URL/l'adresse comme suit : `http://www.example.com:80`. C'est ce que les navigateurs web envoient aux serveurs chaque fois que l'on navigue sur les pages internet. 
 
-Si le serveur est configuré pour certianes pages par défaut, alors par exemple une page peut s'afficher lorsqu'on visite un dossier sur le serveur. Cette page en question est détérminée par le nom du fichier. Certains serveurs ont `public.html` et d'autres configurés avec `index.html`.
+Si le serveur est configuré pour certaines pages par défaut, alors par exemple une page peut s'afficher lorsqu'on visite un dossier sur le serveur. Cette page en question est détérminée par le nom du fichier. Certains serveurs ont `public.html` et d'autres configurés avec `index.html`.
 
 ### HTTP Methodes
 
@@ -258,14 +303,14 @@ Il y a beaucoup de cas différents à considérer, en voici un exemple :
 - Ou le fichier est-il absent ?
 - Et s'il existe, le client a-t-il la permission d'accéder à ce fichier ?
 
-Selon la réponse à ces questions on va complèter la réponse HTTP :
+Selon la réponse à ces questions on va compléter la réponse HTTP :
 -	On selectionne le *status code* adéquat. 
 -	On ouvre le fichier, on stocke les données dans un variable, ce qui permet de renseigner *Content-Type*.
 -	On compte les bytes lus puis on assigne la valeur à *Content-Length*.
 -	Enfin pour conclure le *Header* on ajoute une ligne vide à la fin.
 -	Si besoin de contenu dans le *Body* on concatène les données à la réponse.
 
-Lorsque que la réponse est ***complète et conforme au format HTTP*** on peut l'envoyer au client.
+Lorsque que la réponse est ***compléte et conforme au format HTTP*** on peut l'envoyer au client.
 
 ### Status Code et Status Message
 
@@ -275,3 +320,64 @@ Le premier chiffre du *status code* indique l'une des 5 classes standards de ré
 
 Donc si on ne trouve pas un fichier demandé par le client ou si il n'a pas la permission on renvoie le *status code* approprié.
 
+## Traiter la requete HTTP - Pratique
+
+Voici une tentative de lister toutes les étapes du **parsing de la requete** afin de **convenir d'une réponse** adéquate :
+
+-	Créer un buffer assez large et l'initialiser à zéro/NULL.
+-	Stocker la requete dans le buffer et concerver le nombre de bytes lus avec `read()`, pour connaitre la taille de la requete.
+-	Analyser la *Request Line* :
+	-	Récupérer le type de méthode.
+	-	Récupérer le path et identifier le type d'extension du fichier.
+	-	Que doit on faire avec le protocol, on doit vérifier qu'il match ??? (à vérifier!)
+
+Si erreur :
+-	Chercher si le code de l'erreur correspond à des pages stockées en interne et configurées dans le serveur avec error_page.
+-	Pour POST, limiter la taille du body avec client_max_body_size.
+
+
+https://nginx.org/en/docs/http/request_processing.html
+
+Comment Nginx process la selection de paramétres :
+-	Comparer "Host" avec le nom du serveur. si `server_name == ""` alors le virtual-server peut match avec une request sans la mention `Host` dans son header. Sinon on cherche un match.
+-	**Selection du block location** :
+	-	nginx cherche d'abord le prefix location (le path?) le plus spécifique peu importe l'ordre des block. Si il y un seul block avec "/" alors on va le choisir mais s'il en existe un plus précis dans le match c'est celui-ci qui sera selectionné.
+	- Lorsque un match est trouvé on utilise toutes les
+
+| Directive         | Action attendue                                |                                                |
+| ----------------- | ---------------------------------------------- | ---------------------------------------------- |
+| `listen [IP]:[port]`   | Créer un socket sur IP\:port                |
+| `server_name`          | Comparer avec `Host:` de la requête HTTP    |
+| `error_page code path` | Retourner ce fichier si `code` est retourné |
+| `client_max_body_size` | Limiter la taille du body pour POST/PUT     |
+| `methods`         | Autoriser seulement les méthodes données       |                                                |
+| `return code URL` | Redirection                                    |                                                |
+| `root`            | Répertoire associé à cette URL                 |                                                |
+| `index`           | Fichier par défaut à retourner dans un dossier |                                                |
+| \`autoindex on    | off\`                                          | Si fichier manquant, lister contenu du dossier |
+| `cgi_pass path`   | Utiliser ce programme CGI selon extension      |                                                |
+| `upload_dir path` | Sauvegarder les uploads ici                    |                                                |
+
+### Méthode GET
+
+*	[Documentation GET](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/GET)
+
+Dans le cas où la méthode est `GET`, le **client veut récupérer des informations à partir d'un ressource spécifiée, sans modifier les données**.
+
+Que faire pour la traiter :
+-	Décider quel fichier on doit envoyer, analyser l'uri/path :
+	-	Si le `path == "/"` -> on renvoie l'index par défaut, et on compléte le *Header* de réponse en cohérence.
+	-	Sinon selon l'extension du fichier renvoyer le type de contenu associé, exemple `path_ext == "jpg" || "JPG"` -> on va envoyer une image, compléter le *Header* en fonction avec "Content-Type: image/jpg\r\n". Vérifier tous les cas possibles css, js, ttf, html etc.
+-	**status** : 
+	-	`200` (OK) -> la demande a réussie.
+	-	`404` (NOT FOUND) -> n'est pas trouvé par le serveur.
+	-	`400` (WRONG REQUEST) -> la requete a mal été formatée.
+-	Ne doit pas avoir de body, la facon dont on gère l'erreur est indéfini, on peut renvoyer `status 400`.
+
+À tester :
+-	Les requetes GET doitvent toujours renvoyer les memes résultats si on les effectue plusieurs fois.
+
+### Méthode POST
+
+Dans le cas où la méthode est `POST` :
+-	

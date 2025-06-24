@@ -181,7 +181,7 @@ Nous sommes à présent au stade où :
 - Le client (par exemple un navigateur web, ou un terminal) envoie une requete HTTP au serveur HTTP.
 - Le server recoit et proccesse la demande et envoie une reponse HTTP au client.
 
-### Le Client HTTP
+### La requete coté Client HTTP
 
 Le client à besoin de se connecter au serveur à tout moment. Le serveur ne pas se connecter au client, c'est donc le client qui *initie* la connexion.
 
@@ -207,7 +207,7 @@ Il existe en tout 9 méthodes HTTP :
 - **HEAD** -> Aller chercher une information à propos d'une URL.
 - **PUT** -> Stocker une URL.
 
-### Le serveur HTTP
+### La requete coté serveur HTTP
 
 Lorsqu'on recoit une requete il faut ensuite y fournir une réponse appropriée.
 
@@ -247,5 +247,31 @@ Les *Headers* exigent au minimum ces 3 renseignements :
 
 Donc nous devons nous assurer du nombre de bytes que l'on envoie dans la partie *Body* et le renseigner dans `Content-Length` ainsi que du type de donnée renvoyé et le spécifier dans `Content-Type`.
 
+### Traiter une  requete et y répondre
 
+La première chose à considérer c'est la 1ère ligne du *Header* : la **request line**, ou **request header**.
+
+Donc si on recoit `GET /info.html HTTP/1.1`, nous devons chercher le fichier `info.html` dans le dossier courant, car le slash au debut du path `/` signifie que ***le fichier se trouve dans le dossier root*** du serveur. Dans un autre cas comme `/message/info.html` on chercherait dans le dossier "message" pour trouver le fichier "index.html"
+
+Il y a beaucoup de cas différents à considérer, en voici un exemple :
+- Est-ce que le fichier (page web) est présent ?
+- Ou le fichier est-il absent ?
+- Et s'il existe, le client a-t-il la permission d'accéder à ce fichier ?
+
+Selon la réponse à ces questions on va complèter la réponse HTTP :
+-	On selectionne le *status code* adéquat. 
+-	On ouvre le fichier, on stocke les données dans un variable, ce qui permet de renseigner *Content-Type*.
+-	On compte les bytes lus puis on assigne la valeur à *Content-Length*.
+-	Enfin pour conclure le *Header* on ajoute une ligne vide à la fin.
+-	Si besoin de contenu dans le *Body* on concatène les données à la réponse.
+
+Lorsque que la réponse est ***complète et conforme au format HTTP*** on peut l'envoyer au client.
+
+### Status Code et Status Message
+
+Les **status code** sont emis par le serveur en réponse à une demande/requete faite par un client. Cela inclut les codes provenant de `IETF Request Comments (RFCs)`, d'autres spécifications et puis des codes utilisés dans des applications HTTP.
+
+Le premier chiffre du *status code* indique l'une des 5 classes standards de réponse. Les phrases du message indiquées sont typiques, mais toute alternative lisible par l'homme peut être fournie. Sauf indication contraire, le code d'état fait partie de la norme HTTP/1.1 (RFC 7231).
+
+Donc si on ne trouve pas un fichier demandé par le client ou si il n'a pas la permission on renvoie le *status code* approprié.
 

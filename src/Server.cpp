@@ -164,9 +164,14 @@ void	Server::setMethods(const std::vector<std::string> &methods) { _directives.m
 
 void	Server::start()
 {
-	if (_socket_fd == INVALID)
+	if ((_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) != OK) {
+		std::cout << RED << "Error: socket()" << RESET << std::endl;
 		return ;
-	
+	}
+	memset(_serv_addr.sin_zero, '\0', sizeof(_serv_addr.sin_zero));
+	_serv_addr.sin_family = AF_INET;
+	_serv_addr.sin_port = 
+
 	_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 
 	if (add_fd_to_epoll(_epoll_fd, _socket_fd) != OK)
@@ -180,7 +185,6 @@ void	Server::start()
 		stop("bind");
 		return ;
 	}
-
 	if (listen(_socket_fd, 5) != OK)
 	{
 		stop("listen");

@@ -15,21 +15,21 @@ int	main(int ac, char **av)
 		return ERROR;
 	}
 	// webserv loop = for each server in the serv_group start and update
-	// std::vector<Server>::iterator it = serv_group.begin();
-	// while (it != serv_group.end())
-	// {
-	// 	it->start();
-	// 	it++;
-	// }
-	// while (true)
-	// {
-	// 	std::vector<Server>::iterator it = serv_group.begin();
-	// 	while (it != serv_group.end())
-	// 	{
-	// 		it->update();
-	// 		it++;
-	// 	}
-	// }
+	std::vector<Server*>::iterator current_serv = serv_group.begin();
+	while (current_serv != serv_group.end())
+	{
+		(*current_serv)->start();
+		current_serv++;
+	}
+	while (true)
+	{
+		current_serv = serv_group.begin();
+		while (current_serv != serv_group.end())
+		{
+			(*current_serv)->update();
+			current_serv++;
+		}
+	}
 	Server::delete_server_group(serv_group);
 	return EXIT_SUCCESS;
 }

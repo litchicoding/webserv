@@ -80,7 +80,7 @@ int	parse_config_file(const std::string &config_file, std::vector<Server*> &serv
 	file.close();
 	
 	// just for debug -- print every token node
-	print_token_type(&tokenList);
+	// print_token_type(&tokenList);
 
 	// parse every token node and create new Server object accordingly, store them in serv_group
 	std::vector<t_tokenConfig>::iterator it = tokenList.begin();
@@ -91,6 +91,7 @@ int	parse_config_file(const std::string &config_file, std::vector<Server*> &serv
 		it++;
 	}
 
+	// just for debug -- print all data of the server object
 	for (std::vector<Server*>::iterator it = serv_group.begin(); it != serv_group.end(); it++)
 		(*it)->print_server_class();
 

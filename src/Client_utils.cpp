@@ -14,15 +14,15 @@ std::string Client::getMIME(std::string& URI)
 	else if (URI.find(".js") != std::string::npos)
 		contentType = "text/javascript";
 	else if (URI.find(".gif") != std::string::npos)
-        return "image/gif";
+        contentType = "image/gif";
 	else if (URI.find(".otf") != std::string::npos)
-        return "font/otf";
+        contentType = "font/otf";
     else if (URI.find(".svg") != std::string::npos)
-        return "image/svg+xml";
+        contentType = "image/svg+xml";
 	else if (URI.find(".css") != std::string::npos)
 		contentType = "text/css";
     else if (URI.find(".ico") != std::string::npos)
-        return "image/x-icon";
+        contentType = "image/x-icon";
 	else
 		contentType = "text/plain";
     return contentType;

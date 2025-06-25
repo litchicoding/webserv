@@ -24,6 +24,7 @@
 # include <vector>
 # include <map>
 # include <sys/socket.h>
+# include <sys/stat.h>
 # include <unistd.h>
 # include <netinet/in.h>
 # include <fcntl.h>

@@ -27,6 +27,7 @@ private:
 	void			handleDelete();
 	std::string		getMIME(std::string& URI);
 	bool			URI_Not_Printable(std::string& URI);
+	int				HeadersCorrect(std::string method);
 
 public:
 	Client(int client_fd, sockaddr_in client_adrr);
@@ -35,7 +36,7 @@ public:
 	void			start();
 
 	// getter
-	int         getSocketFd(void);
+	int			getSocketFd(void);
 	std::string getMethod();
 	std::string getURI();
 	std::string getVersion();

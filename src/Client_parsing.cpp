@@ -21,7 +21,6 @@ std::string	Client::collect_request() {
 
 void	Client::handleMethodLine(std::string& line)
 {
-	printf("CoucouLesCongolais");
 	std::istringstream  iss(line);
 	if (!(iss >> this->_method >> this->_URI >> this->_version))
 		return(handleError(400));

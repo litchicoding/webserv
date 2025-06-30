@@ -17,17 +17,33 @@
 # include <cstdlib>
 # include <cstdio>
 # include <csignal>
-# include <vector>
-# include <fstream>
 # include <string>
-#include <fcntl.h>
+
+# include <fstream>
+# include <sstream>
+
+# include <vector>
+# include <map>
+
+# include <unistd.h>
+# include <fcntl.h>
+# include <netinet/in.h>
+# include <sys/socket.h>
+# include <sys/stat.h>
+# include <sys/epoll.h>
+# include <sys/types.h>
+# include <netdb.h>
 
 # include "Server.hpp"
+# include "Client.hpp"
+# include "Listen.hpp"
 # include "parser.hpp"
 
 class	Server;
+class	Client;
+class	Listen;
 
-extern Server	*g_server_instance;
+extern Listen	*g_global_instance;
 
 void	signal_handler(int signal);
 int		add_fd_to_epoll(int epoll_fd, int fd);

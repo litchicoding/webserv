@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
-/*****************************************************************************/
-/* Constructors **************************************************************/
+/******************************************************************************/
+/* Constructor and Deconstructor **********************************************/
 
 Server::Server()
 {
@@ -19,23 +19,8 @@ Server::Server()
 	// _serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	/* NEW CONSTRUCTION */
-	_socket_fd = INVALID;
+	// _socket_fd = INVALID;
 }
-
-Server::Server(const Server &copy) { *this = copy; }
-
-Server&	Server::operator=(const Server &copy)
-{
-	// TO DO (ou pas ? doit on coder les classes sous forme canonique pour ce projet?)
-	(void)copy;
-	// if (this != &copy)
-	// {
-	// }
-	return *this;
-}
-
-/*****************************************************************************/
-/* Deconstructor *************************************************************/
 
 Server::~Server()
 {
@@ -49,6 +34,172 @@ Server::~Server()
 }
 
 /*****************************************************************************/
+/* Member Functions **********************************************************/
+
+// void	Server::start()
+// {
+// 	if ((_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) != OK) {
+// 		std::cout << RED << "Error: socket()" << RESET << std::endl;
+// 		return ;
+// 	}
+// 	memset(_serv_addr.sin_zero, '\0', sizeof(_serv_addr.sin_zero));
+// 	_serv_addr.sin_family = AF_INET;
+// 	_serv_addr.sin_port = 
+
+// 	_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+
+// 	if (add_fd_to_epoll(_epoll_fd, _socket_fd) != OK)
+// 	{
+// 		stop("epoll_ctl");
+// 		return;
+// 	}
+
+// 	if (bind(_socket_fd, reinterpret_cast<sockaddr*>(&_serv_addr), sizeof(_serv_addr)) != OK)
+// 	{
+// 		stop("bind");
+// 		return ;
+// 	}
+// 	if (listen(_socket_fd, 5) != OK)
+// 	{
+// 		stop("listen");
+// 		return ;
+// 	}
+
+// 	std::cout << BLUE << "🟢 Serveur en écoute sur le port 8080..." << RESET << std::endl;
+// }
+
+// void	Server::update()
+// {
+// 	epoll_event events[MAX_EVENTS];
+// 	while (_socket_fd != INVALID)
+// 	{
+// 		signal(SIGINT, &signal_handler);
+// 		int nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
+// 		if (nfds == INVALID)
+// 		{
+// 			perror("epoll_wait");
+// 			break;
+// 		}
+
+// 		for (int i=0; i < nfds; ++i)
+// 		{
+// 			if (events[i].data.fd == _socket_fd) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
+// 			{
+// 				struct sockaddr_in  client_addr;
+//        			socklen_t           client_addr_len = sizeof(client_addr);
+
+// 				int socket_client = accept(_socket_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_addr_len);
+// 				if (socket_client == INVALID)
+// 				{
+// 					perror("accept");
+// 					continue;
+// 				}
+
+// 				if (add_fd_to_epoll(_epoll_fd, socket_client) != OK)
+// 					continue;
+// 			}
+// 			else	//cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
+// 			{
+// 				int socket_client = events[i].data.fd;
+// 				char buffer[4064];
+// 				std::memset(buffer, 0, sizeof(buffer));
+
+// 				int bytes_read = read(socket_client, buffer, sizeof(buffer) - 1);
+//             	if (bytes_read < 0)
+// 				{
+//                 	perror("read");
+//             	}
+// 				else
+// 				{
+// 					std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
+// 					// Ici lire la requete dans une fonction a part qui switch entre GET POST DELETE ERROR
+// 					write(socket_client, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 50 \r\nConnection: close\r\n\r\nWebserv", 92);
+// 				}
+// 				close(socket_client);
+// 				epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, socket_client, NULL);
+// 			}
+// 		}
+//     }
+
+// }
+
+// void	Server::stop(const std::string &msg)
+// {
+// 	if (_socket_fd == INVALID)
+// 		return ;
+// 	if (!msg.empty())
+// 		std::cout << RED << "Error: " << msg << "()" << RESET << std::endl;
+// 	close(_socket_fd);
+// 	_socket_fd = INVALID;
+//    	std::cout << GREEN << "🛑 Connexion fermée." << RESET << std::endl;
+// }
+
+void	Server::delete_server_group(std::vector<Server*> &server)
+{
+	for (std::vector<Server*>::iterator it = server.begin(); it != server.end(); it++)
+		delete *it;
+}
+
+void	Server::print_server_class()
+{
+	std::cout << "SERVER BLOCK ----------------------------" << std::endl;
+	// std::cout << "socket_fd = " << _socket_fd << std::endl;
+	
+	std::cout << "Directives = " << std::endl;
+
+	for (std::vector<std::string>::iterator it = _server_name.begin(); it != _server_name.end(); it++)
+		std::cout << "	server_name = " << *it << std::endl;
+
+	for (std::vector<t_listen>::iterator it = _listen.begin(); it != _listen.end(); it++)
+		std::cout << "	listen = " << it->port_address << "(" << it->ip << "/" << it->port << ")" << std::endl;
+
+	if (_directives.autoindex)
+		std::cout << "	autoindex = on" << std::endl;
+	else
+		std::cout << "	autoindex = off" << std::endl;
+	std::cout << "	client_max_body_size = " << _directives.client_max_body_size << std::endl;
+	std::cout << "	root = " << _directives.root << std::endl;
+
+	std::cout << "	index = ";
+	for (std::vector<std::string>::iterator it = _directives.index.begin(); it != _directives.index.end(); it++)
+		std::cout << *it << " ";
+	std::cout << std::endl;
+
+	std::cout << "	methods = ";
+	for (std::vector<std::string>::iterator it = _directives.methods.begin(); it != _directives.methods.end(); it++)
+		std::cout << *it << " ";
+	std::cout << std::endl;
+
+	std::cout << "	return_code = ";
+	for (std::map<int, std::string>::iterator it = _directives.return_code.begin(); it != _directives.return_code.end(); it++)
+		std::cout << it->first << " " << it->second;
+	std::cout << std::endl;
+
+	std::cout << "	error_page = ";
+	for (std::map<int, std::string>::iterator it = _directives.error_page.begin(); it != _directives.error_page.end(); it++)
+		std::cout << it->first << " " << it->second;
+	std::cout << std::endl;
+	
+	for (std::vector<t_location>::iterator it = _locations.begin(); it < _locations.end(); it++)
+	{
+		std::cout << "Location block = " << "URI = " << it->uri_path << std::endl;
+		std::map<std::string, std::vector<std::string> >::iterator a = it->directives.begin();
+		while (a != it->directives.end())
+		{
+			std::cout << "	" << a->first << " ";
+			std::vector<std::string>::iterator ite = a->second.begin();
+			while (ite != a->second.end())
+			{
+				std::cout << *ite << " " << std::endl;
+				ite++;
+			}
+			a++;
+		}
+	}
+}
+
+
+/*****************************************************************************/
 /* Setters *******************************************************************/
 
 int	Server::setListen(const std::string &arg)
@@ -56,15 +207,15 @@ int	Server::setListen(const std::string &arg)
 	t_listen	listen;
 	size_t		pos;
 
-	listen.original = arg;
+	listen.port_address = arg;
 	pos = arg.find(":", 0);
 	if (pos != std::string::npos) {
-		listen.address = arg.substr(0, pos);
+		listen.ip = arg.substr(0, pos);
 		listen.port = atoi(arg.substr(pos, arg.size() - pos).c_str());
 	}
 	else if (arg.find(".", 0) != std::string::npos || arg == "localhost") {
 		listen.port = 80;
-		listen.address = arg;
+		listen.ip = arg;
 	}
 	else {
 		for (size_t i = 0; i < arg.size(); i++) {
@@ -74,7 +225,7 @@ int	Server::setListen(const std::string &arg)
 			}
 		}
 		listen.port = atoi(arg.c_str());
-		listen.address = "0.0.0.0";
+		listen.ip = "0.0.0.0";
 	}
 	_listen.push_back(listen);
 	return OK;
@@ -159,167 +310,6 @@ void	Server::setIndex(const std::vector<std::string> &index) { _directives.index
 	
 void	Server::setMethods(const std::vector<std::string> &methods) { _directives.methods = methods; }
 
-/*****************************************************************************/
-/* Member Functions **********************************************************/
+/* Getters ***************************************************************************************/
 
-void	Server::start()
-{
-	if ((_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) != OK) {
-		std::cout << RED << "Error: socket()" << RESET << std::endl;
-		return ;
-	}
-	memset(_serv_addr.sin_zero, '\0', sizeof(_serv_addr.sin_zero));
-	_serv_addr.sin_family = AF_INET;
-	_serv_addr.sin_port = 
-
-	_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
-
-	if (add_fd_to_epoll(_epoll_fd, _socket_fd) != OK)
-	{
-		stop("epoll_ctl");
-		return;
-	}
-
-	if (bind(_socket_fd, reinterpret_cast<sockaddr*>(&_serv_addr), sizeof(_serv_addr)) != OK)
-	{
-		stop("bind");
-		return ;
-	}
-	if (listen(_socket_fd, 5) != OK)
-	{
-		stop("listen");
-		return ;
-	}
-
-	std::cout << BLUE << "🟢 Serveur en écoute sur le port 8080..." << RESET << std::endl;
-}
-
-void	Server::update()
-{
-	epoll_event events[MAX_EVENTS];
-	while (_socket_fd != INVALID)
-	{
-		signal(SIGINT, &signal_handler);
-		int nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
-		if (nfds == INVALID)
-		{
-			perror("epoll_wait");
-			break;
-		}
-
-		for (int i=0; i < nfds; ++i)
-		{
-			if (events[i].data.fd == _socket_fd) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
-			{
-				struct sockaddr_in  client_addr;
-       			socklen_t           client_addr_len = sizeof(client_addr);
-
-				int socket_client = accept(_socket_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_addr_len);
-				if (socket_client == INVALID)
-				{
-					perror("accept");
-					continue;
-				}
-
-				if (add_fd_to_epoll(_epoll_fd, socket_client) != OK)
-					continue;
-			}
-			else	//cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
-			{
-				int socket_client = events[i].data.fd;
-				char buffer[4064];
-				std::memset(buffer, 0, sizeof(buffer));
-
-				int bytes_read = read(socket_client, buffer, sizeof(buffer) - 1);
-            	if (bytes_read < 0)
-				{
-                	perror("read");
-            	}
-				else
-				{
-					std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
-					// Ici lire la requete dans une fonction a part qui switch entre GET POST DELETE ERROR
-					write(socket_client, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 50 \r\nConnection: close\r\n\r\nWebserv", 92);
-				}
-				close(socket_client);
-				epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, socket_client, NULL);
-			}
-		}
-    }
-
-}
-
-void	Server::stop(const std::string &msg)
-{
-	if (_socket_fd == INVALID)
-		return ;
-	if (!msg.empty())
-		std::cout << RED << "Error: " << msg << "()" << RESET << std::endl;
-	close(_socket_fd);
-	_socket_fd = INVALID;
-   	std::cout << GREEN << "🛑 Connexion fermée." << RESET << std::endl;
-}
-
-void	Server::delete_server_group(std::vector<Server*> &server)
-{
-	for (std::vector<Server*>::iterator it = server.begin(); it != server.end(); it++)
-		delete *it;
-}
-
-void	Server::print_server_class()
-{
-	std::cout << "SERVER BLOCK ----------------------------" << std::endl;
-	std::cout << "socket_fd = " << _socket_fd << std::endl;
-	
-	std::cout << "Directives = " << std::endl;
-
-	for (std::vector<std::string>::iterator it = _server_name.begin(); it != _server_name.end(); it++)
-		std::cout << "	server_name = " << *it << std::endl;
-
-	for (std::vector<t_listen>::iterator it = _listen.begin(); it != _listen.end(); it++)
-		std::cout << "	listen = " << it->original << "(" << it->address << "/" << it->port << ")" << std::endl;
-
-	if (_directives.autoindex)
-		std::cout << "	autoindex = on" << std::endl;
-	else
-		std::cout << "	autoindex = off" << std::endl;
-	std::cout << "	client_max_body_size = " << _directives.client_max_body_size << std::endl;
-	std::cout << "	root = " << _directives.root << std::endl;
-
-	std::cout << "	index = ";
-	for (std::vector<std::string>::iterator it = _directives.index.begin(); it != _directives.index.end(); it++)
-		std::cout << *it << " ";
-	std::cout << std::endl;
-
-	std::cout << "	methods = ";
-	for (std::vector<std::string>::iterator it = _directives.methods.begin(); it != _directives.methods.end(); it++)
-		std::cout << *it << " ";
-	std::cout << std::endl;
-
-	std::cout << "	return_code = ";
-	for (std::map<int, std::string>::iterator it = _directives.return_code.begin(); it != _directives.return_code.end(); it++)
-		std::cout << it->first << " " << it->second;
-	std::cout << std::endl;
-
-	std::cout << "	error_page = ";
-	for (std::map<int, std::string>::iterator it = _directives.error_page.begin(); it != _directives.error_page.end(); it++)
-		std::cout << it->first << " " << it->second;
-	std::cout << std::endl;
-	
-	for (std::vector<t_location>::iterator it = _locations.begin(); it < _locations.end(); it++)
-	{
-		std::cout << "Location block = " << "URI = " << it->uri_path << std::endl;
-		std::map<std::string, std::vector<std::string> >::iterator a = it->directives.begin();
-		while (a != it->directives.end())
-		{
-			std::cout << "	" << a->first << " ";
-			std::vector<std::string>::iterator ite = a->second.begin();
-			while (ite != a->second.end())
-			{
-				std::cout << *ite << " " << std::endl;
-				ite++;
-			}
-			a++;
-		}
-	}
-}
+std::vector<t_listen>	Server::getListen() const { return _listen; }

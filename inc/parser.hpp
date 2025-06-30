@@ -11,6 +11,7 @@
 # define INVALID_ARG 11
 
 class	Server;
+class	Listen;
 
 typedef enum 	tokenType
 {
@@ -32,7 +33,7 @@ typedef struct	tokenConfig
 
 /* config_parser.c *******************************************************************************/
 
-int		parse_config_file(const std::string &config_file, std::vector<Server*> &serv_group);
+int		parse_config_file(std::string config_file, Listen &listenPorts);
 int		parsing_error(const std::string &msg, int code_error);
 
 /* tokenizer.c ***********************************************************************************/

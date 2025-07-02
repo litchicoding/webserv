@@ -28,7 +28,7 @@ struct sockaddr_in	Listen::createSockaddr(const char *ip, int port)
 	hints.ai_socktype = SOCK_STREAM; // TCP
 	hints.ai_flags = AI_PASSIVE; // pour bind
 	portStr << port;
-	if (getaddrinfo(ip, portStr.str().c_str(), &hints, &res) != OK) {
+	if (getaddrinfo(ip, portStr.str().c_str(), &hints, &res) != 0) {
 		std::cout << RED << "Error: createSockaddr: getaddrinfo failed" << RESET << std::endl;
 		exit(EXIT_FAILURE);
 	}
@@ -39,19 +39,19 @@ struct sockaddr_in	Listen::createSockaddr(const char *ip, int port)
 
 void	Listen::configuration()
 {
-	std::vector<Server*>::iterator	serv = _serv_blocks.begin();
-	std::vector<t_listen>::iterator	listen, listen_end;
+	std::vector<Server>::iterator			serv = _serv_blocks.begin();
+	std::vector<t_listen>::const_iterator	listen, listen_end;
 	t_port							new_port;
 
 	while (serv != _serv_blocks.end())
 	{
-		listen = (*serv)->getListen().begin();
-		listen_end = (*serv)->getListen().end();
+		listen = serv->getListen().begin();
+		listen_end = serv->getListen().end();
 		while (listen != listen_end)
 		{
-			new_port.port_address = (*listen).port_address;
+			new_port.address_port = (*listen).address_port;
 			new_port.port_addr = createSockaddr((*listen).ip.c_str(), (*listen).port);
-			if ((new_port.listen_fd = socket(AF_INET, SOCK_STREAM, 0)) != OK) {
+			if ((new_port.listen_fd = socket(AF_INET, SOCK_STREAM, 0)) == ERROR) {
 				std::cout << RED << "Error: socket()" << RESET << std::endl;
 				exit(EXIT_FAILURE);
 			}
@@ -157,24 +157,28 @@ void	Listen::stop(const std::string &msg)
 /*************************************************************************************************/
 /* Getters ***************************************************************************************/
 
-t_port	Listen::getListeningPort(int listen_fd) const
+std::map<int, t_port>&	Listen::getListeningPorts() { return _listeningPorts; }
+
+// const std::map<int, t_port>&	Listen::getListeningPorts() const { return _listeningPorts; }
+
+t_port&	Listen::getListeningPort(int listen_fd)
 {
-	std::map<int, t_port>::const_iterator it = _listeningPorts.find(listen_fd);
-	if (it != _listeningPorts.end())
+	std::map<int, t_port>::iterator it = _listeningPorts.find(listen_fd);
+	// if (it != _listeningPorts.end())
 		return it->second;
-	t_port error;
-	error.listen_fd = INVALID;
-	return error;
+	// t_port error;
+	// error.listen_fd = INVALID;
+	// return error;
 }
 
-std::map<int, Client*>	Listen::getClients() const { return _clients; }
+std::map<int, Client*>&	Listen::getClients() { return _clients; }
 	
-std::vector<Server*>	Listen::getServerBlocks() const { return _serv_blocks; }
+std::vector<Server>&	Listen::getServerBlocks() { return _serv_blocks; }
 
 /*************************************************************************************************/
 /* Setters ***************************************************************************************/
 
-void	Listen::setServerBlocks(const std::vector<Server*> &serv_blocks)
+void	Listen::setServerBlocks(const std::vector<Server> &serv_blocks)
 {
 	_serv_blocks = serv_blocks;
 }
@@ -183,4 +187,42 @@ void	Listen::addNewClient(int listen_fd, int epoll_fd)
 {
 	Client	*newClient = new Client(listen_fd, epoll_fd);
 	_clients.insert(std::make_pair(newClient->getClientFd(), newClient));
+}
+
+/*************************************************************************************************/
+/* Operator Overload *****************************************************************************/
+
+std::ostream&	operator<<(std::ostream &os, Listen &src)
+{
+	os << BLUE << "*** Display what's inside Listen object ***" << std::endl;
+	int i = 1;
+
+	os << BLUE << "listening ports -> " << std::endl;
+	for (std::map<int, t_port>::iterator it = src.getListeningPorts().begin();
+										it != src.getListeningPorts().end(); it++)
+	{
+		os << BLUE << "(port " << i << ")" << RESET << std::endl;
+		os << BLUE << "	address_port: " << RESET << it->second.address_port << std::endl;
+		os << BLUE << "	listen_fd: " << RESET << it->second.listen_fd << std::endl;
+		os << BLUE << "	epoll_fd: " << RESET << it->second.epoll_fd << std::endl;
+		os << BLUE << "	port_addr: " << std::endl;
+		os << "		sin_port=" << RESET << it->second.port_addr.sin_port << std::endl;
+		os << BLUE << "		sin_family=" << RESET << it->second.port_addr.sin_family << std::endl;
+		os << BLUE << "		sin_addr=" << RESET << it->second.port_addr.sin_addr.s_addr << std::endl;
+		os << BLUE << "		sin_zero=" << RESET << it->second.port_addr.sin_zero << std::endl;
+		os << "--------------------------------------" << std::endl;
+		i++;
+	}
+
+	i = 1;
+	for (std::vector<Server>::iterator it = src.getServerBlocks().begin();
+										it != src.getServerBlocks().end(); it++)
+	{
+		os << BLUE << "(serv block " << i << ")" << RESET << "--------------------" << std::endl;
+		os << *it << std::endl;
+		os << "--------------------------------------" << std::endl;
+		i++;
+	}
+
+	return os;
 }

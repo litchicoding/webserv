@@ -16,6 +16,7 @@ int	main(int ac, char **av)
 		return ERROR;
 	g_global_instance = &listenPorts;
 	listenPorts.configuration();
+	std::cout << listenPorts;
 	if (listenPorts.start_connexion() != OK)
 		return ERROR;
 	listenPorts.update_connexion();

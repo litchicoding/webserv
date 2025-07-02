@@ -2,6 +2,7 @@
 # define LISTEN_HPP
 
 # include "webserv.hpp"
+# include <iostream>
 
 # define MAX_CLIENT_WAITING 5
 
@@ -10,7 +11,7 @@ class	Client;
 
 typedef struct s_port
 {
-	std::string				port_address;
+	std::string				address_port;
 	struct sockaddr_in		port_addr;
 	int						listen_fd;
 	int						epoll_fd;
@@ -22,7 +23,7 @@ private:
 	/* Listen Port ID *********************************************************/
 	std::map<int, t_port>	_listeningPorts; // <listen_fd, port struct>
 	std::map<int, Client*>	_clients; // <client_fd, client class>
-	std::vector<Server*>	_serv_blocks;
+	std::vector<Server>		_serv_blocks;
 	std::string				_defaultServer;
 
 public:
@@ -37,13 +38,17 @@ public:
 	int						handleClientRequest(int client_fd, int epoll_fd);
 
 	/* Getters ****************************************************************/
-	t_port					getListeningPort(int socket_fd) const;
-	std::map<int, Client*>	getClients() const;
-	std::vector<Server*>	getServerBlocks() const;
+	std::map<int, t_port>&	getListeningPorts();
+	t_port&					getListeningPort(int socket_fd);
+	std::map<int, Client*>&	getClients();
+	std::vector<Server>&	getServerBlocks();
 	
 	/* Setters ****************************************************************/
-	void					setServerBlocks(const std::vector<Server*> &serv_blocks);
+	void					setServerBlocks(const std::vector<Server> &serv_blocks);
 	void					addNewClient(int listen_fd, int epoll_fd);
 };
+
+	/* Operator Overload ******************************************************/
+	std::ostream&			operator<<(std::ostream &os, Listen &src);
 
 #endif

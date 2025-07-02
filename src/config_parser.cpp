@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-static int	parse_directive(std::vector<t_tokenConfig>::iterator &token, t_tokenType type, Server *server, const std::string &loc_path)
+static int	parse_directive(std::vector<t_tokenConfig>::iterator &token, t_tokenType type, Server &server, const std::string &loc_path)
 {
 	std::string					directive_type = token->data;
 	std::vector<std::string>	directive_arg;
@@ -15,13 +15,13 @@ static int	parse_directive(std::vector<t_tokenConfig>::iterator &token, t_tokenT
 		token++;
 	}
 	if (type == SERVER)
-		server->setDirectives(directive_type, directive_arg);
+		server.setOneDirective(directive_type, directive_arg, &server.getDirectives());
 	else if (type == LOCATION)
-		server->setLocation(loc_path, directive_type, directive_arg);
+		server.setLocation(loc_path, directive_type, directive_arg);
 	return OK;
 }
 
-static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Server *server)
+static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Server &server)
 {
 	if (token->data.empty())
 		return ERROR;
@@ -39,12 +39,12 @@ static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Ser
 	return OK;
 }
 
-static int	parse_server_block(std::vector<t_tokenConfig>::iterator &token, std::vector<Server*> &serv_blocks)
+static int	parse_server_block(std::vector<t_tokenConfig>::iterator &token, std::vector<Server> &serv_blocks)
 {
 	if (token->type != SERVER)
 		return parsing_error("parse_server_block", MISSING_ARG);
 
-	Server	*newServer = new Server();
+	Server	newServer = Server();
 	token++;
 	if (token->type != O_BRACE)
 		return parsing_error("parse_server_block", MISSING_ARG);
@@ -56,6 +56,7 @@ static int	parse_server_block(std::vector<t_tokenConfig>::iterator &token, std::
 			return ERROR;
 		token++;
 	}
+	newServer.defaultConfiguration();
 	serv_blocks.push_back(newServer);
 	return OK;
 }
@@ -87,7 +88,7 @@ int	parse_config_file(std::string config_file, Listen &listenPorts)
 	// print_token_type(&tokenList);
 
 	// parse every token node and create new Server object accordingly, store them in serv_blocks
-	std::vector<Server*>					serv_blocks;
+	std::vector<Server>						serv_blocks;
 	std::vector<t_tokenConfig>::iterator	it = tokenList.begin();
 	while (it->type != END)
 	{
@@ -96,11 +97,6 @@ int	parse_config_file(std::string config_file, Listen &listenPorts)
 		it++;
 	}
 	listenPorts.setServerBlocks(serv_blocks);
-
-	// just for debug -- print all data of the server object
-	for (std::vector<Server*>::iterator it = serv_blocks.begin(); it != serv_blocks.end(); it++)
-		(*it)->print_server_class();
-
 	return OK;
 }
 
@@ -119,4 +115,3 @@ int	parsing_error(const std::string &msg, int code_error)
 	std::cout << RESET;
 	return ERROR;
 }
-

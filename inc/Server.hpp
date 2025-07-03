@@ -3,7 +3,7 @@
 
 # include "webserv.hpp"
 
-# define DEFAULT_PORT 80
+# define DEFAULT_PORT 8080
 # define DEFAULT_ADDRESS_IP "0.0.0.0"
 # define DEFAULT_SERVER_NAME ""
 # define DEFAULT_BODY_SIZE 1
@@ -48,7 +48,6 @@ public :
 	/* Member Functions ****************************************************************************/
 	void								defaultConfiguration(t_directives server, t_directives &location);
 	void								defaultConfiguration();
-	static void					delete_server_group(std::vector<Server*> &server);
 
 	/* Setters *************************************************************************************/
 	int									setListen(const std::string &arg);

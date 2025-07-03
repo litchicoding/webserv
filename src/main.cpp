@@ -20,6 +20,5 @@ int	main(int ac, char **av)
 	if (listenPorts.start_connexion() != OK)
 		return ERROR;
 	listenPorts.update_connexion();
-	listenPorts.stop("");
 	return EXIT_SUCCESS;
 }

@@ -19,6 +19,7 @@ Client::~Client()
 {
 	std::cout << GREEN << "*** Client Deconstruction ***" << RESET << std::endl;
 	// must delete everything needed
+	close(_client_fd);
 }
 
 /**************************************************************************************************/

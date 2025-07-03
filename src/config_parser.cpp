@@ -25,7 +25,7 @@ static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Ser
 {
 	if (token->data.empty())
 		return ERROR;
-	std::string					loc_path = token->data;
+	std::string	loc_path = token->data;
 	
 	token++;
 	if (token->type != O_BRACE)

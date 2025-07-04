@@ -8,11 +8,11 @@ class	Server;
 class	Client
 {
 private:
-	/* Client ID **************************************************************/
+	/* Client ID **********************************************************************************/
 	int									_client_fd;
 	struct sockaddr_in					_client_addr;
 	Server								*_server_config;
-	/* Request ****************************************************************/
+	/* Request ************************************************************************************/
 	std::string							_method;
 	std::string							_URI;
 	std::string							_version;
@@ -21,11 +21,11 @@ private:
 	std::string							_body;
 	std::string							_response;
 	std::string							_root;
+	int									_request_len;
+	size_t								_response_len;
 
-	/* Parsing ****************************************************************/
+	/* Parsing ************************************************************************************/
 	void								handleError(int code);
-	void								buildResponse();
-	void								parseRawRequest();
 	void								handleMethodLine(std::string& line);
 	void								handleHeaders(std::string& line);
 	void								handleBody(std::string& line);
@@ -39,18 +39,27 @@ private:
 
 public:
 	Client(int listen_fd, int epoll_fd);
-	Client(int client_fd, sockaddr_in client_adrr);
+	// Client(int client_fd, sockaddr_in client_adrr);
 	~Client();
 
-	/* Member Function ********************************************************/
+	/* Member Function ****************************************************************************/
 	void								start();
+	void								parseRawRequest();
+	void								buildResponse();
 
-	/* Getters ****************************************************************/
+	/* Setters ************************************************************************************/
+	void								setRequest(const std::string &request, const int &len);
+	void								setServerConfig(Server *server_config);
+
+	/* Getters ************************************************************************************/
 	int									getClientFd();
 	std::string							getMethod();
 	std::string							getURI();
 	std::string							getVersion();
 	std::string							getRequest();
+	Server*								getServerConfig() const;
+	std::string							getResponse() const;
+	size_t								getResponseLen() const;
 };
 
 #endif

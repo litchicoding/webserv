@@ -1,27 +1,13 @@
 #include "Server.hpp"
 
-/******************************************************************************/
-/* Constructor and Deconstructor **********************************************/
+/**************************************************************************************************/
+/* Constructor and Deconstructor ******************************************************************/
 
 Server::Server()
 {
 	std::cout << GREEN << "*** Server construction ***" << RESET << std::endl;
 	_directives.autoindex = INVALID;
 	_directives.client_max_body_size = INVALID;
-	/* OLD CONSTRUCTION */
-	// _socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	// if (_socket_fd < 0)
-	// {
-	// 	std::cout << RED << "Error: socket()" << RESET << std::endl;
-	// 	return ;
-	// }
-	// std::memset(&_serv_addr, 0, sizeof(_serv_addr));
-	// _serv_addr.sin_family = AF_INET;
-	// _serv_addr.sin_port = htons(8080); // HARDCODED value (must change it later)
-	// _serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-	/* NEW CONSTRUCTION */
-	// _socket_fd = INVALID;
 }
 
 Server::~Server()
@@ -35,8 +21,8 @@ Server::~Server()
 	_locations.clear();
 }
 
-/*****************************************************************************/
-/* Member Functions **********************************************************/
+/*************************************************************************************************/
+/* Member Functions ******************************************************************************/
 
 void	Server::defaultConfiguration(t_directives serv, t_directives &location)
 {
@@ -73,8 +59,8 @@ void	Server::defaultConfiguration()
 		defaultConfiguration(_directives, it->second);
 }
 
-/*****************************************************************************/
-/* Setters *******************************************************************/
+/*************************************************************************************************/
+/* Setters ***************************************************************************************/
 
 int	Server::setListen(const std::string &arg)
 {
@@ -85,9 +71,6 @@ int	Server::setListen(const std::string &arg)
 	if (pos != std::string::npos) {
 		listen.ip = arg.substr(0, pos);
 		listen.port = atoi(arg.substr(pos + 1, arg.size() - pos).c_str());
-		// std::string test = arg.substr(pos + 1, arg.size() - pos);
-		// std::cout << RED << test << RESET << std::endl;
-		// listen.port = atoi(test.c_str());
 	}
 	else if (arg.find(".", 0) != std::string::npos || arg == "localhost") {
 		listen.port = 80;
@@ -180,7 +163,7 @@ void	Server::setIndex(const std::vector<std::string> &index, t_directives &dir) 
 	
 void	Server::setMethods(const std::vector<std::string> &methods, t_directives &dir) { dir.methods = methods; }
 
-/* Getters ***************************************************************************************/
+/* Getters ***********************************************************************************************************/
 
 const std::vector<t_listen>&	Server::getListen() const { return _listen; }
 
@@ -192,8 +175,8 @@ t_directives&	Server::getDirectives() { return _directives; }
 
 const std::map<std::string, t_directives>&	Server::getLocations() const { return _locations; }
 
-/*************************************************************************************************/
-/* Operator Overload *****************************************************************************/
+/*********************************************************************************************************************/
+/* Operator Overload *************************************************************************************************/
 
 std::ostream&	operator<<(std::ostream &os, const Server &src)
 {
@@ -222,7 +205,6 @@ std::ostream&	operator<<(std::ostream &os, const Server &src)
 		print_directives(os, it->second);
 		i++;
 	}
-
 	return os;
 }
 

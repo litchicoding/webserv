@@ -28,7 +28,17 @@ Client::~Client()
 /**************************************************************************************************/
 /* Member Fucntions *******************************************************************************/
 
+void	Client::setRequest(const std::string &request, const int &len)
+{
+	_request = request;
+	_request_len = len;
+}
+
+void	Client::setServerConfig(Server *server_config) { _server_config = server_config; }
+
 /**************************************************************************************************/
 /* Getters ****************************************************************************************/
 
 int	Client::getClientFd() { return _client_fd; }
+
+Server*	Client::getServerConfig() const { return _server_config; }

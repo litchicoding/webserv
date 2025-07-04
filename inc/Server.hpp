@@ -60,7 +60,6 @@ public :
 	void								setMethods(const std::vector<std::string> &methods, t_directives &dir);
 	
 	/* Getters *************************************************************************************/
-	// std::vector<t_listen>				getListen();
 	const std::vector<t_listen>&		getListen() const;
 	const std::vector<std::string>&		getServerName() const;
 	const t_directives&					getDirectives() const;

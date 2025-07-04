@@ -1,5 +1,4 @@
 #include "Listen.hpp"
-#include <arpa/inet.h>
 
 /**************************************************************************************************/
 /* Constructor and Deconstructor ******************************************************************/
@@ -17,6 +16,11 @@ Listen::~Listen()
 	{
 		close(it->second.listen_fd);
 		close(it->second.epoll_fd);
+	}
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		close(it->first);
+		delete it->second;
 	}
 	_listeningPorts.clear();
 	_clients.clear();
@@ -62,7 +66,6 @@ void	Listen::configuration()
 		while (listen != listen_end)
 		{
 			new_port.address_port = (*listen).address_port;
-			std::cout << "configuration: ip=" << (*listen).ip.c_str() << " port=" << (*listen).port << std::endl;
 			new_port.port_addr = createSockaddr((*listen).ip.c_str(), (*listen).port);
 			if ((new_port.listen_fd = socket(AF_INET, SOCK_STREAM, 0)) == ERROR) {
 				std::cout << RED << "Error: socket()" << RESET << std::endl;
@@ -92,13 +95,13 @@ int	Listen::start_connexion()
 		if (add_fd_to_epoll(epoll_fd, listen_fd) != OK)
 			return ERROR;
 		if (bind(listen_fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != OK) {
-			std::cout << "Trying to bind to IP: " << inet_ntoa(address.sin_addr) << " Port: " << ntohs(address.sin_port) << std::endl;
-			std::cout << RED << "Error: while bind()" << RESET << std::endl;
+			std::cout << RED << "Error: while trying to bind() to IP:" << address.sin_addr.s_addr;
+			std::cout << " Port: " << ntohs(address.sin_port) << RESET << std::endl;
 			perror("bind");
 			return ERROR;
 		}
 		if (listen(listen_fd, MAX_CLIENT_WAITING) != OK) {
-			std::cout << RED << "Error: while listen()" << RESET << std::endl;
+			std::cout << RED << "Error: while trying to listen() to socket_fd" << listen_fd << RESET << std::endl;
 			return ERROR;
 		}
 		current_port++;
@@ -112,7 +115,7 @@ int	Listen::update_connexion()
 	epoll_event						events[MAX_EVENTS];
 	int								nfds, epoll_fd, listen_fd;
 
-	std::cout << GREEN << "🟢 Serveur en écoute" << RESET << std::endl;
+	std::cout << GREEN << "🟢 Server is listening on ports" << RESET << std::endl;
 	while (true)
 	{
 		signal(SIGINT, &signal_handler);
@@ -132,7 +135,7 @@ int	Listen::update_connexion()
 				if (events[i].data.fd == listen_fd) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
 					addNewClient(listen_fd, epoll_fd);
 				else //cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
-					handleClientRequest(events[i].data.fd, epoll_fd);
+					handleClientRequest(events[i].data.fd, epoll_fd, listen_fd);
 			}
 			current_port++;
 		}
@@ -140,34 +143,68 @@ int	Listen::update_connexion()
 	return OK;
 }
 
-int	Listen::handleClientRequest(int client_fd, int epoll_fd)
+int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
-	char buffer[4064];
+	char	buffer[4064];
+	int		bytes_read;
+	t_port	listening_port;
+	
 	memset(buffer, 0, sizeof(buffer));
-
-	int bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
+	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
 	if (bytes_read <= 0)
 	{
-		std::cout << "Error handleClientRequest" << std::endl;
+		std::cout << RED << "Error: handleClientRequest()" << RESET << std::endl;
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-		close(client_fd);
 		delete _clients[client_fd];
 		_clients.erase(client_fd);
+		close(client_fd);
 		return ERROR;
 	}
 	std::cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << std::endl;
-	write(client_fd, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 11\r\n\r\nHello Web!", 92);
-	// epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-	// close(client_fd);
-	// delete _clients[client_fd];
-	// _clients.erase(client_fd);
+	std::cout << BLUE << "Server is processing client request..." << RESET << std::endl;
 
-	// retreive the client with client_fd
-	// store the request in associated client class, with buffer and read, and
+	// retreive the client with client_fd, store the request + request length in the associated client class
+	_clients[client_fd]->setRequest(buffer, bytes_read);
+	// retreive the appropriate server block config with PORT match
+	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
+	if (_clients[client_fd]->getServerConfig() == NULL)
+		stop("no match for server configuration");
 	// parse the request and start filling datas in client class
-	// retreive the appropriate server block config with PORT and HOST of clientRequest
-	// build response based on request and server config
+	_clients[client_fd]->parseRawRequest();
+	// build response based on request and location config
+	_clients[client_fd]->buildResponse();
+	// finally send to client the response
+	write(client_fd, _clients[client_fd]->getResponse().c_str(), _clients[client_fd]->getResponseLen());
+	std::cout << BLUE << "Response to request has been sent!" << RESET << std::endl;
 	return OK;
+}
+
+Server*	Listen::findServerConfig(const int &listen_fd)
+{
+	std::vector<Server>::iterator			serv_block, serv_blocks_end;
+	std::vector<t_listen>::const_iterator	listen_serv, listen_serv_end;
+	std::map<int, t_port>::iterator			current_listening_port;
+
+	current_listening_port = _listeningPorts.find(listen_fd);
+	if (current_listening_port == _listeningPorts.end()) {
+		stop("no match found for current listen fd");
+		return NULL;
+	}
+	serv_block = _serv_blocks.begin();
+	serv_blocks_end = _serv_blocks.end();
+	while (serv_block != serv_blocks_end)
+	{
+		listen_serv = serv_block->getListen().begin();
+		listen_serv_end = serv_block->getListen().end();
+		while (listen_serv != listen_serv_end)
+		{
+			if (listen_serv->address_port == current_listening_port->second.address_port)
+				return &(*serv_block);
+			listen_serv++;
+		}
+		serv_block++;
+	}
+	return NULL;
 }
 
 void	Listen::stop(const std::string &msg)
@@ -192,17 +229,15 @@ void	Listen::stop(const std::string &msg)
 
 std::map<int, t_port>&	Listen::getListeningPorts() { return _listeningPorts; }
 
-// const std::map<int, t_port>&	Listen::getListeningPorts() const { return _listeningPorts; }
-
-t_port&	Listen::getListeningPort(int listen_fd)
-{
-	std::map<int, t_port>::iterator it = _listeningPorts.find(listen_fd);
-	// if (it != _listeningPorts.end())
-		return it->second;
-	// t_port error;
-	// error.listen_fd = INVALID;
-	// return error;
-}
+// t_port&	Listen::getListeningPort(int listen_fd)
+// {
+// 	std::map<int, t_port>::iterator it = _listeningPorts.find(listen_fd);
+// 	if (it != _listeningPorts.end())
+// 		return it->second;
+// 	t_port error;
+// 	error.listen_fd = INVALID;
+// 	return error;
+// }
 
 std::map<int, Client*>&	Listen::getClients() { return _clients; }
 	

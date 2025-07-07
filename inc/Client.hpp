@@ -12,6 +12,7 @@ private:
 	int									_client_fd;
 	struct sockaddr_in					_client_addr;
 	Server								*_server_config;
+	t_directives						*_config;
 	/* Request ************************************************************************************/
 	std::string							_method;
 	std::string							_URI;
@@ -50,6 +51,7 @@ public:
 	/* Setters ************************************************************************************/
 	void								setRequest(const std::string &request, const int &len);
 	void								setServerConfig(Server *server_config);
+	void								setConfig();
 
 	/* Getters ************************************************************************************/
 	int									getClientFd();

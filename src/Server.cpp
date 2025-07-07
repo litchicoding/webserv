@@ -59,6 +59,35 @@ void	Server::defaultConfiguration()
 		defaultConfiguration(_directives, it->second);
 }
 
+t_directives*	Server::searchLocationMatch(const std::string &request_uri)
+{
+	/* cherche correspondance exacte */
+	// = définit une correspondance exacte entre l'URI et une chaîne. 
+	// Si correspondance exacte, la recherche s'arrête.
+	std::map<std::string, t_directives>::iterator location_block = _locations.begin();
+	while (location_block != _locations.end())
+	{
+		if (location_block->first == request_uri)
+			return &(location_block->second);
+		location_block++;
+	}
+	/* Test des chaînes de préfixe */
+	// teste l'URI contre tous les préfixes (/images, / etc) et stocke la plus longue correspondance
+
+	/* Modificateur ^~ */
+	// Si ^~ précède la chaîne de préfixe correspondante la plus longue, les expressions régulières sont pas vérifiées. 
+	// Ce modificateur interrompt l'évaluation des regex.
+
+	/* Expressions régulières */
+	// Teste l'URI contre les expressions régulières dans l'ordre où elles apparaissent dans le fichier
+	// ~ pour une correspondance sensible à la casse
+	// ~* pour une correspondance insensible à la casse
+
+	/* Sélection finale */
+	// s'arrête lorsque la première expression régulière correspondante est trouvée
+	return NULL;
+}
+
 /*************************************************************************************************/
 /* Setters ***************************************************************************************/
 

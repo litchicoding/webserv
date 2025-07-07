@@ -65,7 +65,7 @@ int	parse_config_file(std::string config_file, Listen &listenPorts)
 {
 	// TO DO -> check error in file name (extension etc) !!!
 	if (config_file.empty())
-		config_file = "./config/default.conf";
+		config_file = DEFAULT_CONFIG_FILE;
 
 	// open file
 	std::ifstream	file;

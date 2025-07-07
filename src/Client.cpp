@@ -3,7 +3,7 @@
 /**************************************************************************************************/
 /* Constructor and Deconstructor ******************************************************************/
 
-Client::Client(int listen_fd, int epoll_fd)
+Client::Client(int listen_fd, int epoll_fd) : _server_config(NULL), _config(NULL)
 {
 	std::cout << GREEN << "*** Client Construction ***" << RESET << std::endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
@@ -35,6 +35,15 @@ void	Client::setRequest(const std::string &request, const int &len)
 }
 
 void	Client::setServerConfig(Server *server_config) { _server_config = server_config; }
+
+void	Client::setConfig()
+{
+	if (_server_config == NULL)
+		return ;
+	_config = _server_config->searchLocationMatch(_URI);
+	if (_config == NULL)
+		std::cout << RED << "Error: setServerConfig(): no match with URI found" << RESET << std::endl;
+}
 
 /**************************************************************************************************/
 /* Getters ****************************************************************************************/

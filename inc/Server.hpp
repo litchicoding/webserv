@@ -48,6 +48,7 @@ public :
 	/* Member Functions ****************************************************************************/
 	void								defaultConfiguration(t_directives server, t_directives &location);
 	void								defaultConfiguration();
+	t_directives*						searchLocationMatch(const std::string &request_uri);
 
 	/* Setters *************************************************************************************/
 	int									setListen(const std::string &arg);

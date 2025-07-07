@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: knavarre <knavarre@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sdeutsch <sdeutsch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 16:37:46 by sdeutsch          #+#    #+#             */
-/*   Updated: 2025/06/20 21:49:28 by knavarre         ###   ########.fr       */
+/*   Updated: 2025/06/17 17:29:17 by sdeutsch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,4 +32,3 @@ int add_fd_to_epoll(int epoll_fd, int fd)
 	}
     return 0;
 }
-

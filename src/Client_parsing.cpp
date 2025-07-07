@@ -7,7 +7,7 @@ std::string	Client::collect_request() {
 
 	while (true) {
 		std::memset(buffer, 0, buffer_size);
-		ssize_t bytes_read = recv(this->getSocketFd(), buffer, buffer_size - 1, 0);
+		ssize_t bytes_read = recv(this->getClientFd(), buffer, buffer_size - 1, 0);
 		if (bytes_read < 0) {
 			break ;
 		}

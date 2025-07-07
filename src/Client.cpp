@@ -1,23 +1,29 @@
-#include "../inc/Client.hpp"
+#include "Client.hpp"
 
-Client::Client(int client_fd, sockaddr_in client_adrr) {
-	this->_socket_fd = client_fd;
-	this->_client_addr = client_adrr;
+/**************************************************************************************************/
+/* Constructor and Deconstructor ******************************************************************/
+
+Client::Client(int listen_fd, int epoll_fd) : _server_config(NULL), _config(NULL)
+{
+	std::cout << GREEN << "*** Client Construction ***" << RESET << std::endl;
+	socklen_t	client_addr_len = sizeof(_client_addr);
+	_client_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&_client_addr), &client_addr_len);
+	if (_client_fd == INVALID) {
+		perror("accept");
+		return ;
+	}
+	add_fd_to_epoll(epoll_fd, _client_fd);
 }
 
-Client::~Client() {}
-
-/******************************************************************************/
-/******************************************************************************/
-
-void Client::start() {
-	parseRawRequest();
-	buildResponse();
-	// sendResponse();
+Client::~Client()
+{
+	std::cout << GREEN << "*** Client Deconstruction ***" << RESET << std::endl;
+	// must delete everything needed
+	close(_client_fd);
 }
 
-/******************************************************************************/
-/******************************************************************************/
+/**************************************************************************************************/
+/* Parsing ****************************************************************************************/
 
 void	Client::handleError(int code) {
 	std::string	message, filePath;
@@ -61,18 +67,6 @@ void	Client::handleError(int code) {
 	// Rajouter d'autres headers ?? Date ? Server ? Connection ?z
 }
 
-
-void	Client::buildResponse() {
-	if (_method == "GET")
-		handleGet();
-	else if (_method == "POST")
-		handlePost();
-	else if (_method == "DELETE") {
-		handleDelete();
-	}
-}
-
-
 void	Client::parseRawRequest() {
 	this->_request = collect_request();
 	std::istringstream  iss(this->_request);
@@ -109,32 +103,41 @@ void	Client::parseRawRequest() {
 }
 
 
+/**************************************************************************************************/
+/* Member Fucntions *******************************************************************************/
 
-
-
-
-
-
-/***************************************************************/
-/**                      getter                               **/
-/***************************************************************/
-
-int	Client::getSocketFd() {
-	return this->_socket_fd;
+void	Client::setRequest(const std::string &request, const int &len)
+{
+	_request = request;
+	_request_len = len;
 }
 
-std::string Client::getMethod() {
-	return this->_method;
+void	Client::setServerConfig(Server *server_config) { _server_config = server_config; }
+
+void	Client::setConfig()
+{
+	if (_server_config == NULL)
+		return ;
+	_config = _server_config->searchLocationMatch(_URI);
+	if (_config == NULL)
+		std::cout << RED << "Error: setServerConfig(): no match with URI found" << RESET << std::endl;
 }
 
-std::string Client::getURI() {
-	return this->_URI;
-}
+/**************************************************************************************************/
+/* Getters ****************************************************************************************/
 
-std::string Client::getVersion() {
-	return this->_version;
-}
+int	Client::getClientFd() { return _client_fd; }
 
-std::string Client::getRequest() {
-	return this->_request;
-}
+Server*	Client::getServerConfig() const { return _server_config; }
+
+std::string Client::getMethod() { return this->_method; }
+
+std::string Client::getURI() { return this->_URI; }
+
+std::string Client::getVersion() { return this->_version; }
+
+std::string Client::getRequest() { return this->_request; }
+
+std::string	Client::getResponse() const { return _response; }
+
+size_t	Client::getResponseLen() const { return _response_len; }

@@ -153,7 +153,7 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
 	if (bytes_read <= 0)
 	{
-		std::cout << RED << "Error: handleClientRequest()" << RESET << std::endl;
+		std::cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << std::endl;
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		delete _clients[client_fd];
 		_clients.erase(client_fd);

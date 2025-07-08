@@ -13,6 +13,7 @@ class	Client
 private:
 	/* Client ID **********************************************************************************/
 	int									_client_fd;
+	int									_listen_fd;
 	struct sockaddr_in					_client_addr;
 	Server								*_server_config;
 	t_directives						*_config;
@@ -65,6 +66,7 @@ public:
 	Server*								getServerConfig() const;
 	std::string							getResponse() const;
 	size_t								getResponseLen() const;
+	int									getListenFd() const;
 };
 
 #endif

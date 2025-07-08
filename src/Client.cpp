@@ -3,7 +3,7 @@
 /**************************************************************************************************/
 /* Constructor and Deconstructor ******************************************************************/
 
-Client::Client(int listen_fd, int epoll_fd) : _server_config(NULL), _config(NULL)
+Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_config(NULL), _config(NULL)
 {
 	std::cout << GREEN << "*** Client Construction ***" << RESET << std::endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
@@ -141,3 +141,5 @@ std::string Client::getRequest() { return this->_request; }
 std::string	Client::getResponse() const { return _response; }
 
 size_t	Client::getResponseLen() const { return _response_len; }
+
+int	Client::getListenFd() const { return _listen_fd; }

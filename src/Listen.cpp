@@ -3,7 +3,7 @@
 /**************************************************************************************************/
 /* Constructor and Deconstructor ******************************************************************/
 
-Listen::Listen()
+Listen::Listen() : _epoll_fd(INVALID)
 {
 	std::cout << GREEN << "*** Listen Construction ***" << RESET << std::endl;
 }
@@ -15,7 +15,7 @@ Listen::~Listen()
 	for (std::map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
 	{
 		close(it->second.listen_fd);
-		close(it->second.epoll_fd);
+		close(_epoll_fd);
 	}
 	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
@@ -59,6 +59,7 @@ void	Listen::configuration()
 	std::vector<t_listen>::const_iterator	listen, listen_end;
 	t_port									new_port;
 
+	_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 	while (serv != _serv_blocks.end())
 	{
 		listen = serv->getListen().begin();
@@ -73,7 +74,6 @@ void	Listen::configuration()
 			}
 			int opt = 1;
 			setsockopt(new_port.listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-			new_port.epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 			_listeningPorts.insert(std::make_pair(new_port.listen_fd, new_port));
 			listen++;
 		}
@@ -84,15 +84,14 @@ void	Listen::configuration()
 int	Listen::start_connexion()
 {
 	std::map<int, t_port>::iterator current_port = _listeningPorts.begin();
-	int								listen_fd, epoll_fd;
+	int								listen_fd;
 	struct sockaddr_in				address;
 
 	while (current_port != _listeningPorts.end())
 	{
 		listen_fd = current_port->first;
-		epoll_fd = current_port->second.epoll_fd;
 		address = current_port->second.port_addr;
-		if (add_fd_to_epoll(epoll_fd, listen_fd) != OK)
+		if (add_fd_to_epoll(_epoll_fd, listen_fd) != OK)
 			return ERROR;
 		if (bind(listen_fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != OK) {
 			std::cout << RED << "Error: while trying to bind() to IP:" << address.sin_addr.s_addr;
@@ -113,35 +112,48 @@ int	Listen::update_connexion()
 {
 	std::map<int, t_port>::iterator	current_port;
 	epoll_event						events[MAX_EVENTS];
-	int								nfds, epoll_fd, listen_fd;
+	int								nfds;
 
 	std::cout << GREEN << "🟢 Server is listening on ports" << RESET << std::endl;
 	while (true)
 	{
 		signal(SIGINT, &signal_handler);
-		current_port = _listeningPorts.begin();
-		while (current_port != _listeningPorts.end())
-		{
-			listen_fd = current_port->second.listen_fd;
-			epoll_fd = current_port->second.epoll_fd;
-			if ((nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
-				if (errno != EINTR)
-					return perror("epoll_wait"), ERROR;
-				return OK;
-			}
-			for (int i = 0; i < nfds; ++i)
-			{
-				signal(SIGINT, &signal_handler);
-				if (events[i].data.fd == listen_fd) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
-					addNewClient(listen_fd, epoll_fd);
-				else //cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
-					handleClientRequest(events[i].data.fd, epoll_fd, listen_fd);
-			}
-			current_port++;
+		// current_port = _listeningPorts.begin();
+		// while (current_port != _listeningPorts.end())
+		// {
+			// listen_fd = current_port->second.listen_fd;
+		if ((nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
+			if (errno != EINTR)
+				return perror("epoll_wait"), ERROR;
+			return OK;
 		}
+		for (int i = 0; i < nfds; ++i)
+		{
+			signal(SIGINT, &signal_handler);
+			if (isListeningSocket(events[i].data.fd)) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
+				addNewClient(events[i].data.fd, _epoll_fd);
+			else //cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
+			{
+				if (_clients.find(events[i].data.fd) == _clients.end())
+					continue ;
+				int listen_fd = _clients[events[i].data.fd]->getListenFd();
+				handleClientRequest(events[i].data.fd, _epoll_fd, listen_fd);
+			}
+		}
+		// 	current_port++;
+		// }
 	}
 	return OK;
 }
+
+bool	Listen::isListeningSocket(int fd)
+{
+	std::map<int, t_port>::iterator port = _listeningPorts.find(fd);
+	if (port != _listeningPorts.end())
+		return true;
+	return false;
+}
+
 
 int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
@@ -222,8 +234,8 @@ void	Listen::stop(const std::string &msg)
 		// epoll_ctl(it->second.epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		close(it->second.listen_fd);
 		it->second.listen_fd = INVALID;
-		close(it->second.epoll_fd);
-		it->second.epoll_fd = INVALID;
+		close(_epoll_fd);
+		_epoll_fd = INVALID;
 	}
    	std::cout << GREEN << "🛑 Connexion fermée." << RESET << std::endl;
 }
@@ -287,7 +299,6 @@ std::ostream&	operator<<(std::ostream &os, Listen &src)
 		os << BLUE << "(port " << i << ")" << RESET << std::endl;
 		os << BLUE << "	address_port: " << RESET << it->second.address_port << std::endl;
 		os << BLUE << "	listen_fd: " << RESET << it->second.listen_fd << std::endl;
-		os << BLUE << "	epoll_fd: " << RESET << it->second.epoll_fd << std::endl;
 		os << BLUE << "	port_addr: " << std::endl;
 		os << "		sin_port=" << RESET << it->second.port_addr.sin_port << std::endl;
 		os << BLUE << "		sin_family=" << RESET << it->second.port_addr.sin_family << std::endl;

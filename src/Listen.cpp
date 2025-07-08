@@ -118,10 +118,6 @@ int	Listen::update_connexion()
 	while (true)
 	{
 		signal(SIGINT, &signal_handler);
-		// current_port = _listeningPorts.begin();
-		// while (current_port != _listeningPorts.end())
-		// {
-			// listen_fd = current_port->second.listen_fd;
 		if ((nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
 			if (errno != EINTR)
 				return perror("epoll_wait"), ERROR;
@@ -140,8 +136,6 @@ int	Listen::update_connexion()
 				handleClientRequest(events[i].data.fd, _epoll_fd, listen_fd);
 			}
 		}
-		// 	current_port++;
-		// }
 	}
 	return OK;
 }

@@ -6,7 +6,7 @@
 # define DEFAULT_PORT 8080
 # define DEFAULT_ADDRESS_IP "0.0.0.0"
 # define DEFAULT_SERVER_NAME ""
-# define DEFAULT_BODY_SIZE 1
+# define DEFAULT_BODY_SIZE 1048576
 # define DEFAULT_ROOT "html"
 # define DEFAULT_INDEX "index.html"
 
@@ -23,7 +23,7 @@ typedef struct	s_listen
 typedef struct	s_directives
 {
 	int							autoindex;
-	int							client_max_body_size;
+	size_t						client_max_body_size;
 	std::string					root;
 	std::vector<std::string>	index;
 	std::vector<std::string>	methods;
@@ -34,10 +34,8 @@ typedef struct	s_directives
 class	Server
 {
 private :
-	/* Server ID ***********************************************************************************/
+/* Configuration *******************************************************************************/
 	std::vector<t_listen>				_listen;
-	std::vector<std::string>			_server_name;
-	/* Configuration *******************************************************************************/
 	t_directives						_directives;
 	std::map<std::string, t_directives>	_locations; // <uri_path, directives>
 
@@ -52,17 +50,15 @@ public :
 
 	/* Setters *************************************************************************************/
 	int									setListen(const std::string &arg);
-	void								setServerName(const std::vector<std::string> &names);
 	int									setOneDirective(const std::string &type, const std::vector<std::string> &arg, t_directives *container);
 	int									setLocation(const std::string &loc_path, const std::string &type, const std::vector<std::string> &arg);
-	void								setClientMaxBodySize(const int &value, t_directives &dir);
+	void								setClientMaxBodySize(const std::string &value, t_directives &dir);
 	void								setRoot(const std::string &root, t_directives &dir);
 	void								setIndex(const std::vector<std::string> &index, t_directives &dir);
 	void								setMethods(const std::vector<std::string> &methods, t_directives &dir);
 	
 	/* Getters *************************************************************************************/
 	const std::vector<t_listen>&		getListen() const;
-	const std::vector<std::string>&		getServerName() const;
 	const t_directives&					getDirectives() const;
 	t_directives&						getDirectives();
 	const std::map<std::string, t_directives>&	getLocations() const;

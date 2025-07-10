@@ -1,9 +1,9 @@
 #include "webserv.hpp"
 
-static int	parse_directive(std::vector<t_tokenConfig>::iterator &token, t_tokenType type, Server &server, const std::string &loc_path)
+static int	parse_directive(vector<t_tokenConfig>::iterator &token, t_tokenType type, Server &server, const string &loc_path)
 {
-	std::string					directive_type = token->data;
-	std::vector<std::string>	directive_arg;
+	string			directive_type = token->data;
+	vector<string>	directive_arg;
 
 	token++;
 	while (token->type != SEMICOLON)
@@ -21,12 +21,12 @@ static int	parse_directive(std::vector<t_tokenConfig>::iterator &token, t_tokenT
 	return OK;
 }
 
-static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Server &server)
+static int	parse_location_block(vector<t_tokenConfig>::iterator &token, Server &server)
 {
 	if (token->data.empty())
 		return ERROR;
-	std::string	loc_path = token->data;
-	
+		
+	string	loc_path = token->data;
 	token++;
 	if (token->type != O_BRACE)
 		return parsing_error("parse_location_block", MISSING_ARG);
@@ -39,7 +39,7 @@ static int	parse_location_block(std::vector<t_tokenConfig>::iterator &token, Ser
 	return OK;
 }
 
-static int	parse_server_block(std::vector<t_tokenConfig>::iterator &token, std::vector<Server> &serv_blocks)
+static int	parse_server_block(vector<t_tokenConfig>::iterator &token, vector<Server> &serv_blocks)
 {
 	if (token->type != SERVER)
 		return parsing_error("parse_server_block", MISSING_ARG);
@@ -61,24 +61,23 @@ static int	parse_server_block(std::vector<t_tokenConfig>::iterator &token, std::
 	return OK;
 }
 
-int	parse_config_file(std::string config_file, Listen &listenPorts)
+int	parse_config_file(string config_file, Listen &listenPorts)
 {
 	// TO DO -> check error in file name (extension etc) !!!
 	if (config_file.empty())
 		config_file = DEFAULT_CONFIG_FILE;
 
-	std::cout << config_file;
 	// open file
-	std::ifstream	file;
+	ifstream	file;
 
 	file.open(config_file.c_str());
 	if (!file.is_open() || file.fail()) {
-		std::cout << RED <<  "Error: can't open file" << RESET << std::endl;
+		cout << RED <<  "Error: can't open file" << RESET << endl;
 		return ERROR;
 	}
 
 	// read file and store token
-	std::vector<t_tokenConfig>	tokenList;
+	vector<t_tokenConfig>	tokenList;
 	if (tokenize_config_file(file, &tokenList) != OK) {
 		file.close();
 		return ERROR;
@@ -89,8 +88,8 @@ int	parse_config_file(std::string config_file, Listen &listenPorts)
 	// print_token_type(&tokenList);
 
 	// parse every token node and create new Server object accordingly, store them in serv_blocks
-	std::vector<Server>						serv_blocks;
-	std::vector<t_tokenConfig>::iterator	it = tokenList.begin();
+	vector<Server>						serv_blocks;
+	vector<t_tokenConfig>::iterator	it = tokenList.begin();
 	while (it->type != END)
 	{
 		if (parse_server_block(it, serv_blocks) != OK)
@@ -101,18 +100,18 @@ int	parse_config_file(std::string config_file, Listen &listenPorts)
 	return OK;
 }
 
-int	parsing_error(const std::string &msg, int code_error)
+int	parsing_error(const string &msg, int code_error)
 {
-	std::cout << RED << "Error: ";
+	cout << RED << "Error: ";
 	switch (code_error)
 	{
 		case MISSING_ARG:
-			std::cout << msg << " - missing an argument" << std::endl;
+			cout << msg << " - missing an argument" << endl;
 			break ;
 		case INVALID_ARG:
-			std::cout << msg << " - invalid argument detected" << std::endl;
+			cout << msg << " - invalid argument detected" << endl;
 			break ;
 	}
-	std::cout << RESET;
+	cout << RESET;
 	return ERROR;
 }

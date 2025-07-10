@@ -1,16 +1,16 @@
 #include "webserv.hpp"
 
-static size_t	get_end_word_index(const std::string &line, size_t start)
+static size_t	get_end_word_index(const string &line, size_t start)
 {
 	for (size_t i = start; i < line.size(); i++)
 	{
 		if (isspace(line[i]))
 			return i - 1;
 	}
-	return std::string::npos;
+	return string::npos;
 }
 
-size_t	skip_white_spaces(const std::string &line, size_t index)
+size_t	skip_white_spaces(const string &line, size_t index)
 {
 	size_t	i = index;
 
@@ -23,7 +23,7 @@ size_t	skip_white_spaces(const std::string &line, size_t index)
 	return i;
 }
 
-static t_tokenConfig	create_token(const std::string &data, t_tokenType tokenType)
+static t_tokenConfig	create_token(const string &data, t_tokenType tokenType)
 {
 	t_tokenConfig	token;
 	token.data = data;
@@ -31,7 +31,7 @@ static t_tokenConfig	create_token(const std::string &data, t_tokenType tokenType
 	return token;
 }
 
-static int	tokenize_server_line(std::string &line, size_t start, std::vector<t_tokenConfig> *tokenList)
+static int	tokenize_server_line(string &line, size_t start, vector<t_tokenConfig> *tokenList)
 {
 	tokenList->push_back(create_token("server", SERVER));
 	size_t	i = skip_white_spaces(line, start + SERV_LEN);
@@ -43,9 +43,9 @@ static int	tokenize_server_line(std::string &line, size_t start, std::vector<t_t
 	return OK;
 }
 
-static int	tokenize_location_line(std::string &line, size_t start, std::vector<t_tokenConfig> *tokenList)
+static int	tokenize_location_line(string &line, size_t start, vector<t_tokenConfig> *tokenList)
 {
-	std::string	arg;
+	string	arg;
 	size_t		i = skip_white_spaces(line, start + LOC_LEN);
 	
 	start = i;
@@ -61,10 +61,10 @@ static int	tokenize_location_line(std::string &line, size_t start, std::vector<t
 	return OK;
 }
 
-static bool	is_directive_line(const std::string &line, size_t start)
+static bool	is_directive_line(const string &line, size_t start)
 {
-	std::string	directive[] = { "listen", "server_name", "error_page", "client_max_body_size", "root", "autoindex", "index", "allow_method", "return" };
-	size_t		end = get_end_word_index(line, start) + 1;
+	string	directive[] = { "listen", "error_page", "client_max_body_size", "root", "autoindex", "index", "allow_methods", "return" };
+	size_t	end = get_end_word_index(line, start) + 1;
 
 	for (size_t i = 0; i < directive->size() + 1; ++i)
 	{
@@ -74,26 +74,26 @@ static bool	is_directive_line(const std::string &line, size_t start)
 	return false;
 }
 
-static int	tokenize_directive_line(std::string &line, size_t start, std::vector<t_tokenConfig> *tokenList)
+static int	tokenize_directive_line(string &line, size_t start, vector<t_tokenConfig> *tokenList)
 {
-	size_t	end = get_end_word_index(line, start);
-	if (end == std::string::npos)
+	size_t	end = get_end_word_index(line, start) + 1;
+	if (end == string::npos)
 		return ERROR;
 
-	tokenList->push_back(create_token(line.substr(start, end), IDENTIFIER));
-	start = skip_white_spaces(line, end + 1);
+	tokenList->push_back(create_token(line.substr(start, end - start), IDENTIFIER));
+	start = skip_white_spaces(line, end);
 	end = start;
 	while (line[end] && line[end] != ';')
 	{
 		if (isspace(line[end])) {
-			std::string	args = line.substr(start, end - start);
+			string	args = line.substr(start, end - start);
 			tokenList->push_back(create_token(args, ARG));
-			start = end;
+			start = end + 1;
 			end = skip_white_spaces(line, end);
 		}
 		else if (line[end + 1] == ';') {
 			end++;
-			std::string	args = line.substr(start, end - start);
+			string	args = line.substr(start, end - start);
 			tokenList->push_back(create_token(args, ARG));
 			start = end;
 			end = skip_white_spaces(line, end);
@@ -108,9 +108,9 @@ static int	tokenize_directive_line(std::string &line, size_t start, std::vector<
 	return OK;
 }
 
-int	tokenize_config_file(std::ifstream &file, std::vector<t_tokenConfig> *tokenList)
+int	tokenize_config_file(ifstream &file, vector<t_tokenConfig> *tokenList)
 {
-	std::string					line;
+	string					line;
 	size_t						pos = 0;
 	int							status = OK;
 
@@ -134,41 +134,41 @@ int	tokenize_config_file(std::ifstream &file, std::vector<t_tokenConfig> *tokenL
 	return OK;
 }
 
-void print_token_type(std::vector<t_tokenConfig> *tokenList)
+void print_token_type(vector<t_tokenConfig> *tokenList)
 {
-	std::vector<t_tokenConfig>::iterator it = tokenList->begin();
+	vector<t_tokenConfig>::iterator it = tokenList->begin();
 	while (it != tokenList->end())
 	{
-		std::cout << "data = " << it->data << std::endl;
-		std::cout << "type = ";
+		cout << "data = " << it->data << "$" << endl;
+		cout << "type = ";
 		switch (it->type)
 		{
 			case SERVER:
-				std::cout << "server" << std::endl;
+				cout << "server" << endl;
 				break ;
 			case LOCATION:
-				std::cout << "location" << std::endl;
+				cout << "location" << endl;
 				break ;
 			case IDENTIFIER:
-				std::cout << "identifier" << std::endl;
+				cout << "identifier" << endl;
 				break ;
 			case O_BRACE:
-				std::cout << "opening brace" << std::endl;
+				cout << "opening brace" << endl;
 				break ;
 			case C_BRACE:
-				std::cout << "closing brace" << std::endl;
+				cout << "closing brace" << endl;
 				break ;
 			case SEMICOLON:
-				std::cout << "semicolon" << std::endl;
+				cout << "semicolon" << endl;
 				break ;
 			case ARG:
-				std::cout << "arg" << std::endl;
+				cout << "arg" << endl;
 				break ;
 			case END:
-				std::cout << "end of file" << std::endl;
+				cout << "end of file" << endl;
 				break ;
 		}
-		std::cout << "------------------------------------" << std::endl;
+		cout << "------------------------------------" << endl;
 		it++;
 	}
 }

@@ -13,59 +13,62 @@
 # define AUTO_ON 1
 # define AUTO_OFF 0
 
+using namespace std;
+
 typedef struct	s_listen
 {
-	int							port;
-	std::string					ip;
-	std::string					address_port;
+	int					port;
+	string				ip;
+	string				address_port;
 }				t_listen;
 
 typedef struct	s_directives
 {
-	int							autoindex;
-	size_t						client_max_body_size;
-	std::string					root;
-	std::vector<std::string>	index;
-	std::vector<std::string>	methods;
-	std::map<int, std::string>	redirection; // <error_code, text ou url>
-	std::map<int, std::string>	error_page; // <error_code, error_uri_path>
+	int					autoindex;
+	size_t				client_max_body_size;
+	string				root;
+	string				full_path;
+	vector<string>		index;
+	vector<string>		methods;
+	map<int, string>	redirection; // <error_code, text ou url>
+	map<int, string>	error_page; // <error_code, error_uri_path>
 }				t_directives;
 
 class	Server
 {
 private :
 /* Configuration *******************************************************************************/
-	std::vector<t_listen>				_listen;
-	t_directives						_directives;
-	std::map<std::string, t_directives>	_locations; // <uri_path, directives>
+	vector<t_listen>			_listen;
+	t_directives				_directives;
+	map<string, t_directives>	_locations; // <uri_path, directives>
 
 public :
 	Server();
 	~Server();
 
 	/* Member Functions ****************************************************************************/
-	void								defaultConfiguration(t_directives server, t_directives &location);
-	void								defaultConfiguration();
-	t_directives*						searchLocationMatch(const std::string &request_uri);
+	void						defaultConfiguration(t_directives server, t_directives &location);
+	void						defaultConfiguration();
+	t_directives*				searchLocationMatch(const string &request_uri);
 
 	/* Setters *************************************************************************************/
-	int									setListen(const std::string &arg);
-	int									setOneDirective(const std::string &type, const std::vector<std::string> &arg, t_directives *container);
-	int									setLocation(const std::string &loc_path, const std::string &type, const std::vector<std::string> &arg);
-	void								setClientMaxBodySize(const std::string &value, t_directives &dir);
-	void								setRoot(const std::string &root, t_directives &dir);
-	void								setIndex(const std::vector<std::string> &index, t_directives &dir);
-	void								setMethods(const std::vector<std::string> &methods, t_directives &dir);
+	int							setListen(const string &arg);
+	int							setOneDirective(const string &type, const vector<string> &arg, t_directives *container);
+	int							setLocation(const string &loc_path, const string &type, const vector<string> &arg);
+	void						setClientMaxBodySize(const string &value, t_directives &dir);
+	void						setRoot(const string &root, t_directives &dir);
+	void						setIndex(const vector<string> &index, t_directives &dir);
+	void						setMethods(const vector<string> &methods, t_directives &dir);
 	
 	/* Getters *************************************************************************************/
-	const std::vector<t_listen>&		getListen() const;
-	const t_directives&					getDirectives() const;
-	t_directives&						getDirectives();
-	const std::map<std::string, t_directives>&	getLocations() const;
+	const vector<t_listen>&		getListen() const;
+	const t_directives&			getDirectives() const;
+	t_directives&				getDirectives();
+	const map<string, t_directives>&	getLocations() const;
 };
 
 /* Operator Overload *******************************************************************************/
-std::ostream&	operator<<(std::ostream &os, const Server &src);
-void			print_directives(std::ostream &os, const t_directives &directives);
+ostream&	operator<<(ostream &os, const Server &src);
+void		print_directives(ostream &os, const t_directives &directives);
 
 #endif

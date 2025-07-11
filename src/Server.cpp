@@ -53,31 +53,46 @@ void	Server::defaultConfiguration()
 		defaultConfiguration(_directives, it->second);
 }
 
-t_directives*	Server::searchLocationMatch(const string &request_uri)
+t_directives*	Server::searchLocationMatch(const string &uri)
 {
-	/* Cherche correspondance exacte */
-	// = définit une correspondance exacte entre l'URI et une chaîne. 
-	// Si correspondance exacte, la recherche s'arrête.
-	map<string, t_directives>::iterator	location_block = _locations.begin();
-	while (location_block != _locations.end())
+	map<string, t_directives>::iterator	location;
+	string								match;
+	t_directives						*result = NULL;
+	size_t								prev_match_len = 0;
+
+	if (uri.empty())
+		return NULL;
+	/* Cherche correspondance exacte entre l'URI de la requete et les path des location blocks */
+	location = _locations.begin();
+	while (location != _locations.end())
 	{
-		if (location_block->first == request_uri)
-			return &(location_block->second);
-		location_block++;
+		if (location->first == uri) {
+			match = location->first;
+			result = &(location->second);
+			break ;
+		}
+		location++;
 	}
-	/* Test des chaînes de préfixe */
-	// teste l'URI contre tous les préfixes (/images, / etc) et stocke la plus longue correspondance
-	// location_block = _locations.begin();
-	// vector<string>	temp;
-	// while (location_block != _locations.end())
-	// {
-	// 	string relative_path = request_uri.substr(location_block->first.length());
-	// 	cout << RED << relative_path << RESET << endl;
-	// 	if (location_block->first == request_uri)
-	// 		return &(location_block->second);
-	// 	location_block++;
-	// }
-	return NULL;
+	if (result == NULL) {
+		/* Cherche la plus longue correspondance de préfixe (/images, /kapouet/admin vs /kapouet etc) */
+		location = _locations.begin();
+		while (location != _locations.end())
+		{
+			if (uri.find(location->first) == 0 && location->first.length() > prev_match_len) {
+				match = location->first;
+				prev_match_len = match.length();
+			}
+			location++;
+		}
+		if (match.empty()) {
+			match = "/";
+			result = &(_locations.find("/")->second);
+		}
+		else
+			result = &(_locations.find(match)->second);
+	}
+	result->full_path = result->root + match + uri.substr(match.length());
+	return result;
 }
 
 /*************************************************************************************************/
@@ -202,7 +217,7 @@ void	Server::setRoot(const string &root, t_directives &dir) { dir.root = root; }
 
 void	Server::setIndex(const vector<string> &index, t_directives &dir) { dir.index = index; }
 	
-void	Server::setMethods(const vector<string> &methods, t_directives &dir) { cout << "CACA" << endl; dir.methods = methods; }
+void	Server::setMethods(const vector<string> &methods, t_directives &dir) { dir.methods = methods; }
 
 /* Getters ***********************************************************************************************************/
 

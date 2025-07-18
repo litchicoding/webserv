@@ -120,7 +120,8 @@ void	Client::setConfig()
 		return ;
 	_config = _server_config->searchLocationMatch(_URI);
 	if (_config == NULL) {
-		cout << RED << "Error: setLocationMatch(): no match with URI found" << RESET << endl;
+		cout << RED << "Error: setLocationMatch(): no match found with URI(" << _URI;
+		cout << ")" << RESET << endl;
 		return ;
 	}
 }

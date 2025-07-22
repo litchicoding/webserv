@@ -30,7 +30,8 @@ void    Client::isFileDelete()
 	//	;
     if (std::remove(_URI.c_str()) != 0)
 		return(handleError(500));
-    sendResponse(204);
+	std::cout << GREEN "File Delete" RESET << std::endl;
+    // sendResponse(204);
 }
 
 void    Client::isDirectoryDelete()
@@ -48,10 +49,11 @@ void    Client::isDirectoryDelete()
     if (std::remove(cleanPath.c_str()) != 0)
 		return(handleError(500));
     std::cout << GREEN "Directory deleted successfully: " << _URI << RESET << std::endl;
-    sendResponse(204);
+    // sendResponse(204);
 }
 
 int Client::delete_all_folder_content(std::string URI)
 {
+	std::cout << GREEN "delete all folder content" RESET << std::endl;
     // ...
 }

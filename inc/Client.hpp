@@ -38,23 +38,27 @@ private:
 	bool								URI_Not_Printable(std::string& URI);
 	int									HeadersCorrect(std::string method);
 	
-	void								handlePost();
 	void								handleError(int code);
 	bool								URI_has_slash_in_end();
 	
 	/* HandleDelete Function ****************************************************************************/
-
+	
 	void								handleDelete();
 	void    							isFileDelete();
 	void  								isDirectoryDelete();
 	int									delete_all_folder_content(std::string URI);
-
+	
 	/* HandleGet Function ****************************************************************************/
 	void								handleGet();
 	void								handleFileRequest();
 	void								handleDirectoryRequest();
 	std::string							findIndexFile();
-										// generateDirectoryListing();
+	// generateDirectoryListing();
+	
+	void								handlePost();
+	void								isFilePost();
+	void								isDirectoryPost();
+
 
 public:
 	Client(int listen_fd, int epoll_fd);

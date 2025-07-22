@@ -78,7 +78,6 @@ void	Client::start()
 }
 
 void	Client::parseRawRequest() {
-	this->_request = collect_request();
 	istringstream  iss(this->_request);
 	string line;
 	bool isFirstLine = true;

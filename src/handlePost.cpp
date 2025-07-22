@@ -1,7 +1,9 @@
 #include "../inc/Client.hpp"
 
+
 void	Client::handlePost()
 {
+	struct stat st;
 	if (access(_URI.c_str(), F_OK) != 0)
 		return(handleError(404));
 	if (stat(_URI.c_str(), &st) != 0)
@@ -40,7 +42,7 @@ void    Client::isFilePost()
 
 void    Client::isDirectoryPost()
 {
-   	if (_URI.empty() || _URI.back() != '/')
+   	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 	{
 		std::string redirectUri = _URI + "/";
 		std::cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;

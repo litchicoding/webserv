@@ -8,7 +8,6 @@ class	Server;
 typedef struct s_directives t_directives;
 
 using namespace std;
-struct stat st;
 
 class	Client
 {
@@ -35,7 +34,6 @@ private:
 	void								handleMethodLine(std::string& line);
 	void								handleHeaders(std::string& line);
 	void								handleBody(std::string& line);
-	std::string							collect_request(); // a enlever je crois.
 	std::string							getMIME(std::string& URI);
 	bool								URI_Not_Printable(std::string& URI);
 	int									HeadersCorrect(std::string method);

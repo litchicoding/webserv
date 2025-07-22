@@ -1,6 +1,7 @@
 #include "../inc/Client.hpp"
 
 void	Client::handleGet() {
+	struct stat st;
 	if (access(_URI.c_str(), F_OK) != 0)
 		return(handleError(404));
 	if (stat(_URI.c_str(), &st) != 0)
@@ -45,7 +46,7 @@ void	Client::handleFileRequest()
 
 void	Client::handleDirectoryRequest()
 {
-	if (_URI.empty() || _URI.back() != '/')
+   	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 	{
 		std::string redirectUri = _URI + "/";
 		std::cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
@@ -72,13 +73,14 @@ void	Client::handleDirectoryRequest()
 
 std::string Client::findIndexFile()
 {
-    for (const std::string& indexName : _config->index)
+	struct stat st;
+	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
     {
-        std::string indexPath = _URI + indexName;    
-        if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0) {
-            if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode)) {
+	    const std::string& indexPath = *it;
+        if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0)
+		{
+            if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
                 return indexPath;
-            }
         }
     }
     return "";

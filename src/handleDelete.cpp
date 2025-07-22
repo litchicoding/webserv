@@ -1,12 +1,14 @@
 #include "../inc/Client.hpp"
 
+
 void	Client::handleDelete() {
+	struct stat st;
 	if (access(_URI.c_str(), F_OK) != 0)
 		return(handleError(404));
 	if (stat(_URI.c_str(), &st) != 0)
 		return(handleError(500));
     if (access(_URI.c_str(), W_OK) != 0)
-        return handleError(403);
+		return handleError(403);
 	if (S_ISREG(st.st_mode))
 	{
 	 	std::cout << RED "file" RESET << std::endl;
@@ -36,7 +38,7 @@ void    Client::isFileDelete()
 
 void    Client::isDirectoryDelete()
 {
-   	if (_URI.empty() || _URI.back() != '/')
+   	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
         return (handleError(409));
     // if(isCgiScript(_URI) == OK)
     //     index_files
@@ -54,6 +56,7 @@ void    Client::isDirectoryDelete()
 
 int Client::delete_all_folder_content(std::string URI)
 {
-	std::cout << GREEN "delete all folder content" RESET << std::endl;
+	std::cout << GREEN "delete all folder content" RESET << URI << std::endl;
     // ...
+	return 0;
 }

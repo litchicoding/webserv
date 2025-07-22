@@ -36,10 +36,8 @@ private:
 	void								handleBody(std::string& line);
 	std::string							getMIME(std::string& URI);
 	bool								URI_Not_Printable(std::string& URI);
-	int									HeadersCorrect(std::string method);
 	
 	void								handleError(int code);
-	bool								URI_has_slash_in_end();
 	
 	/* HandleDelete Function ****************************************************************************/
 	

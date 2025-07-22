@@ -178,7 +178,7 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	// _clients[client_fd]->initRequest()
 	// _clients[client_fd]->isRequestFormed()
 	// Avec l'URI de la requete on cherche un match dans les blocs location du server_block associé
-	_clients[client_fd]->setConfig();
+	// _clients[client_fd]->setConfig();
 	// parse the request and start filling datas in client class
 	_clients[client_fd]->parseRawRequest();
 	_clients[client_fd]->request_well_formed_optimized();

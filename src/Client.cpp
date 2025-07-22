@@ -30,24 +30,24 @@ void	Client::handleError(int code) {
 
 	switch (code) {
 		case 400:
-		    std::cout << RED << "400 : Reussie !" << std::endl;
+		    std::cout << RED << "400 : Error !" RESET << std::endl;
 			// message = "400 Bad Request";
 			// filePath = "";
 			break;
 		case 403:
-		    std::cout << RED << "403 : Reussie !" << std::endl;
+		    std::cout << RED << "403 : Error !" RESET << std::endl;
 			break;
 		case 404:
-	        std::cout << RED << "404 : Reussie !" << std::endl;
+	        std::cout << RED << "404 : Error !" RESET << std::endl;
 			break;
 		case 405:
-	        std::cout << RED << "405 : Reussie !" << std::endl;
+	        std::cout << RED << "405 : Error !" RESET << std::endl;
 			break;
 		case 500:
-	        std::cout << RED << "500 : Reussie !" << std::endl;
+	        std::cout << RED << "500 : Error !" RESET << std::endl;
 			break;
 		case 505:
-	        std::cout << RED << "505 : Reussie !" << std::endl;
+	        std::cout << RED << "505 : Error !" RESET << std::endl;
 			break;
 	}
 	// std::ifstream 		file(filePath);
@@ -67,8 +67,17 @@ void	Client::handleError(int code) {
 	// Rajouter d'autres headers ?? Date ? Server ? Connection ?z
 }
 
+void	Client::start()
+{
+	if (_method == "GET")
+		handleGet();
+	if (_method == "POST")
+		handlePost();
+	if (_method == "DELETE")
+		handleDelete();
+}
+
 void	Client::parseRawRequest() {
-	this->_request = collect_request();
 	std::istringstream  iss(this->_request);
 	std::string line;
 	bool isFirstLine = true;
@@ -118,6 +127,7 @@ void	Client::setConfig()
 {
 	if (_server_config == NULL)
 		return ;
+	std::cout << RED << "URI : " << _URI << RESET << std::endl;
 	_config = _server_config->searchLocationMatch(_URI);
 	if (_config == NULL)
 		std::cout << RED << "Error: setServerConfig(): no match with URI found" << RESET << std::endl;

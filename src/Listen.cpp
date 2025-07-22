@@ -188,6 +188,9 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	_clients[client_fd]->setConfig();
 	// parse the request and start filling datas in client class
 	_clients[client_fd]->parseRawRequest();
+	_clients[client_fd]->request_well_formed_optimized();
+	_clients[client_fd]->start();
+	
 	// Ecrire une réponse basée sur les élements dans la requete et sur les directives de configurations
 	// _clients[client_fd]->buildResponse();
 	// finally send to client the response

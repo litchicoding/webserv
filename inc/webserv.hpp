@@ -40,13 +40,16 @@
 
 # define RED "\e[31m"
 # define GREEN "\e[32m"
+# define YELLOW "\e[33m"
 # define BLUE "\e[34m"
 # define RESET "\e[0m"
 
+extern Listen	*g_global_instance;
+
+using namespace std;
+
 class	Server;
 class   Client;
-
-extern Listen	*g_global_instance;
 
 void	signal_handler(int signal);
 int		add_fd_to_epoll(int epoll_fd, int fd);

@@ -25,6 +25,7 @@ void	Client::handleGet() {
 
 void	Client::handleFileRequest()
 {
+	cout << "hey hey hey" << endl;
 	if (access(_URI.c_str(), R_OK) != 0)
 		return (handleError(403));
 	
@@ -46,11 +47,12 @@ void	Client::handleFileRequest()
 
 void	Client::handleDirectoryRequest()
 {
+	std::cout << "HEY handleDirResquest()" << std::endl;
    	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 	{
 		std::string redirectUri = _URI + "/";
 		std::cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
-		// return sendRedirect(redirectUri); // 301 Redirection
+		return (sendRedirect(redirectUri));
 	}
 
 	// Chercher un fichier index
@@ -68,11 +70,12 @@ void	Client::handleDirectoryRequest()
         // return generateDirectoryListing();
     }
     else
-        return handleError(403);
+        return (handleError(403));
 }
 
 std::string Client::findIndexFile()
 {
+	cout << "coucou" << endl;
 	struct stat st;
 	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
     {
@@ -83,5 +86,6 @@ std::string Client::findIndexFile()
                 return indexPath;
         }
     }
+	cout << "coucou22222" << endl;
     return "";
 }

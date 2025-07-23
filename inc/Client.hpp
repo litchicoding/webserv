@@ -37,7 +37,11 @@ private:
 	std::string							getMIME(std::string& URI);
 	bool								URI_Not_Printable(std::string& URI);
 	
+
+	/* Response Function ****************************************************************************/
+
 	void								handleError(int code);
+	void								sendRedirect(string URI);
 	
 	/* HandleDelete Function ****************************************************************************/
 	
@@ -47,11 +51,14 @@ private:
 	int									delete_all_folder_content(std::string URI);
 	
 	/* HandleGet Function ****************************************************************************/
+	
 	void								handleGet();
 	void								handleFileRequest();
 	void								handleDirectoryRequest();
 	std::string							findIndexFile();
 	// generateDirectoryListing();
+
+	/* HandlePost Function ****************************************************************************/
 	
 	void								handlePost();
 	void								isFilePost();

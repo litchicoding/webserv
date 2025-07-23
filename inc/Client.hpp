@@ -31,8 +31,8 @@ private:
 	size_t				_response_len;
 
 	/* Parsing ************************************************************************************/
-	void								handleMethodLine(std::string& line);
-	void								handleHeaders(std::string& line);
+	int									handleMethodLine(std::string& line);
+	int									handleHeaders(std::string& line);
 	void								handleBody(std::string& line);
 	std::string							getMIME(std::string& URI);
 	bool								URI_Not_Printable(std::string& URI);
@@ -72,9 +72,9 @@ public:
 
 	/* Member Function ****************************************************************************/
 	void								start();
-	void								parseRawRequest();
+	int									parseRawRequest();
 	void								buildResponse();
-	void    							request_well_formed_optimized();
+	int	    							request_well_formed_optimized();
 
 	/* Setters ************************************************************************************/
 	void				setRequest(const string &request, const int &len);

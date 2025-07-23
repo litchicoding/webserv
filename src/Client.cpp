@@ -28,14 +28,14 @@ Client::~Client()
 void	Client::start()
 {
 	if (_method == "GET")
-		handleGet();
+		return (handleGet());
 	if (_method == "POST")
-		handlePost();
+		return (handlePost());
 	if (_method == "DELETE")
-		handleDelete();
+		return (handleDelete());
 }
 
-void	Client::parseRawRequest() {
+int	Client::parseRawRequest() {
 	istringstream  iss(this->_request);
 	string line;
 	bool isFirstLine = true;
@@ -47,13 +47,17 @@ void	Client::parseRawRequest() {
 			line.erase(line.length() - 1, 1);
 		if (isFirstLine)
 		{
-			handleMethodLine(line);
+			if (handleMethodLine(line) != OK)
+				return ERROR;
 			isFirstLine = false;
 		}
 		else if (line.empty())
 			headers = false;
 		else if (headers)
-			handleHeaders(line);
+		{
+			if (handleHeaders(line) != OK)
+				return ERROR;
+		}
 		else
 			handleBody(line);
 	}
@@ -67,6 +71,8 @@ void	Client::parseRawRequest() {
 		cout << it->first << ": " << it->second << endl;
 	}
 	cout << "Body : \n" << this->_body << RESET << endl;
+
+	return OK;
 }
 
 
@@ -91,6 +97,10 @@ void	Client::setConfig()
 		cout << RED << "Error: setLocationMatch(): no match with URI found" << RESET << endl;
 		return ;
 	}
+	string newURI = _URI;
+	_URI = _config->root + '/';
+	cout << GREEN "setconfig: " << _URI << RESET << endl;
+	cout << GREEN "root = " << _config->root << endl; 
 }
 
 /**************************************************************************************************/

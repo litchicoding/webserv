@@ -1,31 +1,31 @@
 #include "../inc/Client.hpp"
 
-void	Client::request_well_formed_optimized() {
+int	Client::request_well_formed_optimized() {
 
 	// VALIDATION DE L'URI
 	if (_URI.empty() || _URI[0] != '/')
-		return(handleError(400));
+		return(handleError(400), ERROR);
 	if (_URI.find("..") != std::string::npos)
-		return(handleError(403));
+		return(handleError(403), ERROR);
 	if (URI_Not_Printable(_URI))
-		return(handleError(400));
+		return(handleError(400), ERROR);
 	if (_URI.size() > 2048)
-		return(handleError(414));
+		return(handleError(414), ERROR);
 
 	// VALIDATION DE LA VERSION
 	if (_version != "HTTP/1.1")
-		return(handleError(505));
+		return(handleError(505), ERROR);
 
 	// VALIDATION ROOT LOCATION
 	setConfig();
 	if (_config == NULL)
-		return (handleError(404));
+		return (handleError(404), ERROR);
 	if (!(_config->redirection.empty()))
-		return (handleError(301));
+		return (handleError(301), ERROR);
 	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())
-		return (handleError(413));
+		return (handleError(413), ERROR);
 	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
-		return (handleError(405));
+		return (handleError(405), ERROR);
 
 	// if (location_have_redirection(_config) != OK) // voir si redirection précisée dans la location
 	// 	return (handleError(301));
@@ -45,7 +45,7 @@ void	Client::request_well_formed_optimized() {
 	// std::map<std::string, std::string>::iterator contentLengthIt = _headersMap.find("Content-Length");
 		
 	if (transferEncodingIt != _headersMap.end() && transferEncodingIt->second != "chunked")
-		return(handleError(501));
+		return(handleError(501), ERROR);
 	// else if (transferEncodingIt == _headersMap.end() && contentLengthIt == _headersMap.end() && _method != "POST")
 	// {
 	// 	std::cout << RED "transferencodingit" RESET << std::endl;
@@ -54,25 +54,29 @@ void	Client::request_well_formed_optimized() {
 	// Transfer encoding + content length impossible
 	// Si content-length vérifier que ce soit un nombre valide
 	// HOST obligatoire en HTTP/1.1
+
+	return OK;
 }
 
-void	Client::handleMethodLine(std::string& line)
+int	Client::handleMethodLine(std::string& line)
 {
 	std::istringstream  iss(line);
 	if (!(iss >> this->_method >> this->_URI >> this->_version))
-		return(handleError(400));
+		return(handleError(400), ERROR);
+	return OK;
 }
 
-void	Client::handleHeaders(std::string& line)
+int	Client::handleHeaders(std::string& line)
 {
 	size_t delimiterPos = line.find(':');
 	if (delimiterPos == std::string::npos)
-		return(handleError(400));
+		return(handleError(400), ERROR);
 	std::string key = line.substr(0, delimiterPos);
 	std::string value = line.substr(delimiterPos + 1);
 	if (key.empty())
-		return(handleError(400));
+		return(handleError(400), ERROR);
 	this->_headersMap[key] = value;
+	return OK;
 }
 
 

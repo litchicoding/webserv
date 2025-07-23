@@ -189,6 +189,8 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	// Ecrire une réponse basée sur les élements dans la requete et sur les directives de configurations
 	// _clients[client_fd]->buildResponse();
 	// finally send to client the response
+	cout << "OMG : " << _clients[client_fd]->getResponse().c_str() << endl;
+
 	write(client_fd, _clients[client_fd]->getResponse().c_str(), _clients[client_fd]->getResponseLen());
 	cout << BLUE << "Response to request has been sent!" << RESET << endl;
 	return OK;

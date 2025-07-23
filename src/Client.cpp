@@ -13,6 +13,15 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 		return ;
 	}
 	add_fd_to_epoll(epoll_fd, _client_fd);
+	_method = "";
+	_URI = "";
+	_version = "";
+	_request = "";
+	_body = "";
+	_response = "";
+	_root = "";
+	_request_len = 0;
+	_response_len = 0;
 }
 
 Client::~Client()
@@ -61,17 +70,6 @@ int	Client::parseRawRequest() {
 		else
 			handleBody(line);
 	}
-
-	// Pour tester !!!
-	cout << GREEN "Method = " << this->_method << endl;
-	cout << "URI = " << this->_URI << endl;
-	cout << "version = " << this->_version << endl;
-	cout << "Headers:" << endl;
-	for (map<string, string>::const_iterator it = this->_headersMap.begin(); it != this->_headersMap.end(); ++it) {
-		cout << it->first << ": " << it->second << endl;
-	}
-	cout << "Body : \n" << this->_body << RESET << endl;
-
 	return OK;
 }
 
@@ -97,10 +95,6 @@ void	Client::setConfig()
 		cout << RED << "Error: setLocationMatch(): no match with URI found" << RESET << endl;
 		return ;
 	}
-	string newURI = _URI;
-	_URI = _config->root + '/';
-	cout << GREEN "setconfig: " << _URI << RESET << endl;
-	cout << GREEN "root = " << _config->root << endl; 
 }
 
 /**************************************************************************************************/

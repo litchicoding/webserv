@@ -2,10 +2,12 @@
 
 void	Client::handleGet() {
 	struct stat st;
-	cout << _URI << endl;
-	if (access(_URI.c_str(), F_OK) != 0)
+	string root = _config->root;
+	cout << GREEN << root << RESET << endl;
+
+	if (access(root.c_str(), F_OK) != 0)
 		return(handleError(404));
-	if (stat(_URI.c_str(), &st) != 0)
+	if (stat(root.c_str(), &st) != 0)
 		return(handleError(500));
 	if (S_ISREG(st.st_mode))
 		return (handleFileRequest());
@@ -17,7 +19,6 @@ void	Client::handleGet() {
 
 void	Client::handleFileRequest()
 {
-	cout << "hey hey hey" << endl;
 	if (access(_URI.c_str(), R_OK) != 0)
 		return (handleError(403));
 	
@@ -35,19 +36,23 @@ void	Client::handleFileRequest()
 	body << file.rdbuf();
 	file.close();
 
-	// Construction response !
+	ostringstream	response;
+	response << "HTTP/1.1 200 OK\r\n";
+	response << "Content-Type: " << getMIME(_URI) << "\r\n";
+	response << "Content-Length: " << body.str().size() << "\r\n";
+	response << "Connection: close\r\n";
+	response << "\r\n";
+	response << body.str();
 
-	std::cout << GREEN "handleFileRequest(): Get parsing File fonctionne !" RESET << std::endl;
-
-	// _response = sendResponse();
+	_response = response.str();
 }
 
 void	Client::handleDirectoryRequest()
 {
    	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 	{
-		std::string redirectUri = _URI + "/";
-		std::cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
+		string redirectUri = _URI + "/";
+		cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
 		return (sendRedirect(redirectUri));
 	}
 
@@ -72,18 +77,15 @@ void	Client::handleDirectoryRequest()
 
 std::string Client::findIndexFile()
 {
-	cout << "coucou" << endl;
 	struct stat st;
 	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
     {
-	    const std::string& indexPath = _URI + *it;
-		cout << RED << indexPath << RESET << endl;
+	    const std::string& indexPath = _config->root + '/' + *it;
         if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0)
 		{
             if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
                 return indexPath;
         }
     }
-	cout << "coucou22222" << endl;
     return "";
 }

@@ -2,15 +2,21 @@
 
 void	Client::handleGet() {
 	struct stat st;
-	string root = _config->root;
+	string root = _config->full_path;
 	cout << GREEN << root << RESET << endl;
 
+	// ./WEBSITE/QSD/
 	if (access(root.c_str(), F_OK) != 0)
 		return(handleError(404));
 	if (stat(root.c_str(), &st) != 0)
 		return(handleError(500));
 	if (S_ISREG(st.st_mode))
+	{
+		// if (handleFileRequest() != OK)
+		// 	return ERROR;
+		// return OK;
 		return (handleFileRequest());
+	}
 	else if (S_ISDIR(st.st_mode))
 		return (handleDirectoryRequest());
 	else
@@ -45,11 +51,12 @@ void	Client::handleFileRequest()
 	response << body.str();
 
 	_response = response.str();
+	_response_len = _response.size();
 }
 
 void	Client::handleDirectoryRequest()
 {
-   	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
+	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 	{
 		string redirectUri = _URI + "/";
 		cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
@@ -79,13 +86,13 @@ std::string Client::findIndexFile()
 {
 	struct stat st;
 	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
-    {
-	    const std::string& indexPath = _config->root + '/' + *it;
-        if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0)
+	{
+		const std::string& indexPath = _config->root + '/' + *it;
+		if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0)
 		{
-            if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
-                return indexPath;
-        }
-    }
-    return "";
+			if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+				return indexPath;
+		}
+	}
+	return "";
 }

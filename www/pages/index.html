@@ -95,12 +95,12 @@
         <!-- Test GET -->
         <div class="test-section">
             <h2>📥 Test GET - Fichiers statiques</h2>
-            <p>Testez le chargement de différents types de fichiers :</p>
+            <p>Testez le chargement de diff&eacute;rents types de fichiers :</p>
             <div class="links">
                 <a href="/index.html">HTML (cette page)</a>
                 <a href="/style.css">CSS</a>
                 <a href="/script.js">JavaScript</a>
-                <a href="/image.jpg">Image JPG</a>
+                <a href="/images/image_1.jpg">Image JPG</a>
                 <a href="/test.txt">Fichier texte</a>
                 <a href="/nonexistent.html">404 Error</a>
             </div>
@@ -118,11 +118,11 @@
 
         <!-- Test POST Data -->
         <div class="test-section">
-            <h2>📝 Test POST - Envoi de données</h2>
+            <h2>📝 Test POST - Envoi de donn&eacute;es</h2>
             <form id="dataForm">
                 <input type="text" id="nameInput" name="name" placeholder="Votre nom" required>
                 <input type="text" id="messageInput" name="message" placeholder="Votre message" required>
-                <button type="submit">Envoyer les données</button>
+                <button type="submit">Envoyer les donn&eacute;es</button>
             </form>
             <div id="dataResult"></div>
         </div>
@@ -144,7 +144,7 @@
                 <a href="/cgi-bin/form.php">PHP Form</a>
             </div>
             <form id="cgiForm">
-                <input type="text" id="cgiInput" name="data" placeholder="Données pour CGI" required>
+                <input type="text" id="cgiInput" name="data" placeholder="Donn&eacute;es pour CGI" required>
                 <button type="submit">Envoyer au CGI</button>
             </form>
             <div id="cgiResult"></div>
@@ -164,7 +164,7 @@
         <div class="test-section">
             <h2>❌ Test Pages d'erreur</h2>
             <div class="links">
-                <a href="/nonexistent">404 - Page non trouvée</a>
+                <a href="/nonexistent">404 - Page non trouv&eacute;e</a>
                 <a href="/forbidden">403 - Accès interdit</a>
                 <a href="/large-file">413 - Fichier trop volumineux</a>
             </div>
@@ -185,7 +185,7 @@
             const fileInput = document.getElementById('fileInput');
             
             if (fileInput.files.length === 0) {
-                document.getElementById('uploadResult').innerHTML = '<div class="result error">Veuillez sélectionner un fichier</div>';
+                document.getElementById('uploadResult').innerHTML = '<div class="result error">Veuillez s&eacute;lectionner un fichier</div>';
                 return;
             }
             
@@ -197,7 +197,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('uploadResult').innerHTML = '<div class="result">Fichier uploadé avec succès: ' + data + '</div>';
+                document.getElementById('uploadResult').innerHTML = '<div class="result">Fichier upload&eacute; avec succès: ' + data + '</div>';
             })
             .catch(error => {
                 document.getElementById('uploadResult').innerHTML = '<div class="result error">Erreur upload: ' + error + '</div>';
@@ -217,7 +217,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('dataResult').innerHTML = '<div class="result">Données envoyées: ' + data + '</div>';
+                document.getElementById('dataResult').innerHTML = '<div class="result">Donn&eacute;es envoy&eacute;es: ' + data + '</div>';
             })
             .catch(error => {
                 document.getElementById('dataResult').innerHTML = '<div class="result error">Erreur envoi: ' + error + '</div>';
@@ -237,7 +237,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('deleteResult').innerHTML = '<div class="result">Fichier supprimé: ' + filename + '</div>';
+                document.getElementById('deleteResult').innerHTML = '<div class="result">Fichier supprim&eacute;: ' + filename + '</div>';
             })
             .catch(error => {
                 document.getElementById('deleteResult').innerHTML = '<div class="result error">Erreur suppression: ' + error + '</div>';
@@ -256,7 +256,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('cgiResult').innerHTML = '<div class="result">Réponse CGI: ' + data + '</div>';
+                document.getElementById('cgiResult').innerHTML = '<div class="result">R&eacute;ponse CGI: ' + data + '</div>';
             })
             .catch(error => {
                 document.getElementById('cgiResult').innerHTML = '<div class="result error">Erreur CGI: ' + error + '</div>';

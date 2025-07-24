@@ -165,7 +165,7 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 		close(client_fd);
 		return ERROR;
 	}
-	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer << endl;
+	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
 	cout << BLUE << "Server is processing client request..." << RESET << endl;
 
 	// Stocke la requete + la taille de la requete
@@ -174,19 +174,10 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
 	if (_clients[client_fd]->getServerConfig() == NULL)
 		stop("no match for server configuration");
-	// Lire la requete et trier les datas (URI, METHOD, HEADERS etc) dans la classe client
-	// _clients[client_fd]->initRequest()
-	// _clients[client_fd]->isRequestFormed()
-	// Avec l'URI de la requete on cherche un match dans les blocs location du server_block associé
-	// _clients[client_fd]->setConfig();
 	// parse the request and start filling datas in client class
 	if (_clients[client_fd]->parseRawRequest() == OK && _clients[client_fd]->request_well_formed_optimized() == OK)
 		_clients[client_fd]->start();
 	
-	// Ecrire une réponse basée sur les élements dans la requete et sur les directives de configurations
-	// _clients[client_fd]->buildResponse();
-	// finally send to client the response
-
 	// cout << "OMG : " << _clients[client_fd]->getResponse().c_str() << endl;
 	// cout << "Taille : " << _clients[client_fd]->getResponseLen() << endl;
 

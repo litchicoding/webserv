@@ -19,7 +19,7 @@ int	Client::request_well_formed_optimized() {
 	// VALIDATION ROOT LOCATION
 	setConfig();
 	if (_config == NULL)
-		return (handleError(404), ERROR);
+		return (handleError(404), ERROR); // ou error 500 ?
 	if (!(_config->redirection.empty()))
 		return (handleError(301), ERROR); // error
 	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())

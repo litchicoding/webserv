@@ -3,7 +3,7 @@
 void	Client::handleGet() {
 	struct stat st;
 	string root = _config->full_path;
-	cout << GREEN << root << RESET << endl;
+	cout << GREEN << "handleGet() - root(full_path) : " << RESET << root << endl;
 
 	// ./WEBSITE/QSD/
 	if (access(root.c_str(), F_OK) != 0)
@@ -20,21 +20,23 @@ void	Client::handleGet() {
 	else if (S_ISDIR(st.st_mode))
 		return (handleDirectoryRequest());
 	else
-		return(handleError(403));
+		return (handleError(403));
 }
 
 void	Client::handleFileRequest()
 {
-	if (access(_URI.c_str(), R_OK) != 0)
+	const char	*uri = _config->full_path.c_str();
+	cout << GREEN << "handleFileRequest() - full_path : " << RESET << uri << endl;
+	// const char *uri = _URI.c_str();
+	if (access(uri, R_OK) != 0)
 		return (handleError(403));
-	
-	// if(isCgiScript(_URI) == OK)
+	// if(isCgiScript(uri) == OK)
 	//	;
 
-	std::ifstream	file(_URI.c_str());
+	std::ifstream	file(uri);
 	if (!file.is_open())
 	{
-		std::cout << RED "Error : Cannot open file: " << _URI << RESET << std::endl;
+		std::cout << RED "Error : Cannot open file: " << RESET << uri << std::endl;
 		return (handleError(500));
 	}
 
@@ -44,7 +46,7 @@ void	Client::handleFileRequest()
 
 	ostringstream	response;
 	response << "HTTP/1.1 200 OK\r\n";
-	response << "Content-Type: " << getMIME(_URI) << "\r\n";
+	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
 	response << "Connection: close\r\n";
 	response << "\r\n";
@@ -56,9 +58,10 @@ void	Client::handleFileRequest()
 
 void	Client::handleDirectoryRequest()
 {
-	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
+	string	uri = _config->full_path;
+	if (uri.empty() || uri[uri.size() - 1] != '/')
 	{
-		string redirectUri = _URI + "/";
+		string redirectUri = uri + "/";
 		cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
 		return (sendRedirect(redirectUri));
 	}
@@ -66,13 +69,14 @@ void	Client::handleDirectoryRequest()
 	// Chercher un fichier index
     std::string indexFile = findIndexFile();
     if (!indexFile.empty()) {
-        std::cout << GREEN "Index file found: " << indexFile << RESET << std::endl;
+        std::cout << GREEN "handleDirectoryRequest() - Index file found: " <<  RESET << indexFile << std::endl;
         _URI = indexFile;
+		_config->full_path = indexFile;
         return (handleFileRequest());
     }
     
     // Si pas de fichier index, vérifier l'autoindex
-    if (_config->autoindex == 1)
+    if (_config->autoindex == 1) // utiliser la macro AUTO_ON
     {
         std::cout << BLUE "Generating directory listing for: " << _URI << RESET << std::endl;
 		return ;
@@ -87,7 +91,8 @@ std::string Client::findIndexFile()
 	struct stat st;
 	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
 	{
-		const std::string& indexPath = _config->root + '/' + *it;
+		// const std::string& indexPath = _config->root + '/' + *it;
+		const std::string& indexPath = _config->full_path + *it;
 		if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0)
 		{
 			if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))

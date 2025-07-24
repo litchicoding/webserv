@@ -31,17 +31,39 @@ private:
 	size_t				_response_len;
 
 	/* Parsing ************************************************************************************/
-	void				handleError(int code);
-	void				handleMethodLine(string& line);
-	void				handleHeaders(string& line);
-	void				handleBody(string& line);
-	string				collect_request();
-	void				handleGet();
-	void				handlePost();
-	void				handleDelete();
-	string				getMIME(string& URI);
-	bool				URI_Not_Printable(string& URI);
-	int					HeadersCorrect(string method);
+	int									handleMethodLine(std::string& line);
+	int									handleHeaders(std::string& line);
+	void								handleBody(std::string& line);
+	std::string							getMIME(std::string& URI);
+	bool								URI_Not_Printable(std::string& URI);
+	
+
+	/* Response Function ****************************************************************************/
+
+	void								handleError(int code);
+	void								sendRedirect(string URI);
+	
+	/* HandleDelete Function ****************************************************************************/
+	
+	void								handleDelete();
+	void    							isFileDelete();
+	void  								isDirectoryDelete();
+	int									delete_all_folder_content(std::string URI);
+	
+	/* HandleGet Function ****************************************************************************/
+	
+	void								handleGet();
+	void								handleFileRequest();
+	void								handleDirectoryRequest();
+	std::string							findIndexFile();
+	// generateDirectoryListing();
+
+	/* HandlePost Function ****************************************************************************/
+	
+	void								handlePost();
+	void								isFilePost();
+	void								isDirectoryPost();
+
 
 public:
 	Client(int listen_fd, int epoll_fd);
@@ -49,9 +71,10 @@ public:
 	~Client();
 
 	/* Member Function ****************************************************************************/
-	void				start();
-	void				parseRawRequest();
-	void				buildResponse();
+	void								start();
+	int									parseRawRequest();
+	void								buildResponse();
+	int	    							request_well_formed_optimized();
 
 	/* Setters ************************************************************************************/
 	void				setRequest(const string &request, const int &len);

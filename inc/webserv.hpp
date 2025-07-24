@@ -22,6 +22,7 @@
 # include <sys/epoll.h>
 # include <sys/types.h>
 # include <netdb.h>
+# include <algorithm>
 
 # include "Server.hpp"
 # include "Client.hpp"

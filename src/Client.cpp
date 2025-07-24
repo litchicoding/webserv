@@ -13,6 +13,15 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 		return ;
 	}
 	add_fd_to_epoll(epoll_fd, _client_fd);
+	_method = "";
+	_URI = "";
+	_version = "";
+	_request = "";
+	_body = "";
+	_response = "";
+	_root = "";
+	_request_len = 0;
+	_response_len = 0;
 }
 
 Client::~Client()
@@ -25,50 +34,17 @@ Client::~Client()
 /**************************************************************************************************/
 /* Parsing ****************************************************************************************/
 
-void	Client::handleError(int code) {
-	string	message, filePath;
-
-	switch (code) {
-		case 400:
-		    cout << RED << "400 : Reussie !" << endl;
-			// message = "400 Bad Request";
-			// filePath = "";
-			break;
-		case 403:
-		    cout << RED << "403 : Reussie !" << endl;
-			break;
-		case 404:
-	        cout << RED << "404 : Reussie !" << endl;
-			break;
-		case 405:
-	        cout << RED << "405 : Reussie !" << endl;
-			break;
-		case 500:
-	        cout << RED << "500 : Reussie !" << endl;
-			break;
-		case 505:
-	        cout << RED << "505 : Reussie !" << endl;
-			break;
-	}
-	// ifstream 		file(filePath);
-	// if (!file.is_open()) {
-	// 	cerr << "In handleError() file not open.";
-	// 	return ;
-	// }
-	// ostringstream	body;
-	// body << file.rdbuf();
-
-	// this->response = "HTTP/1.1 " + message + "\r\n";
-	// this->response += "Content-Type: text/html\r\n";
-
-	// this->response += "Content-Length: " + to_string(body.str().size()) + "\r\n";
-	// this->response += "\r\n";
-	// this->response += body.str();
-	// Rajouter d'autres headers ?? Date ? Server ? Connection ?z
+void	Client::start()
+{
+	if (_method == "GET")
+		return (handleGet());
+	if (_method == "POST")
+		return (handlePost());
+	if (_method == "DELETE")
+		return (handleDelete());
 }
 
-void	Client::parseRawRequest() {
-	this->_request = collect_request();
+int	Client::parseRawRequest() {
 	istringstream  iss(this->_request);
 	string line;
 	bool isFirstLine = true;
@@ -80,26 +56,21 @@ void	Client::parseRawRequest() {
 			line.erase(line.length() - 1, 1);
 		if (isFirstLine)
 		{
-			handleMethodLine(line);
+			if (handleMethodLine(line) != OK)
+				return ERROR;
 			isFirstLine = false;
 		}
 		else if (line.empty())
 			headers = false;
 		else if (headers)
-			handleHeaders(line);
+		{
+			if (handleHeaders(line) != OK)
+				return ERROR;
+		}
 		else
 			handleBody(line);
 	}
-
-	// Pour tester !!!
-	cout << GREEN "Method = " << this->_method << endl;
-	cout << "URI = " << this->_URI << endl;
-	cout << "version = " << this->_version << endl;
-	cout << "Headers:" << endl;
-	for (map<string, string>::const_iterator it = this->_headersMap.begin(); it != this->_headersMap.end(); ++it) {
-		cout << it->first << ": " << it->second << endl;
-	}
-	cout << "Body : \n" << this->_body << RESET << endl;
+	return OK;
 }
 
 
@@ -118,6 +89,7 @@ void	Client::setConfig()
 {
 	if (_server_config == NULL)
 		return ;
+	std::cout << RED << "URI : " << _URI << RESET << std::endl;
 	_config = _server_config->searchLocationMatch(_URI);
 	if (_config == NULL) {
 		cout << RED << "Error: setLocationMatch(): no match found with URI(" << _URI;

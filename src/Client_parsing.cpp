@@ -1,65 +1,83 @@
 #include "../inc/Client.hpp"
 
-std::string	Client::collect_request() {
-	std::string		newRequest;
-	const size_t	buffer_size = 1024;
-	char			buffer[buffer_size];
+int	Client::request_well_formed_optimized() {
 
-	while (true) {
-		std::memset(buffer, 0, buffer_size);
-		ssize_t bytes_read = recv(this->getClientFd(), buffer, buffer_size - 1, 0);
-		if (bytes_read < 0) {
-			break ;
-		}
-		else if (bytes_read == 0)
-			break ;
-		else
-			newRequest.append(buffer, bytes_read);
-	}
-	return newRequest;
+	// VALIDATION DE L'URI
+	if (_URI.empty() || _URI[0] != '/')
+		return(handleError(400), ERROR);
+	if (_URI.find("..") != std::string::npos)
+		return(handleError(403), ERROR);
+	if (URI_Not_Printable(_URI))
+		return(handleError(400), ERROR);
+	if (_URI.size() > 2048)
+		return(handleError(414), ERROR);
+
+	// VALIDATION DE LA VERSION
+	if (_version != "HTTP/1.1")
+		return(handleError(505), ERROR);
+
+	// VALIDATION ROOT LOCATION
+	setConfig();
+	if (_config == NULL)
+		return (handleError(404), ERROR);
+	if (!(_config->redirection.empty()))
+		return (handleError(301), ERROR); // error
+	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())
+		return (handleError(413), ERROR);
+	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
+		return (handleError(405), ERROR);
+
+	// if (location_have_redirection(_config) != OK) // voir si redirection précisée dans la location
+	// 	return (handleError(301));
+
+	// if (max_body_size(_config) != OK) // Voir si le body_size est respectée dans le fichier conf.
+	// 	return (handleError(413));
+
+	// if (is_method_allowed(_config) != OK) // Voir si method = GET POST DELETE ou en fonction de ce qui est autorisée dans fichier conf.
+	// 	return (handleError(405));
+	
+
+
+
+
+	// VALIDATION DES HEADERS - Ici tout mettre dans une fonction et vérifier les différents HEADERS obligatoire.
+	std::map<std::string, std::string>::iterator transferEncodingIt = _headersMap.find("Transfer-Encoding");
+	// std::map<std::string, std::string>::iterator contentLengthIt = _headersMap.find("Content-Length");
+		
+	if (transferEncodingIt != _headersMap.end() && transferEncodingIt->second != "chunked")
+		return(handleError(501), ERROR);
+	// else if (transferEncodingIt == _headersMap.end() && contentLengthIt == _headersMap.end() && _method != "POST")
+	// {
+	// 	std::cout << RED "transferencodingit" RESET << std::endl;
+	// 	return (handleError(400));
+	// }
+	// Transfer encoding + content length impossible
+	// Si content-length vérifier que ce soit un nombre valide
+	// HOST obligatoire en HTTP/1.1
+
+	return OK;
 }
 
-void	Client::handleMethodLine(std::string& line)
+int	Client::handleMethodLine(std::string& line)
 {
 	std::istringstream  iss(line);
 	if (!(iss >> this->_method >> this->_URI >> this->_version))
-		return(handleError(400));
-	if (_method != "GET" && _method != "POST" && _method != "DELETE")
-		return(handleError(405));
-	if (_URI.empty() || _URI[0] != '/')
-		return(handleError(400));
-	if (_URI.find("..") != std::string::npos)
-		return(handleError(403));
-	if (URI_Not_Printable(_URI))
-		return(handleError(400));
-	if (_URI.size() > 2048)
-		return(handleError(414));
-	if (_version != "HTTP/1.1")
-		return(handleError(505));
-	// else
-	// {
-	//     std::string tmp = _URI;
-	//     this->_URI = root + tmp;
-	// }
-
-	// TODO : Ajouter protection contre les chemins hors root
-	
-	return ;
+		return(handleError(400), ERROR);
+    std::cout << "Parsed - Method: [" << _method << "] URI: [" << _URI << "] Version: [" << _version << "]" << std::endl;
+	return OK;
 }
 
-void	Client::handleHeaders(std::string& line)
+int	Client::handleHeaders(std::string& line)
 {
 	size_t delimiterPos = line.find(':');
 	if (delimiterPos == std::string::npos)
-		return(handleError(400));
+		return(handleError(400), ERROR);
 	std::string key = line.substr(0, delimiterPos);
 	std::string value = line.substr(delimiterPos + 1);
 	if (key.empty())
-		return(handleError(400));
+		return(handleError(400), ERROR);
 	this->_headersMap[key] = value;
-
-	// if (HeadersCorrect("GET") != OK)
-	// 	handleError(400);
+	return OK;
 }
 
 

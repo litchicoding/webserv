@@ -27,9 +27,9 @@ void	Client::handleFileRequest()
 {
 	const char	*uri = _config->full_path.c_str();
 	cout << GREEN << "handleFileRequest() - full_path : " << RESET << uri << endl;
-	// const char *uri = _URI.c_str();
 	if (access(uri, R_OK) != 0)
 		return (handleError(403));
+
 	// if(isCgiScript(uri) == OK)
 	//	;
 
@@ -78,7 +78,7 @@ void	Client::handleDirectoryRequest()
     // Si pas de fichier index, vérifier l'autoindex
     if (_config->autoindex == 1) // utiliser la macro AUTO_ON
     {
-        std::cout << BLUE "Generating directory listing for: " << _URI << RESET << std::endl;
+        std::cout << BLUE "Generating directory listing for: " << uri << RESET << std::endl;
 		return ;
         // return generateDirectoryListing();
     }

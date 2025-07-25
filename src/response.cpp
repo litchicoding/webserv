@@ -39,6 +39,10 @@ void	Client::handleError(int code)
 			message = "405 Method Not Allowed";
 			filePath = "www/error_pages/405.html";			
 			break;
+		case 413:
+			message = "413 Playload Too Large";
+			filePath = "www/error_pages/413.html";
+			break ;
 		case 500:
 			cout << RED << "500 : Reussie !" << endl;
 			message = "500 Internal Server Error";

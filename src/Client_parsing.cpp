@@ -22,11 +22,12 @@ int	Client::request_well_formed_optimized() {
 		return (handleError(404), ERROR); // ou error 500 ?
 	if (!(_config->redirection.empty()))
 		return (handleError(301), ERROR); // error
+	cout << YELLOW << "max body size " << _config->client_max_body_size << endl;
+	cout << "client body size : " << _body.size() << RESET << endl;
 	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())
 		return (handleError(413), ERROR);
 	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
 		return (handleError(405), ERROR);
-
 	// if (location_have_redirection(_config) != OK) // voir si redirection précisée dans la location
 	// 	return (handleError(301));
 

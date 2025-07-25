@@ -89,7 +89,7 @@ void	Client::setConfig()
 {
 	if (_server_config == NULL)
 		return ;
-	std::cout << RED << "URI : " << _URI << RESET << std::endl;
+	std::cout << GREEN << "setConfig() - request URI: " << RESET << _URI << std::endl;
 	_config = _server_config->searchLocationMatch(_URI);
 	if (_config == NULL) {
 		cout << RED << "Error: setLocationMatch(): no match found with URI(" << _URI;

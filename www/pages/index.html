@@ -232,7 +232,7 @@
                 return;
             }
             
-            fetch('/uploads/' + filename, {
+            fetch('/upload/' + filename, {
                 method: 'DELETE'
             })
             .then(response => response.text())

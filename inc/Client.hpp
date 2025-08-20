@@ -52,11 +52,11 @@ private:
 	
 	/* HandleGet Function ****************************************************************************/
 	
-	void								handleGet();
-	void								handleFileRequest();
-	void								handleDirectoryRequest();
-	std::string							findIndexFile();
-	// generateDirectoryListing();
+	void									handleGet();
+	void									handleFileRequest();
+	void									handleDirectoryRequest();
+	std::string								findIndexFile();
+	void									generateDirectoryListing();
 
 	/* HandlePost Function ****************************************************************************/
 	

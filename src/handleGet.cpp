@@ -122,8 +122,15 @@ void	Client::generateDirectoryListing()
 		string name = entry->d_name;
 		if (name == ".")
 			continue ;
+
 		string fullPath = path + "/" + name;
 		string link = _URI;
+
+		cout << "link = " << link << endl;
+		if (!link.empty() && link[link.size() - 1] != '/')
+			link += '/';
+		link += name;
+
 		if (stat(fullPath.c_str(), &st) == OK && S_ISDIR(st.st_mode))
 			link += "/";
 		body << "<li><a href=\"" << link << "\">" << name << "</a></li>\n";

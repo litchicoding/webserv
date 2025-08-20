@@ -5,6 +5,7 @@ int	Client::request_well_formed_optimized() {
 	// VALIDATION DE L'URI
 	if (_URI.empty() || _URI[0] != '/')
 		return(handleError(400), ERROR);
+	cout << RED << _URI << RESET << endl;
 	if (_URI.find("..") != std::string::npos)
 		return(handleError(403), ERROR);
 	if (URI_Not_Printable(_URI))
@@ -21,7 +22,7 @@ int	Client::request_well_formed_optimized() {
 	if (_config == NULL)
 		return (handleError(404), ERROR); // ou error 500 ?
 	if (!(_config->redirection.empty()))
-		return (handleError(301), ERROR); // error
+		return (handleError(301), ERROR);
 	cout << YELLOW << "max body size " << _config->client_max_body_size << endl;
 	cout << "client body size : " << _body.size() << RESET << endl;
 	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())

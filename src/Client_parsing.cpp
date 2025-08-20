@@ -20,9 +20,13 @@ int	Client::request_well_formed_optimized() {
 	// VALIDATION ROOT LOCATION
 	setConfig();
 	if (_config == NULL)
-		return (handleError(404), ERROR); // ou error 500 ?
+		return (handleError(500), ERROR);
 	if (!(_config->redirection.empty()))
-		return (handleError(301), ERROR);
+	{
+		string redirectUrl = _config->redirection.begin()->second;
+		return (sendRedirect(redirectUrl), ERROR);
+	}
+
 	cout << YELLOW << "max body size " << _config->client_max_body_size << endl;
 	cout << "client body size : " << _body.size() << RESET << endl;
 	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())

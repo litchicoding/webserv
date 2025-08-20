@@ -78,7 +78,7 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		location = _locations.begin();
 		while (location != _locations.end())
 		{
-			if (uri.find(location->first) == 0 && location->first.length() > prev_match_len) {
+			if (uri.find(location->first) != string::npos && location->first.length() > prev_match_len) {
 				match = location->first;
 				prev_match_len = match.length();
 			}
@@ -91,7 +91,10 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		else
 			result = &(_locations.find(match)->second);
 	}
-	result->full_path = result->root + match + uri.substr(match.length());
+	if (result->root.find(match.c_str(), 0, match.length() - 1) == string::npos)
+		result->full_path = result->root + uri.substr();
+	else
+		result->full_path = result->root + "/" + uri.substr(match.length());
 	return result;
 }
 

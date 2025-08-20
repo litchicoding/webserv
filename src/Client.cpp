@@ -37,11 +37,11 @@ Client::~Client()
 void	Client::start()
 {
 	if (_method == "GET")
-		return (handleGet());
+		handleGet();
 	if (_method == "POST")
-		return (handlePost());
+		handlePost();
 	if (_method == "DELETE")
-		return (handleDelete());
+		handleDelete();
 }
 
 int	Client::parseRawRequest() {

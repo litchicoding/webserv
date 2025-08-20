@@ -39,6 +39,16 @@ void	Client::handleError(int code)
 			message = "405 Method Not Allowed";
 			filePath = "www/error_pages/405.html";			
 			break;
+		case 409:
+			cout << RED << "409 : Reussie !" << endl;
+			message = "409 Conflict";
+			filePath = "www/error_pages/409.html";			
+			break;		
+		case 413:
+			cout << RED << "413 : Reussie !" << endl;
+			message = "413 Entity Too Large";
+			filePath = "www/error_pages/413.html";			
+			break;
 		case 500:
 			cout << RED << "500 : Reussie !" << endl;
 			message = "500 Internal Server Error";

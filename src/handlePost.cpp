@@ -4,19 +4,21 @@
 void	Client::handlePost()
 {
 	struct stat st;
-	if (access(_URI.c_str(), F_OK) != 0)
+	string root = _config->full_path;
+	cout << GREEN "Welcome to PostFonction, root is : " << root << RESET << endl;
+	if (access(root.c_str(), F_OK) != 0)
 		return(handleError(404));
-	if (stat(_URI.c_str(), &st) != 0)
+	if (stat(root.c_str(), &st) != 0)
 		return(handleError(500));
 	if (S_ISREG(st.st_mode))
 	{
 	 	std::cout << RED "file" RESET << std::endl;
-		isFilePost();
+		return (isFilePost());
 	}
-	if (S_ISDIR(st.st_mode))
+	else if (S_ISDIR(st.st_mode))
 	{
 	 	std::cout << RED "register" RESET << std::endl;
-		isDirectoryPost();
+		return (isDirectoryPost());
 	}
 	else
 	{
@@ -35,7 +37,7 @@ void    Client::isFilePost()
     // if(isCgiScript(_URI) == OK)
 	//	;
 	if (1)
-		std::cout << "a supprimer" << std::endl;
+		std::cout << "CGI à faire" << std::endl;
 	else
 		return (handleError(403));
 }

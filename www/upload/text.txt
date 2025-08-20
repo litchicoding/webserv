@@ -1,0 +1,12 @@
+------WebKitFormBoundaryho6IEf7diRVx5gBj
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+Coucou 42 !
+Webserv !
+Paris
+Marseille
+Bordeaux
+Lyon
+Grenoble
+...
+------WebKitFormBoundaryho6IEf7diRVx5gBj--

@@ -47,7 +47,6 @@ void	Client::handleFileRequest()
 	ostringstream	response;
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
-	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
 	response << "Connection: close\r\n";
 	response << "\r\n";

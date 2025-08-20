@@ -42,6 +42,7 @@ void	Server::defaultConfiguration()
 		listen.address_port = "0.0.0.0:80";
 		_listen.push_back(listen);
 	}
+	if (_directives.autoindex == INVALID) _directives.autoindex = AUTO_OFF;
 	if (_directives.root.empty()) _directives.root = DEFAULT_ROOT;
 	if (_directives.index.empty()) _directives.index.push_back("index.html");
 	if (_directives.methods.empty()) {
@@ -74,13 +75,15 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		location++;
 	}
 	if (result == NULL) {
-		/* Cherche la plus longue correspondance de préfixe (/images, /kapouet/admin vs /kapouet etc) */
+		/* Cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
 		location = _locations.begin();
 		while (location != _locations.end())
 		{
+			// cout << YELLOW << "path = " << location->first << RESET << endl;
 			if (uri.find(location->first) != string::npos && location->first.length() > prev_match_len) {
 				match = location->first;
 				prev_match_len = match.length();
+				// cout << YELLOW << "match = " << match << RESET << endl;
 			}
 			location++;
 		}
@@ -177,7 +180,7 @@ int	Server::setOneDirective(const string &type, const vector<string> &arg, t_dir
 
 int	Server::setLocation(const string &loc_path, const string &type, const vector<string> &arg)
 {
-	if (loc_path.empty() || type.empty())
+	if (loc_path.empty())
 		return ERROR;
 
 	map<string, t_directives>::iterator it = _locations.find(loc_path);
@@ -187,8 +190,8 @@ int	Server::setLocation(const string &loc_path, const string &type, const vector
 		t_directives	newDirectives;
 		newDirectives.autoindex = INVALID;
 		newDirectives.client_max_body_size = 0;
-		// setOneDirective(type, arg, &_locations[loc_path]);
-		setOneDirective(type, arg, &newDirectives);
+		if (!arg.empty())
+			setOneDirective(type, arg, &newDirectives);
 		_locations.insert(make_pair(loc_path, newDirectives));
 	}
 	return OK;

@@ -3,7 +3,7 @@
 void	Client::handleGet() {
 	struct stat st;
 	string root = _config->full_path;
-	cout << GREEN << root << RESET << endl;
+	cout << GREEN << "handleGet() - root(full_path) : " << RESET << root << endl;
 
 	if (access(root.c_str(), F_OK) != 0)
 		return (handleError(404));
@@ -47,6 +47,7 @@ void	Client::handleFileRequest()
 	ostringstream	response;
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
+	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
 	response << "Connection: close\r\n";
 	response << "\r\n";
@@ -58,9 +59,10 @@ void	Client::handleFileRequest()
 
 void	Client::handleDirectoryRequest()
 {
-	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
+	string	uri = _config->full_path;
+	if (uri.empty() || uri[uri.size() - 1] != '/')
 	{
-		string redirectUri = _URI + "/";
+		string redirectUri = uri + "/";
 		cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
 		return (sendRedirect(redirectUri));
 	}

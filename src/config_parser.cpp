@@ -36,6 +36,8 @@ static int	parse_location_block(vector<t_tokenConfig>::iterator &token, Server &
 			return ERROR;
 		token++;
 	}
+	if (server.getLocations().find(loc_path) == server.getLocations().end())
+		server.setLocation(loc_path, "", std::vector<std::string>());
 	return OK;
 }
 

@@ -66,7 +66,7 @@ void	Client::handleError(int code)
 		cerr << "handleError(): could not open error page file: " << filePath << endl;
 		
 		ostringstream body;
-		body << "<html><body><h1>" << message << "</h1></body></html>";
+		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 
 		ostringstream response;
 		response << "HTTP/1.1 " << message << "\r\n";

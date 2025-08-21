@@ -52,17 +52,19 @@ private:
 	
 	/* HandleGet Function ****************************************************************************/
 	
-	void									handleGet();
-	void									handleFileRequest();
-	void									handleDirectoryRequest();
-	std::string								findIndexFile();
-	void									generateDirectoryListing();
+	void								handleGet();
+	void								handleFileRequest();
+	void								handleDirectoryRequest();
+	std::string							findIndexFile();
+	void								generateDirectoryListing();
 
 	/* HandlePost Function ****************************************************************************/
 	
 	void								handlePost();
 	void								isFilePost();
 	void								isDirectoryPost();
+	string								findFileName();
+	void								copyFile(const string &filename);
 
 
 public:

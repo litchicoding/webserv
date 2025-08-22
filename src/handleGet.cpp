@@ -28,9 +28,11 @@ void	Client::handleFileRequest()
 		cout << YELLOW "not permission" RESET << endl;
 		return (handleError(403));
 	}
-	
-	// if(isCgiScript(_URI) == OK)
-	//	;
+	if (isCgi())
+	{
+		handleCGI();
+		return;
+	}
 
 	std::ifstream	file(_config->full_path.c_str());
 	if (!file.is_open())

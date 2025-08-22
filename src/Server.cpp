@@ -63,11 +63,27 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 
 	if (uri.empty())
 		return NULL;
-	/* Cherche correspondance exacte entre l'URI de la requete et les path des location blocks */
+
+	/*separe la query string si il y en a une*/
+	string path_only;
+    string query_string;
+    size_t qpos = uri.find('?');
+    if (qpos != string::npos)
+	{
+        path_only = uri.substr(0, qpos);
+        query_string = uri.substr(qpos + 1);
+    }
+	else
+	{
+        path_only = uri;
+        query_string = "";
+    }
+
+	/* Cherche correspondance exacte entre l'URI de la requete (sans la query string -> path_only) et les path des location blocks */
 	location = _locations.begin();
 	while (location != _locations.end())
 	{
-		if (location->first == uri) {
+		if (location->first == path_only) {
 			match = location->first;
 			result = &(location->second);
 			break ;
@@ -80,7 +96,7 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		while (location != _locations.end())
 		{
 			// cout << YELLOW << "path = " << location->first << RESET << endl;
-			if (uri.find(location->first) != string::npos && location->first.length() > prev_match_len) {
+			if (path_only.find(location->first) != string::npos && location->first.length() > prev_match_len) {
 				match = location->first;
 				prev_match_len = match.length();
 				// cout << YELLOW << "match = " << match << RESET << endl;
@@ -95,9 +111,11 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 			result = &(_locations.find(match)->second);
 	}
 	if (result->root.find(match.c_str(), 0, match.length() - 1) == string::npos)
-		result->full_path = result->root + uri.substr();
+		result->full_path = result->root + path_only.substr();
 	else
-		result->full_path = result->root + "/" + uri.substr(match.length());
+		result->full_path = result->root + "/" + path_only.substr(match.length());
+	
+	result->query_string = query_string;
 	return result;
 }
 

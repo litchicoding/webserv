@@ -64,6 +64,14 @@ private:
 	void								isFilePost();
 	void								isDirectoryPost();
 
+	/* CGI *********************************************************************************************/
+
+	bool 								isCgi();
+	bool								isQueryStringValid();
+	bool								isValid();
+	char**								buildCgiEnv();
+	void								handleCGI();
+	void								buildHttpResponseFromCgiOutput(const std::string& cgiOutput);
 
 public:
 	Client(int listen_fd, int epoll_fd);

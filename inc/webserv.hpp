@@ -23,6 +23,7 @@
 # include <sys/types.h>
 # include <netdb.h>
 # include <algorithm>
+#include <sys/wait.h>
 
 # include "Server.hpp"
 # include "Client.hpp"
@@ -51,7 +52,9 @@ using namespace std;
 class	Server;
 class   Client;
 
-void	signal_handler(int signal);
-int		add_fd_to_epoll(int epoll_fd, int fd);
+void		signal_handler(int signal);
+int			add_fd_to_epoll(int epoll_fd, int fd);
+std::string trim(const std::string &s);
+std::string stripQueryString(const std::string &uri);
 
 #endif

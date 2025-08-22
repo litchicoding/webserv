@@ -28,6 +28,7 @@ typedef struct	s_directives
 	size_t				client_max_body_size;
 	string				root;
 	string				full_path;
+	string				query_string;
 	vector<string>		index;
 	vector<string>		methods;
 	map<int, string>	redirection; // <error_code, text ou url>

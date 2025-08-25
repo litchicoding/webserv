@@ -5,7 +5,7 @@
 
 Server::Server()
 {
-	cout << GREEN << "*** Server Construction ***" << RESET << endl;
+	cout << GREEN << "***  New Server Configuration  ***" << RESET << endl;
 	_directives.autoindex = INVALID;
 	_directives.client_max_body_size = DEFAULT_BODY_SIZE;
 }

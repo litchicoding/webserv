@@ -5,12 +5,12 @@
 
 Listen::Listen() : _epoll_fd(INVALID)
 {
-	cout << GREEN << "*** Listen Construction ***" << RESET << endl;
+	cout << GREEN << "***  Listening ports Configuration   ***" << RESET << endl;
 }
 
 Listen::~Listen()
 {
-	cout << GREEN << "*** Listen Deconstruction ***" << RESET << endl;
+	cout << GREEN << "***  Listening ports Deconstruction  ***" << RESET << endl;
 	// must delete everything needed
 	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
 	{
@@ -113,7 +113,7 @@ int	Listen::update_connexion()
 	epoll_event						events[MAX_EVENTS];
 	int								nfds;
 
-	cout << GREEN << "🟢 Server is listening on ports" << RESET << endl;
+	cout << PURPLE << "🟢 - SERVER IS LISTENING ON PORTS..." << RESET << endl << endl;
 	while (true)
 	{
 		signal(SIGINT, &signal_handler);
@@ -156,17 +156,18 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
-	if (bytes_read <= 0)
-	{
-		cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
+	if (bytes_read <= 0) {
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		delete _clients[client_fd];
 		_clients.erase(client_fd);
 		close(client_fd);
-		return ERROR;
-	}
-	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
-	cout << BLUE << "Server is processing client request..." << RESET << endl;
+		if (bytes_read < 0) {
+		    cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
+		    return ERROR;
+		}
+		return OK;
+    }
+	// cout << BLUE << "📨 - REQUEST RECEIVED :" << endl << RESET << buffer;
 
 	// Stocke la requete + la taille de la requete
 	_clients[client_fd]->setRequest(buffer, bytes_read);
@@ -174,15 +175,14 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
 	if (_clients[client_fd]->getServerConfig() == NULL)
 		stop("no match for server configuration");
-	// parse the request and start filling datas in client class
+	// Parse the request and start filling datas in client class
 	if (_clients[client_fd]->parseRawRequest() == OK && _clients[client_fd]->request_well_formed_optimized() == OK)
 		_clients[client_fd]->start();
-	
-	// cout << "OMG : " << _clients[client_fd]->getResponse().c_str() << endl;
-	// cout << "Taille : " << _clients[client_fd]->getResponseLen() << endl;
-
+	// Send the response
 	write(client_fd, _clients[client_fd]->getResponse().c_str(), _clients[client_fd]->getResponseLen());
-	cout << BLUE << "Response to request has been sent!" << RESET << endl;
+	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << client_fd << "] : " << RESET;
+	size_t pos = _clients[client_fd]->getResponse().find("\n");
+	cout << _clients[client_fd]->getResponse().substr(0, pos) << endl << endl;
 	return OK;
 }
 
@@ -227,7 +227,7 @@ void	Listen::stop(const string &msg)
 		close(_epoll_fd);
 		_epoll_fd = INVALID;
 	}
-   	cout << GREEN << "🛑 Connexion fermée." << RESET << endl;
+   	cout << PURPLE << endl << "🛑 - CONNEXION CLOSED." << RESET << endl;
 }
 
 

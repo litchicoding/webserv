@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Empêche la requête automatique de favicon -->
+	<link rel="icon" href="data:,">
     <title>Test Serveur HTTP</title>
     <style>
         body {
@@ -90,62 +92,62 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Test Serveur HTTP</h1>
+        <h1>🚀 Test Web Server HTTP</h1>
         
         <!-- Test GET -->
         <div class="test-section">
-            <h2>📥 Test GET - Fichiers statiques</h2>
-            <p>Testez le chargement de diff&eacute;rents types de fichiers :</p>
+            <h2>📥 Test GET - Static Files</h2>
+            <p>Get different types of files :</p>
             <div class="links">
                 <a href="/index.html">HTML (cette page)</a>
                 <a href="/style.css">CSS</a>
                 <a href="/script.js">JavaScript</a>
                 <a href="/images/image_1.jpg">Image JPG</a>
-                <a href="/test.txt">Fichier texte</a>
-                <a href="/nonexistent.html">404 Error</a>
+                <a href="/test.txt">Text File</a>
+                <a href="/nonexistent.html">404 Error Page</a>
             </div>
         </div>
 
         <!-- Test POST Upload -->
         <div class="test-section">
-            <h2>📤 Test POST - Upload de fichiers</h2>
+            <h2>📤 Test POST - Upload Files</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <input type="file" id="fileInput" name="file" required>
-                <button type="submit">Uploader le fichier</button>
+                <button type="submit">Upload</button>
             </form>
             <div id="uploadResult"></div>
         </div>
 
         <!-- Test POST Data -->
         <div class="test-section">
-            <h2>📝 Test POST - Envoi de donn&eacute;es</h2>
+            <h2>📝 Test POST - Send Data</h2>
             <form id="dataForm">
-                <input type="text" id="nameInput" name="name" placeholder="Votre nom" required>
-                <input type="text" id="messageInput" name="message" placeholder="Votre message" required>
-                <button type="submit">Envoyer les donn&eacute;es</button>
+                <input type="text" id="nameInput" name="name" placeholder="Name" required>
+                <input type="text" id="messageInput" name="message" placeholder="Message" required>
+                <button type="submit">Send</button>
             </form>
             <div id="dataResult"></div>
         </div>
 
         <!-- Test DELETE -->
         <div class="test-section">
-            <h2>🗑️ Test DELETE - Suppression de fichiers</h2>
-            <input type="text" id="deleteInput" placeholder="Nom du fichier à supprimer" required>
-            <button class="delete-btn" onclick="deleteFile()">Supprimer le fichier</button>
+            <h2>🗑️ Test DELETE - Delete Files</h2>
+            <input type="text" id="deleteInput" placeholder="Filename" required>
+            <button class="delete-btn" onclick="deleteFile()">Delete file</button>
             <div id="deleteResult"></div>
         </div>
 
         <!-- Test CGI -->
         <div class="test-section">
-            <h2>⚙️ Test CGI - Scripts dynamiques</h2>
+            <h2>⚙️ Test CGI - Dynamic Script</h2>
             <div class="links">
                 <a href="/cgi-bin/info.php">PHP Info</a>
                 <a href="/cgi-bin/hello.py">Python Script</a>
                 <a href="/cgi-bin/form.php">PHP Form</a>
             </div>
             <form id="cgiForm">
-                <input type="text" id="cgiInput" name="data" placeholder="Donn&eacute;es pour CGI" required>
-                <button type="submit">Envoyer au CGI</button>
+                <input type="text" id="cgiInput" name="data" placeholder="Data for CGI" required>
+                <button type="submit">Send</button>
             </form>
             <div id="cgiResult"></div>
         </div>
@@ -154,27 +156,22 @@
         <div class="test-section">
             <h2>📁 Test Directory Listing</h2>
             <div class="links">
-                <a href="/uploads/">Dossier uploads</a>
-                <a href="/static/">Dossier statique</a>
-                <a href="/cgi-bin/">Dossier CGI</a>
+                <a href="/upload/">"upload" folder</a>
+                <a href="/data/">"data" folder</a>
+                <a href="/cgi-bin/">"cgi-bin" folder</a>
             </div>
         </div>
 
         <!-- Test Error Pages -->
         <div class="test-section">
-            <h2>❌ Test Pages d'erreur</h2>
+            <h2>❌ Test Error Pages</h2>
             <div class="links">
-                <a href="/nonexistent">404 - Page non trouv&eacute;e</a>
-                <a href="/forbidden.html">403 - Accès interdit</a>
-                <a href="/large_file.txt">413 - Fichier trop volumineux</a>
+                <a href="/nonexistent">404 - Page Not Found</a>
+                <a href="/forbidden.html">403 - Access Forbidden</a>
+                <a href="/large_file.txt">413 - File Too Large</a>
             </div>
         </div>
 
-        <!-- Server Info -->
-        <div class="test-section">
-            <h2>ℹ️ Informations serveur</h2>
-            <p id="serverInfo">Chargement...</p>
-        </div>
     </div>
 
     <script>
@@ -185,7 +182,7 @@
             const fileInput = document.getElementById('fileInput');
             
             if (fileInput.files.length === 0) {
-                document.getElementById('uploadResult').innerHTML = '<div class="result error">Veuillez s&eacute;lectionner un fichier</div>';
+                document.getElementById('uploadResult').innerHTML = '<div class="result error">Please select a file</div>';
                 return;
             }
             
@@ -197,10 +194,10 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('uploadResult').innerHTML = '<div class="result">Fichier upload&eacute; avec succès: ' + data + '</div>';
+                document.getElementById('uploadResult').innerHTML = '<div class="result">' + data + '</div>';
             })
             .catch(error => {
-                document.getElementById('uploadResult').innerHTML = '<div class="result error">Erreur upload: ' + error + '</div>';
+                document.getElementById('uploadResult').innerHTML = '<div class="result error">Error : ' + error + '</div>';
             });
         });
 
@@ -217,10 +214,10 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('dataResult').innerHTML = '<div class="result">Donn&eacute;es envoy&eacute;es: ' + data + '</div>';
+                document.getElementById('dataResult').innerHTML = '<div class="result">' + data + '</div>';
             })
             .catch(error => {
-                document.getElementById('dataResult').innerHTML = '<div class="result error">Erreur envoi: ' + error + '</div>';
+                document.getElementById('dataResult').innerHTML = '<div class="result error">Error : ' + error + '</div>';
             });
         });
 
@@ -228,7 +225,7 @@
         function deleteFile() {
             const filename = document.getElementById('deleteInput').value;
             if (!filename) {
-                document.getElementById('deleteResult').innerHTML = '<div class="result error">Veuillez entrer un nom de fichier</div>';
+                document.getElementById('deleteResult').innerHTML = '<div class="result error">Enter a filename to delete</div>';
                 return;
             }
             
@@ -237,10 +234,10 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('deleteResult').innerHTML = '<div class="result">Fichier supprim&eacute;: ' + filename + '</div>';
+                document.getElementById('deleteResult').innerHTML = '<div class="result">' + filename + '</div>';
             })
             .catch(error => {
-                document.getElementById('deleteResult').innerHTML = '<div class="result error">Erreur suppression: ' + error + '</div>';
+                document.getElementById('deleteResult').innerHTML = '<div class="result error">Error : ' + error + '</div>';
             });
         }
 
@@ -256,22 +253,12 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('cgiResult').innerHTML = '<div class="result">R&eacute;ponse CGI: ' + data + '</div>';
+                document.getElementById('cgiResult').innerHTML = '<div class="result">CGI response : ' + data + '</div>';
             })
             .catch(error => {
-                document.getElementById('cgiResult').innerHTML = '<div class="result error">Erreur CGI: ' + error + '</div>';
+                document.getElementById('cgiResult').innerHTML = '<div class="result error">Error : ' + error + '</div>';
             });
         });
-
-        // Informations serveur
-        fetch('/server-info')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('serverInfo').innerHTML = data;
-            })
-            .catch(error => {
-                document.getElementById('serverInfo').innerHTML = 'Erreur lors du chargement des informations serveur';
-            });
     </script>
 </body>
 </html>

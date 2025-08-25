@@ -40,8 +40,10 @@
 
 # define RED "\e[31m"
 # define GREEN "\e[32m"
-# define YELLOW "\e[33m"
-# define BLUE "\e[34m"
+# define YELLOW "\e[1;33m"
+# define BLUE "\e[1;34m"
+# define CYAN "\e[1;36m"
+# define PURPLE "\e[1;44m"
 # define RESET "\e[0m"
 
 extern Listen	*g_global_instance;

@@ -3,7 +3,6 @@
 void	Client::handleGet() {
 	struct stat st;
 	string root = _config->full_path;
-	cout << GREEN << "handleGet() - root(full_path) : " << RESET << root << endl;
 
 	if (access(root.c_str(), F_OK) != 0)
 		return (handleError(404));
@@ -22,7 +21,6 @@ void	Client::handleGet() {
 
 void	Client::handleFileRequest()
 {
-	cout << GREEN "handleFileRequest: " << _config->full_path << RESET << endl;
 	if (access(_config->full_path.c_str(), R_OK) != 0)
 	{
 		cout << YELLOW "not permission" RESET << endl;
@@ -43,7 +41,6 @@ void	Client::handleFileRequest()
 	body << file.rdbuf();
 	file.close();
 
-	cout << YELLOW "getMIME: " << getMIME(_config->full_path) << RESET << endl; 
 	ostringstream	response;
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
@@ -69,7 +66,6 @@ void	Client::handleDirectoryRequest()
 	// Chercher un fichier index
 	std::string indexFile = findIndexFile();
 	if (!indexFile.empty()) {
-		std::cout << GREEN "Index file found: " << indexFile << RESET << std::endl;
 		_config->full_path = indexFile;
 		return (handleFileRequest());
 	}
@@ -77,7 +73,6 @@ void	Client::handleDirectoryRequest()
 	// Si pas de fichier index, vérifier l'autoindex
 	if (_config->autoindex == 1)
 	{
-		std::cout << BLUE "Generating directory listing for: " << _URI << RESET << std::endl;
 		return generateDirectoryListing();
 	}
 	else
@@ -90,7 +85,6 @@ std::string Client::findIndexFile()
 	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
 	{
 		const std::string& indexPath = _config->full_path + *it;
-		cout << YELLOW "findIndexFile : " RESET << indexPath << endl;
 		if (access(indexPath.c_str(), F_OK) == 0 && access(indexPath.c_str(), R_OK) == 0)
 		{
 			if (stat(indexPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
@@ -127,21 +121,14 @@ void	Client::generateDirectoryListing()
 		string fullPath = path + name;
 		string link = _URI;
 
-		cout << "link = " << link << endl;
-		cout << "fullpath = " << fullPath << endl;
-
 		if (!link.empty() && link[link.size() - 1] != '/')
 			link += '/';
 		link += name;
-		cout << "link = " << link << endl;
 		if (stat(fullPath.c_str(), &st) == OK && S_ISDIR(st.st_mode))
 		{
-			cout << "Marche !" << endl;
 			link += "/";
 			name += "/";
 		}
-		cout << "link = " << link << endl;
-		cout << endl;
 		body << "<li><a href=\"" << link << "\">" << name << "</a></li>\n";
 	}
 	if (closedir(dir) != OK)

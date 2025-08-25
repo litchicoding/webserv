@@ -5,6 +5,14 @@ void	Client::handlePost()
 	struct stat st;
 	string root, filename, message;
 	
+	// 1. Vérifications: 
+	// Content-Type= multipart / Boundary is here and correct / Content-Length coherent
+
+	// 2. Parsing:
+	// Lire boundary et découper le body.
+	// Cas 1 : header-body = filename -> upload de fichier
+	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
+
 	root = _config->full_path;
 	if (access(root.c_str(), W_OK) != 0)
 		return (handleError(403));
@@ -36,15 +44,9 @@ void	Client::handlePost()
 	if (stat(root.c_str(), &st) != 0)
 		return(handleError(500));
 	if (S_ISREG(st.st_mode))
-	{
-	 	std::cout << RED "file" RESET << std::endl;
 		return (isFilePost());
-	}
 	else if (S_ISDIR(st.st_mode))
-	{
-	 	std::cout << RED "register" RESET << std::endl;
 		return (isDirectoryPost());
-	}
 	else
 	{
 		std::cout << RED "Error : Not a regular file or directory: " << _URI << RESET << std::endl;
@@ -67,13 +69,11 @@ void    Client::isDirectoryPost()
    	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 	{
 		std::string redirectUri = _URI + "/";
-		std::cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
 		return sendRedirect(redirectUri);
 	}
 	std::string indexFile = findIndexFile();
 	if (!indexFile.empty())
 	{
-	    std::cout << GREEN "Index file found: " << indexFile << RESET << std::endl;
 	    _URI = indexFile;
 	    isFilePost();
 	}

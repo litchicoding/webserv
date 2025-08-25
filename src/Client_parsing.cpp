@@ -66,7 +66,6 @@ int	Client::handleMethodLine(std::string& line)
 	std::istringstream  iss(line);
 	if (!(iss >> this->_method >> this->_URI >> this->_version))
 		return(handleError(400), ERROR);
-    std::cout << "Parsed - Method: [" << _method << "] URI: [" << _URI << "] Version: [" << _version << "]" << std::endl;
 	return OK;
 }
 

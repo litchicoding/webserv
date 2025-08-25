@@ -5,7 +5,6 @@
 
 Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_config(NULL), _config(NULL)
 {
-	cout << GREEN << "*** Client Construction ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
 	_client_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&_client_addr), &client_addr_len);
 	if (_client_fd == INVALID) {
@@ -26,7 +25,6 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 
 Client::~Client()
 {
-	cout << GREEN << "*** Client Deconstruction ***" << RESET << endl;
 	// must delete everything needed
 	close(_client_fd);
 }
@@ -36,6 +34,10 @@ Client::~Client()
 
 void	Client::start()
 {
+	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
+	cout << endl << "     Method:[\e[0m" << _method << "\e[34m] URI:[\e[0m";
+	cout << _URI << "\e[34m] Version:[\e[0m" << _version;
+	cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]" << endl;
 	if (_method == "GET")
 		handleGet();
 	if (_method == "POST")
@@ -89,7 +91,6 @@ void	Client::setConfig()
 {
 	if (_server_config == NULL)
 		return ;
-	std::cout << GREEN << "setConfig() - request URI: " << RESET << _URI << std::endl;
 	_config = _server_config->searchLocationMatch(_URI);
 	if (_config == NULL) {
 		cout << RED << "Error: setLocationMatch(): no match found with URI(" << _URI;

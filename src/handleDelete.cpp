@@ -12,15 +12,9 @@ void	Client::handleDelete() {
 	if (access(root.c_str(), W_OK) != 0)
 		return handleError(403);
 	if (S_ISREG(st.st_mode))
-	{
-	 	std::cout << RED "file" RESET << std::endl;
 		isFileDelete();
-	}
 	else if (S_ISDIR(st.st_mode))
-	{
-	 	std::cout << RED "register" RESET << std::endl;
 		isDirectoryDelete();
-	}
 	else
 	{
 		std::cout << RED "Error : Not a regular file or directory: " << _URI << RESET << std::endl;
@@ -36,8 +30,6 @@ void	Client::isFileDelete()
 	if (std::remove(_URI.c_str()) != OK)
 		return (handleError(500));
 	
-	std::cout << GREEN "File Delete" RESET << std::endl;
-
 	ostringstream	response;
 	response << "HTTP/1.1 204 No Content\r\n";
 	response << "Connection: close\r\n";
@@ -71,7 +63,6 @@ void	Client::isDirectoryDelete()
 	std::string cleanPath = _URI.substr(0, _URI.length() - 1);
 	if (std::remove(cleanPath.c_str()) != OK)
 		return(handleError(500));
-	std::cout << GREEN "Directory deleted successfully: " << _URI << RESET << std::endl;
 	// sendResponse(204);
 }
 

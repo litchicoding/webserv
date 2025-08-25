@@ -2,28 +2,29 @@
 
 
 void	Client::handleDelete() {
+
+	if (_URI != "/upload/")
+
 	struct stat st;
 	string root = _config->full_path;
-	cout << GREEN << root << RESET << endl;
+	cout << GREEN << "ROOT is : " << root << RESET << endl;
+
 	if (access(root.c_str(), F_OK) != 0)
 		return(handleError(404));
 	if (stat(root.c_str(), &st) != 0)
+	{
+		cout << BLUE << "stat" << RESET << endl;
 		return(handleError(500));
+	}
 	if (access(root.c_str(), W_OK) != 0)
 		return handleError(403);
 	if (S_ISREG(st.st_mode))
-	{
-	 	std::cout << RED "file" RESET << std::endl;
-		isFileDelete();
-	}
+		return (isFileDelete());
 	else if (S_ISDIR(st.st_mode))
-	{
-	 	std::cout << RED "register" RESET << std::endl;
-		isDirectoryDelete();
-	}
+		return (isDirectoryDelete());
 	else
 	{
-		std::cout << RED "Error : Not a regular file or directory: " << _URI << RESET << std::endl;
+		std::cout << RED "Error handleDelete() : Not a regular file or directory: " << _URI << RESET << std::endl;
 		return (handleError(403));
 	}
 }
@@ -32,9 +33,8 @@ void	Client::isFileDelete()
 {
 	// if(isCgiScript(_URI) == OK)
 	//	;
-	cout << YELLOW "isfileDelete _uri = " << _URI << RESET << endl;
-	// Vérifier si _URI ou fullpath plutot ?
-	if (std::remove(_URI.c_str()) != OK)
+	cout << YELLOW "isfileDelete _uri = " << _config->full_path << RESET << endl;
+	if (std::remove(_config->full_path.c_str()) != OK)
 		return (handleError(500));
 	
 	std::cout << GREEN "File Delete" RESET << std::endl;
@@ -50,9 +50,6 @@ void	Client::isFileDelete()
 
 void	Client::isDirectoryDelete()
 {
-	cout << YELLOW "isDirDelete _uri = " << _URI << RESET << endl;
-	// Vérifier si _URI ou fullpath plutot ?
-
 	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 		return (handleError(409));
 
@@ -75,9 +72,7 @@ void	Client::isDirectoryDelete()
 		return (handleError(500));
 	}
 
-	std::string cleanPath = _URI.substr(0, _URI.length() - 1);
-
-	if (std::remove(cleanPath.c_str()) != OK)
+	if (std::remove(_config->full_path.c_str()) != OK)
 		return(handleError(500));
 
 	ostringstream	response;
@@ -116,6 +111,7 @@ int Client::delete_all_folder_content(std::string dirPath)
 				return ERROR;
 			}
 		}
+		cout << "exemple : " << fullpath.c_str() << endl;
 		if (remove(fullpath.c_str()) != OK)
 		{
 			closedir(dir);

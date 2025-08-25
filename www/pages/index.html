@@ -154,7 +154,7 @@
         <div class="test-section">
             <h2>📁 Test Directory Listing</h2>
             <div class="links">
-                <a href="/uploads/">Dossier uploads</a>
+                <a href="/upload/">Dossier upload</a>
                 <a href="/static/">Dossier statique</a>
                 <a href="/cgi-bin/">Dossier CGI</a>
             </div>
@@ -232,7 +232,7 @@
                 return;
             }
             
-            fetch('/uploads/' + filename, {
+            fetch('/upload/' + filename, {
                 method: 'DELETE'
             })
             .then(response => response.text())

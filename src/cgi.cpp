@@ -28,8 +28,6 @@ bool Client::isCgi()
 
 bool Client::isQueryStringValid()
 {
-	std::cout <<GREEN << "Query string = [" << _config->query_string << "]" << RESET << std::endl;
-	
 	const std::string &qs = _config->query_string;
     if (qs.empty())
         return true;

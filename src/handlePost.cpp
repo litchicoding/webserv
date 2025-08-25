@@ -56,8 +56,11 @@ void	Client::handlePost()
 
 void    Client::isFilePost()
 {
-    // if(isCgiScript(_URI) == OK)
-	//	;
+	if (isCgi())
+	{
+		handleCGI();
+		return;
+	}
 	if (1)
 		std::cout << "CGI à faire" << std::endl;
 	else

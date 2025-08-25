@@ -22,7 +22,7 @@ RESET = \033[0;m
 ###############################################################################
 
 SRC_FILES = main.cpp Server.cpp signal_handler.cpp utils.cpp \
-			Client_parsing.cpp Client.cpp Client_utils.cpp config_parser.cpp \
+			cgi.cpp Client_parsing.cpp Client.cpp Client_utils.cpp config_parser.cpp \
 			tokenizer.cpp Listen.cpp handleDelete.cpp handleGet.cpp handlePost.cpp response.cpp
 
 OBJ = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))

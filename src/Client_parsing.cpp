@@ -2,12 +2,13 @@
 
 int	Client::request_well_formed_optimized() {
 
+	string clean_URI = stripQueryString(_URI);
 	// VALIDATION DE L'URI
 	if (_URI.empty() || _URI[0] != '/')
 		return(handleError(400), ERROR);
 	if (_URI.find("..") != std::string::npos)
 		return(handleError(403), ERROR);
-	if (URI_Not_Printable(_URI))
+	if (URI_Not_Printable(clean_URI))
 		return(handleError(400), ERROR);
 	if (_URI.size() > 2048)
 		return(handleError(414), ERROR);

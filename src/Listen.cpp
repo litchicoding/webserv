@@ -156,18 +156,22 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
-	if (bytes_read <= 0) {
+	if (bytes_read <= 0)
+	{
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		delete _clients[client_fd];
 		_clients.erase(client_fd);
 		close(client_fd);
-		if (bytes_read < 0) {
-		    cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
-		    return ERROR;
+
+		if (bytes_read < 0)
+		{
+			cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
+			return ERROR;
 		}
 		return OK;
-    }
-	// cout << BLUE << "📨 - REQUEST RECEIVED :" << endl << RESET << buffer;
+	}
+	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
+	cout << BLUE << "Server is processing client request..." << RESET << endl;
 
 	// Stocke la requete + la taille de la requete
 	_clients[client_fd]->setRequest(buffer, bytes_read);

@@ -170,8 +170,7 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 		}
 		return OK;
 	}
-	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
-	cout << BLUE << "Server is processing client request..." << RESET << endl;
+	// cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
 
 	// Stocke la requete + la taille de la requete
 	_clients[client_fd]->setRequest(buffer, bytes_read);

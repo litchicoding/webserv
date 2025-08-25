@@ -3,7 +3,12 @@
 
 void	Client::handleDelete() {
 
-	if (_URI != "/upload/")
+	// if (_URI.rfind("/upload/", 0) != OK)
+	// 	return (handleError(403));
+
+
+	// if (_URI == "/upload/")
+	// 	return (handleError(403));
 
 	struct stat st;
 	string root = _config->full_path;

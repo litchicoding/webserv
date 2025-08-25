@@ -54,17 +54,11 @@ void	Client::handlePost()
 	}
 }
 
-void    Client::isFilePost()
+void	Client::isFilePost()
 {
 	if (isCgi())
-	{
-		handleCGI();
-		return;
-	}
-	if (1)
-		std::cout << "CGI à faire" << std::endl;
-	else
-		return (handleError(403));
+		return (handleCGI());
+	return (handleError(403));
 }
 
 void    Client::isDirectoryPost()

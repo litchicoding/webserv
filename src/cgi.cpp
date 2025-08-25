@@ -218,6 +218,7 @@ void Client::handleCGI()
 		
 		if (!interpreter.empty())
 		{
+			cerr << interpreter.c_str() << endl;
 			if (execve(interpreter.c_str(), argv, envp) == -1)
 				perror("execve");
 		}

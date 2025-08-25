@@ -9,7 +9,10 @@ int	Client::request_well_formed_optimized() {
 	if (_URI.find("..") != std::string::npos)
 		return(handleError(403), ERROR);
 	if (URI_Not_Printable(clean_URI))
-		return(handleError(400), ERROR);
+	{
+		cout << "clean_URI : " << YELLOW << clean_URI << RESET << endl;
+		return (handleError(400), ERROR);
+	}
 	if (_URI.size() > 2048)
 		return(handleError(414), ERROR);
 

@@ -30,16 +30,26 @@ std::string Client::getMIME(std::string& URI)
 
 bool	Client::URI_Not_Printable(std::string& URI)
 {
-	static const std::string allowed =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz"
-		"0123456789"
-		" ._~:/?#[]@!$&'()*+,;=%";
+	// static const std::string allowed =
+	// 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	// 	"abcdefghijklmnopqrstuvwxyz"
+	// 	"0123456789"
+	// 	" ._~:/?#[]@!$&'()*+,;=%";
 
-	for (size_t i = 0; i < URI.length(); i++)
-	{
-		if (allowed.find(URI[i]) == std::string::npos)
-		    return true;
-	}
-	return false;
+	// for (size_t i = 0; i < URI.length(); i++)
+	// {
+	// 	if (allowed.find(URI[i]) == std::string::npos)
+	// 	    return true;
+	// }
+	// return false;
+    for (size_t i = 0; i < URI.length(); i++)
+    {
+        char c = URI[i];
+        if (!(c == 95 ||
+            (c >= 45 && c <= 57) ||
+            (c >= 64 && c <= 90) ||
+            (c >= 97 && c <= 122)))
+            return true;
+    }
+    return false;
 }

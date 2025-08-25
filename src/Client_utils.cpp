@@ -2,7 +2,7 @@
 
 std::string Client::getMIME(std::string& URI)
 {
-    std::string contentType;
+	std::string contentType;
 	if (URI.find(".html") != std::string::npos)
 		contentType = "text/html";
 	else if (URI.find(".jpg") != std::string::npos || URI.find(".jpeg") != std::string::npos)
@@ -14,30 +14,32 @@ std::string Client::getMIME(std::string& URI)
 	else if (URI.find(".js") != std::string::npos)
 		contentType = "text/javascript";
 	else if (URI.find(".gif") != std::string::npos)
-        contentType = "image/gif";
+		contentType = "image/gif";
 	else if (URI.find(".otf") != std::string::npos)
-        contentType = "font/otf";
-    else if (URI.find(".svg") != std::string::npos)
-        contentType = "image/svg+xml";
+		contentType = "font/otf";
+	else if (URI.find(".svg") != std::string::npos)
+		contentType = "image/svg+xml";
 	else if (URI.find(".css") != std::string::npos)
 		contentType = "text/css";
-    else if (URI.find(".ico") != std::string::npos)
-        contentType = "image/x-icon";
+	else if (URI.find(".ico") != std::string::npos)
+		contentType = "image/x-icon";
 	else
 		contentType = "text/plain";
-    return contentType;
+	return contentType;
 }
 
 bool	Client::URI_Not_Printable(std::string& URI)
 {
+	static const std::string allowed =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz"
+		"0123456789"
+		" ._~:/?#[]@!$&'()*+,;=%";
+
 	for (size_t i = 0; i < URI.length(); i++)
 	{
-		char c = URI[i];
-		if (!(c == 95 ||
-			(c >= 45 && c <= 57) ||
-			(c >= 64 && c <= 90) ||
-			(c >= 97 && c <= 122)))
-			return true;
+		if (allowed.find(URI[i]) == std::string::npos)
+		    return true;
 	}
 	return false;
 }

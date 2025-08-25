@@ -17,8 +17,6 @@ void	Client::handlePost()
 	
 	if (_URI == "/upload")
 	{
-		cout << BLUE << _body << RESET << endl;
-
 		// trouver le filename dans les headers !
 
 		string filename = root + "/text.txt";
@@ -67,9 +65,9 @@ void	Client::handlePost()
 	}
 }
 
-void    Client::isFilePost()
+void	Client::isFilePost()
 {
-    // if(isCgiScript(_URI) == OK)
+	// if(isCgiScript(_URI) == OK)
 	//	;
 	if (1)
 		std::cout << "CGI à faire" << std::endl;

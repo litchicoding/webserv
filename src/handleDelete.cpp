@@ -32,7 +32,8 @@ void	Client::isFileDelete()
 {
 	// if(isCgiScript(_URI) == OK)
 	//	;
-	cout << YELLOW "isfiledelete _uri = " << _URI << RESET << endl;
+	cout << YELLOW "isfileDelete _uri = " << _URI << RESET << endl;
+	// Vérifier si _URI ou fullpath plutot ?
 	if (std::remove(_URI.c_str()) != OK)
 		return (handleError(500));
 	
@@ -50,9 +51,11 @@ void	Client::isFileDelete()
 void	Client::isDirectoryDelete()
 {
 	cout << YELLOW "isDirDelete _uri = " << _URI << RESET << endl;
+	// Vérifier si _URI ou fullpath plutot ?
 
 	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
 		return (handleError(409));
+
 	// if(isCgiScript(_URI) == OK)
 	// {
 	// 	std::string indexFile = findIndexFile();
@@ -64,20 +67,61 @@ void	Client::isDirectoryDelete()
 	// 	else
 	// 		return (handleError(403));
 	// }
-	if (delete_all_folder_content(_URI) != OK) {
-		std::cout << RED "Error: Failed to delete folder content" RESET << std::endl;
+
+	if (delete_all_folder_content(_config->full_path) != OK)
+	{
+		if (access(_config->full_path.c_str(), W_OK) != OK)
+			return (handleError(403));
 		return (handleError(500));
 	}
+
 	std::string cleanPath = _URI.substr(0, _URI.length() - 1);
+
 	if (std::remove(cleanPath.c_str()) != OK)
 		return(handleError(500));
-	std::cout << GREEN "Directory deleted successfully: " << _URI << RESET << std::endl;
-	// sendResponse(204);
+
+	ostringstream	response;
+	response << "HTTP/1.1 204 No Content\r\n";
+	response << "Connection: close\r\n";
+	response << "\r\n";
+
+	_response = response.str();
+	_response_len = _response.size();
 }
 
-int Client::delete_all_folder_content(std::string URI)
+int Client::delete_all_folder_content(std::string dirPath)
 {
-	std::cout << GREEN "delete all folder content" RESET << URI << std::endl;
-	// ...
-	return 0;
+	DIR	*dir = opendir(dirPath.c_str());
+	if (!dir)
+		return ERROR;
+	
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		string name = entry->d_name;
+
+		if (name == "." || name == "..")
+			continue;
+
+		string fullpath = dirPath + "/" + name;
+
+		struct stat st;
+		if (stat(fullpath.c_str(), &st) == -1)
+			return ERROR;
+		if (S_ISDIR(st.st_mode))
+		{
+			if (delete_all_folder_content(fullpath) != OK)
+			{
+				closedir(dir);
+				return ERROR;
+			}
+		}
+		if (remove(fullpath.c_str()) != OK)
+		{
+			closedir(dir);
+			return ERROR;
+		}
+	}
+	closedir(dir);
+	return OK;
 }

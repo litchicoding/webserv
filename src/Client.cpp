@@ -26,7 +26,7 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 Client::~Client()
 {
 	// must delete everything needed
-	close(_client_fd);
+	// close(_client_fd);
 }
 
 /**************************************************************************************************/

@@ -10,13 +10,7 @@ Listen::Listen() : _epoll_fd(INVALID)
 
 Listen::~Listen()
 {
-	cout << GREEN << "***  Listening ports Deconstruction  ***" << RESET << endl;
-	// must delete everything needed
-	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
-	{
-		close(it->second.listen_fd);
-		close(_epoll_fd);
-	}
+	// cout << GREEN << "***  Listening ports Deconstruction  ***" << RESET << endl;
 	for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		close(it->first);
@@ -110,11 +104,11 @@ int	Listen::start_connexion()
 int	Listen::update_connexion()
 {
 	map<int, t_port>::iterator	current_port;
-	epoll_event						events[MAX_EVENTS];
-	int								nfds;
+	epoll_event					events[MAX_EVENTS];
+	int							nfds;
 
 	cout << PURPLE << "🟢 - SERVER IS LISTENING ON PORTS..." << RESET << endl << endl;
-	while (true)
+	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
 		if ((nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
@@ -225,9 +219,7 @@ void	Listen::stop(const string &msg)
 	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
 	{
 		// epoll_ctl(it->second.epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-		close(it->second.listen_fd);
 		it->second.listen_fd = INVALID;
-		close(_epoll_fd);
 		_epoll_fd = INVALID;
 	}
    	cout << PURPLE << endl << "🛑 - CONNEXION CLOSED." << RESET << endl;

@@ -1,0 +1,2 @@
+name = Pierre
+message = L'eau ca mouille et le feu ca brule!

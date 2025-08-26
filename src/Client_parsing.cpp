@@ -30,7 +30,7 @@ int	Client::request_well_formed_optimized() {
 		return (sendRedirect(redirectUrl), ERROR);
 	}
 
-	if (static_cast<size_t>(_config->client_max_body_size) < _body.size())
+	if (_config->client_max_body_size < _body.size())
 		return (handleError(413), ERROR);
 	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
 		return (handleError(405), ERROR);
@@ -42,10 +42,6 @@ int	Client::request_well_formed_optimized() {
 
 	// if (is_method_allowed(_config) != OK) // Voir si method = GET POST DELETE ou en fonction de ce qui est autorisée dans fichier conf.
 	// 	return (handleError(405));
-	
-
-
-
 
 	// VALIDATION DES HEADERS - Ici tout mettre dans une fonction et vérifier les différents HEADERS obligatoire.
 	std::map<std::string, std::string>::iterator transferEncodingIt = _headersMap.find("Transfer-Encoding");
@@ -62,6 +58,10 @@ int	Client::request_well_formed_optimized() {
 	// Si content-length vérifier que ce soit un nombre valide
 	// HOST obligatoire en HTTP/1.1
 
+	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
+	cout << endl << "     Method:[\e[0m" << _method << "\e[34m] URI:[\e[0m";
+	cout << _URI << "\e[34m] Version:[\e[0m" << _version;
+	cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]" << endl;
 	return OK;
 }
 

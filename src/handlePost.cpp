@@ -2,93 +2,104 @@
 
 void	Client::handlePost()
 {
-	struct stat st;
-	string root, filename, message;
-	
-	// 1. Vérifications: 
-	// Content-Type= multipart / Boundary is here and correct / Content-Length coherent
+	string root, filename, message, boundary;
+	int	content_length;
+	map<string, string>::iterator header;
+	ostringstream response;
 
-	// 2. Parsing:
+	root = _config->full_path;
+	if (access(root.c_str(), F_OK) != 0)
+		return (handleError(404));
+	if (access(root.c_str(), W_OK) != 0)
+		return (handleError(403));
+	/*** 1. Vérifications: ***/ 
+	// Content-Type= multipart/form-data
+	header = _headersMap.find("Content-Type");
+	if (header == _headersMap.end() || header->second.find("multipart/form-data") == string::npos)
+		return (handleError(415));
+	// Boundary is here and correct
+	boundary = searchBoundary(header->second);
+	if (boundary.size() <= 0 || _body.find(boundary) == string::npos)
+		return (handleError(400));
+	// Content-Length coherent
+	header = _headersMap.find("Content-Length");
+	if (header == _headersMap.end() && _headersMap.find("Transfer-Encoding") == _headersMap.end())
+		return (handleError(400));
+	content_length = atoi(header->second.c_str());
+	/*** 2. Parsing: ***/
 	// Lire boundary et découper le body.
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
-
-	root = _config->full_path;
-	if (access(root.c_str(), W_OK) != 0)
-		return (handleError(403));
-	if (_URI == "/upload")
-	{
-		map<string, string>::iterator it = _headersMap.find("Content-Type");
-		if (it == _headersMap.end() || it->second.find("multipart/form-data") == string::npos)
-			return (handleError(400));
-		filename = findFileName();
-		if (filename.empty() || !filename.size())
-			return (handleError(400));
-		copyFile(root + "/" + filename);
-		message = "File creation succeeded\n";
-
-		ostringstream response;
-		response << "HTTP/1.1 201 Created\r\n";
-		response << "Location: " + root + "/" + filename + "\r\n";
-		response << "Content-Type: text/plain\r\n";
-		response << "Content-Length: " << message.size() << "\r\n";
-		response << "Connection: close\r\n";
-		response << "\r\n";
-		response << message;
-		_response = response.str();
-		_response_len = _response.size();
-		return ;
-	}
-	if (access(root.c_str(), F_OK) != 0)
-		return(handleError(404));
-	if (stat(root.c_str(), &st) != 0)
-		return(handleError(500));
-	if (S_ISREG(st.st_mode))
-		return (isFilePost());
-	else if (S_ISDIR(st.st_mode))
-		return (isDirectoryPost());
+	filename = findFileName();
+	if (filename.size() > 0)
+		uploadFile(root + "/" + filename, content_length);
 	else
-	{
-		std::cout << RED "Error : Not a regular file or directory: " << _URI << RESET << std::endl;
-		return(handleError(403));
-	}
+		saveData(root + "/data.txt", boundary, content_length);
+	/*** 3.Response HTTP ***/
+	message = "File creation succeeded\n";
+	response << "HTTP/1.1 201 Created\r\n";
+	response << "Location: " + root + "/" + filename + "\r\n";
+	response << "Content-Type: text/plain\r\n";
+	response << "Content-Length: " << message.size() << "\r\n";
+	response << "Connection: close\r\n";
+	response << "\r\n";
+	response << message;
+	_response = response.str();
+	_response_len = _response.size();
 }
 
-void	Client::isFilePost()
+void	Client::saveData(const string &root, const string &boundary, int size)
 {
-	if (isCgi())
-		return (handleCGI());
-	return (handleError(403));
+	size_t	pos, start, end, count;
+	string	key, value, target;
+
+	pos = 0;
+	count = 0;
+	target = "name=\"";
+	ofstream file(root.c_str(), ofstream::out);
+	if (!file.is_open())
+		return (handleError(500));
+	while (true)
+	{
+		// header = key
+		pos = _body.find(target, pos);
+		if (pos == string::npos)
+			break ;
+		start = pos + target.size();
+		end = _body.find("\"", start);
+		if (end == string::npos)
+			break ;
+		key = _body.substr(start, end - start);
+		// \n
+		pos = _body.find("\n", end);
+		if (pos == string::npos)
+			break ;
+		// data = value
+		start = pos + 1;
+		end = _body.find("--" + boundary, pos);
+		if (end == string::npos)
+			break ;
+		end -= 1;
+		value = _body.substr(start, end - start);
+		// boundary
+		pos = end + 2 + boundary.size();
+		count += key.size() + value.size();
+		file << key + " = " + value + "\n";
+	}
+	if (count != (size_t)size)
+		return (handleError(400));
+	file.close();
 }
 
-void    Client::isDirectoryPost()
-{
-   	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
-	{
-		std::string redirectUri = _URI + "/";
-		return sendRedirect(redirectUri);
-	}
-	std::string indexFile = findIndexFile();
-	if (!indexFile.empty())
-	{
-	    _URI = indexFile;
-	    isFilePost();
-	}
-	else
-		return (handleError(403));
-}
-
-void	Client::copyFile(const string &filename)
+void	Client::uploadFile(const string &filename, int size)
 {
 	size_t	start, end, pos;
-	string	boundary, target;
 
 	ofstream file(filename.c_str(), ofstream::out);
 	if (!file.is_open())
 		return (handleError(500));
-
 	// Copy file and skip boundaries + headers
-	pos = _body.find("Content-Type:");
+	pos = _body.find("Content-Type");
 	if (pos == string::npos)
 		return ;
 	start = _body.find("\n", pos);
@@ -98,10 +109,27 @@ void	Client::copyFile(const string &filename)
 	end = _body.find("--", start);
 	if (end == string::npos)
 		return ;
-	if (_body[end - 1] == '\n')
-		end -= 2;
+	end -= 1;
+	if ((size_t)size != end - start)
+		return (handleError(400));
 	file << _body.substr(start, end - start);
 	file.close();
+}
+
+string	Client::searchBoundary(string &arg)
+{
+	string	boundary;
+	size_t	start;
+
+	start = arg.find("boundary=");
+	if (start == string::npos)
+		return ("");
+	start = arg.find("=", start);
+	if (start == string::npos)
+		return ("");
+	start++;
+	boundary = arg.substr(start, arg.length() - start);
+	return (boundary);
 }
 
 string	Client::findFileName()
@@ -121,4 +149,21 @@ string	Client::findFileName()
 		end++;
 	filename = _body.substr(start, end - start);
 	return (filename);
+}
+
+void    Client::isDirectoryPost()
+{
+   	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
+	{
+		std::string redirectUri = _URI + "/";
+		return ;
+	}
+	std::string indexFile = findIndexFile();
+	if (!indexFile.empty())
+	{
+	    _URI = indexFile;
+	    return ;
+	}
+	else
+		return (handleError(403));
 }

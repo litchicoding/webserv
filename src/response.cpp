@@ -43,6 +43,10 @@ void	Client::handleError(int code)
 			message = "413 Entity Too Large";
 			filePath = "www/error_pages/413.html";			
 			break;
+		case 415:
+			message = "415 Unsupported Media Type";
+			filePath = "www/error_pages/415.html";			
+			break;
 		case 500:
 			message = "500 Internal Server Error";
 			filePath = "www/error_pages/500.html";			
@@ -55,8 +59,6 @@ void	Client::handleError(int code)
 
 	ifstream 		file(filePath.c_str());
 	if (!file.is_open()) {
-		cerr << "handleError(): could not open error page file: " << filePath << endl;
-		
 		ostringstream body;
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 

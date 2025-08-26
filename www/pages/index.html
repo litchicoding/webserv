@@ -234,7 +234,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                document.getElementById('deleteResult').innerHTML = '<div class="result">' + filename + '</div>';
+                document.getElementById('deleteResult').innerHTML = '<div class="result">' + data + '</div>';
             })
             .catch(error => {
                 document.getElementById('deleteResult').innerHTML = '<div class="result error">Error : ' + error + '</div>';

@@ -34,10 +34,6 @@ Client::~Client()
 
 void	Client::start()
 {
-	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
-	cout << endl << "     Method:[\e[0m" << _method << "\e[34m] URI:[\e[0m";
-	cout << _URI << "\e[34m] Version:[\e[0m" << _version;
-	cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]" << endl;
 	if (_method == "GET")
 		handleGet();
 	if (_method == "POST")

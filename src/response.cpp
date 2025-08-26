@@ -40,7 +40,7 @@ void	Client::handleError(int code)
 			filePath = "www/error_pages/409.html";			
 			break;		
 		case 413:
-			message = "413 Entity Too Large";
+			message = "413 Playload Too Large";
 			filePath = "www/error_pages/413.html";			
 			break;
 		case 415:

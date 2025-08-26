@@ -50,6 +50,12 @@ void	Server::defaultConfiguration()
 		_directives.methods.push_back("POST");
 		_directives.methods.push_back("DELETE");
 	}
+	if (_locations.empty()) {
+		t_directives	newDirectives;
+		newDirectives.autoindex = INVALID;
+		newDirectives.client_max_body_size = 0;
+		_locations.insert(make_pair("/", newDirectives));
+	}
 	for (map<string, t_directives>::iterator it = _locations.begin(); it != _locations.end(); it++)
 		defaultConfiguration(_directives, it->second);
 }
@@ -64,7 +70,7 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 	if (uri.empty())
 		return NULL;
 
-	/*separe la query string si il y en a une*/
+	/*separe la query string si il y en a une*/ // <- Faire dans une fonction à part
 	string path_only;
     string query_string;
     size_t qpos = uri.find('?');
@@ -114,7 +120,6 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		result->full_path = result->root + path_only.substr();
 	else
 		result->full_path = result->root + "/" + path_only.substr(match.length());
-	
 	result->query_string = query_string;
 	return result;
 }

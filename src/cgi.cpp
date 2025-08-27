@@ -6,7 +6,7 @@
 /*   By: sdeutsch <sdeutsch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 13:41:57 by sdeutsch          #+#    #+#             */
-/*   Updated: 2025/08/25 18:35:34 by sdeutsch         ###   ########.fr       */
+/*   Updated: 2025/08/27 17:51:07 by sdeutsch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,12 @@ bool Client::isQueryStringValid()
         if (isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~' || c == '+') {
             // caractère valide, rien à faire
         }
+		else if (c == '%')
+		{
+			if (i + 2 >= qs.size() || !isxdigit(qs[i+1]) || !isxdigit(qs[i+2]))
+				return false;
+			i += 2; // sauter les deux hexadécimaux
+		} 
         else if (c == '=') {
             if (!inKey || hasEqual) {
                 // déjà dans la valeur OU déjà vu un '=' => invalide

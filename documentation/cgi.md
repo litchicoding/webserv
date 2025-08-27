@@ -28,7 +28,7 @@ QUERY_STRING=foo=bar
 CONTENT_TYPE=application/x-www-form-urlencoded
 les construire dans une function dédiée, sous la forme d’un tableau de char*(char *envp[]) pour execve. 
 #### <ins>3. Créer un pipe pour la communication entre serveur et CGI :</ins>
-Le CGI doit pouvoir lire la requête POST (via stdin du CGI) et écrire la reponse (via stdout du CGI) ; donc pipe() pour stdout (lecture du resultat du CGI et de manière optionnelle pipe() pour stdin si on doit envoyer un body (ex : POST)
+Le CGI doit pouvoir lire la requête POST (via stdin du CGI) et écrire la reponse (via stdout du CGI) ; donc pipe() pour stdout (lecture du resultat du CGI) et de manière optionnelle pipe() pour stdin si on doit envoyer un body (ex : POST)
 #### <ins>4.Forker pour exécuter le CGI</ins>
 #### <ins>5. Integrer la sortie du CGI dans la réponse http :</ins>
 Le CGI va écrire des headers http puis le corps . On doit lire sa sortie, ne pas rajouter nos propres headers sauf si le CGI en a oublie et l’envoyer tel quel au client.

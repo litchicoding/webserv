@@ -30,18 +30,6 @@ std::string Client::getMIME(std::string& URI)
 
 bool	Client::URI_Not_Printable(std::string& URI)
 {
-	// static const std::string allowed =
-	// 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	// 	"abcdefghijklmnopqrstuvwxyz"
-	// 	"0123456789"
-	// 	" ._~:/?#[]@!$&'()*+,;=%";
-
-	// for (size_t i = 0; i < URI.length(); i++)
-	// {
-	// 	if (allowed.find(URI[i]) == std::string::npos)
-	// 	    return true;
-	// }
-	// return false;
     for (size_t i = 0; i < URI.length(); i++)
     {
         char c = URI[i];
@@ -49,7 +37,39 @@ bool	Client::URI_Not_Printable(std::string& URI)
             (c >= 45 && c <= 57) ||
             (c >= 64 && c <= 90) ||
             (c >= 97 && c <= 122)))
+		{
+			if (c == '%')
+			{
+				if (i+2 >= URI.size() || !isxdigit(URI[i+1]) || !isxdigit(URI[i+2]))
+					return true;
+				i += 2;
+				continue;
+			}
             return true;
+		}
     }
     return false;
+}
+
+string Client::urlDecode(const string &str)
+{
+    string result;
+    size_t i = 0;
+
+    while (i < str.length()) {
+        if (str[i] == '%' && i + 2 < str.length() &&
+            isxdigit(str[i+1]) && isxdigit(str[i+2])) {
+            string hex = str.substr(i + 1, 2);
+            char decodedChar = static_cast<char>(strtol(hex.c_str(), 0, 16));
+            result += decodedChar;
+            i += 3;
+        } else if (str[i] == '+') {
+            result += ' ';
+            i++;
+        } else {
+            result += str[i++];
+        }
+    }
+
+    return result;
 }

@@ -7,6 +7,7 @@ void	Client::handlePost()
 	map<string, string>::iterator header;
 	ostringstream response;
 
+	cout << GREEN << _body << RESET << endl;
 	root = _config->full_path;
 	if (access(root.c_str(), F_OK) != 0)
 		return (handleError(404));
@@ -20,7 +21,10 @@ void	Client::handlePost()
 	// Boundary is here and correct
 	boundary = searchBoundary(header->second);
 	if (boundary.size() <= 0 || _body.find(boundary) == string::npos)
+	{
+		cout << RED "BOUNDARY" RESET << endl;
 		return (handleError(400));
+	}
 	// Content-Length coherent
 	header = _headersMap.find("Content-Length");
 	if (header == _headersMap.end() && _headersMap.find("Transfer-Encoding") == _headersMap.end())
@@ -129,7 +133,8 @@ string	Client::searchBoundary(string &arg)
 		return ("");
 	start++;
 	boundary = arg.substr(start, arg.length() - start);
-	return (boundary);
+	cout << YELLOW << boundary << RESET << endl;
+	return ("--" + boundary);
 }
 
 string	Client::findFileName()

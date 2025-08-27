@@ -222,7 +222,7 @@ void	Listen::stop(const string &msg)
 		it->second.listen_fd = INVALID;
 		_epoll_fd = INVALID;
 	}
-   	cout << PURPLE << endl << "🛑 - CONNEXION CLOSED." << RESET << endl;
+   	cout << PURPLE << endl << "🛑 - CONNECTION CLOSED." << RESET << endl;
 }
 
 

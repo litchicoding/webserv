@@ -47,10 +47,13 @@ void	Client::handleFileRequest()
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
-	response << "Connection: close\r\n";
+	map<string, string>::iterator header = _headersMap.find("Connection");
+	if (header != _headersMap.end() && header->second.find("keep-alive") != string::npos)
+		response << "Connection: keep-alive\r\n";
+	else
+		response << "Connection: close\r\n";
 	response << "\r\n";
 	response << body.str();
-
 	_response = response.str();
 	_response_len = _response.size();
 }

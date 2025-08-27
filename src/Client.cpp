@@ -5,6 +5,7 @@
 
 Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_config(NULL), _config(NULL)
 {
+	cout << GREEN << "***   Client Connection   ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
 	_client_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&_client_addr), &client_addr_len);
 	if (_client_fd == INVALID) {
@@ -25,6 +26,7 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 
 Client::~Client()
 {
+	cout << GREEN << "***   Client Deconstruction   ***" << RESET << endl;
 	// must delete everything needed
 	// close(_client_fd);
 }

@@ -1,63 +1,80 @@
 #include "../inc/Client.hpp"
 
+bool	Client::isRequestCompleted()
+{
+	if (_chunked == true && _method == "POST") {
+		if (_body.size() > _content_length)
+			return (handleError(400), false);
+		if (_body.size() < _content_length)
+			return (false);
+	}
+	return (true);
+}
+
+int	Client::isRequestChunked()
+{
+	map<string, string>::iterator transfer;
+	map<string, string>::iterator content_len;
+
+	transfer = _headersMap.find("Transfer-Encoding");
+	content_len = _headersMap.find("Content-Length");
+	if (transfer != _headersMap.end() && transfer->second != "chunked") // can be gzip etc CHECK RFC
+		return(handleError(501), ERROR);
+	else if (transfer != _headersMap.end() && content_len != _headersMap.end()) // both present
+		return(handleError(400), ERROR);
+	else if (transfer != _headersMap.end()) {  // just transfer-encoding
+		_chunked = true;
+		return (OK);
+	}
+	if (content_len == _headersMap.end() && _method == "POST")
+		return (handleError(400), ERROR);
+	else if (content_len != _headersMap.end()) {
+		if (content_len->second.empty() || content_len->second.size() > 19)
+			return (handleError(400), ERROR);
+		for (size_t i = 0; i < content_len->second.size(); i++) {
+			if (!isdigit(content_len->second[i]))
+				return (handleError(400), ERROR);
+		}
+		_content_length = atoi(content_len->second.c_str());
+		if (_content_length < 0)
+			return (handleError(400), ERROR);
+	}
+	return (OK);
+}
+
 int	Client::request_well_formed_optimized() {
 
-	string clean_URI = stripQueryString(_URI);
+	string clean_URI;
+	
+	clean_URI = stripQueryString(_URI);
 	// VALIDATION DE L'URI
 	if (_URI.empty() || _URI[0] != '/')
 		return(handleError(400), ERROR);
 	if (_URI.find("..") != std::string::npos)
 		return(handleError(403), ERROR);
 	if (URI_Not_Printable(clean_URI))
-	{
-		cout << "clean_URI : " << YELLOW << clean_URI << RESET << endl;
 		return (handleError(400), ERROR);
-	}
 	if (_URI.size() > 2048)
 		return(handleError(414), ERROR);
-
 	// VALIDATION DE LA VERSION
 	if (_version != "HTTP/1.1")
 		return(handleError(505), ERROR);
-
-	// VALIDATION ROOT LOCATION
+	// VALIDATION ROOT LOCATION AND DIRECTIVES
 	setConfig();
 	if (_config == NULL)
 		return (handleError(500), ERROR);
-	if (!(_config->redirection.empty()))
-	{
+	if (!_config->redirection.empty()) {
 		string redirectUrl = _config->redirection.begin()->second;
 		return (sendRedirect(redirectUrl), ERROR);
 	}
-
 	if (_config->client_max_body_size < _body.size())
 		return (handleError(413), ERROR);
-	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
+	if (find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
 		return (handleError(405), ERROR);
-	// if (location_have_redirection(_config) != OK) // voir si redirection précisée dans la location
-	// 	return (handleError(301));
-
-	// if (max_body_size(_config) != OK) // Voir si le body_size est respectée dans le fichier conf.
-	// 	return (handleError(413));
-
-	// if (is_method_allowed(_config) != OK) // Voir si method = GET POST DELETE ou en fonction de ce qui est autorisée dans fichier conf.
-	// 	return (handleError(405));
-
 	// VALIDATION DES HEADERS - Ici tout mettre dans une fonction et vérifier les différents HEADERS obligatoire.
-	std::map<std::string, std::string>::iterator transferEncodingIt = _headersMap.find("Transfer-Encoding");
-	// std::map<std::string, std::string>::iterator contentLengthIt = _headersMap.find("Content-Length");
-		
-	if (transferEncodingIt != _headersMap.end() && transferEncodingIt->second != "chunked")
-		return(handleError(501), ERROR);
-	// else if (transferEncodingIt == _headersMap.end() && contentLengthIt == _headersMap.end() && _method != "POST")
-	// {
-	// 	std::cout << RED "transferencodingit" RESET << std::endl;
-	// 	return (handleError(400));
-	// }
-	// Transfer encoding + content length impossible
-	// Si content-length vérifier que ce soit un nombre valide
+	if (isRequestChunked() == ERROR)
+		return (ERROR);
 	// HOST obligatoire en HTTP/1.1
-
 	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 	cout << endl << "     Method:[\e[0m" << _method << "\e[34m] URI:[\e[0m";
 	cout << _URI << "\e[34m] Version:[\e[0m" << _version;

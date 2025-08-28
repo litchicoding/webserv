@@ -20,6 +20,7 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 	_body = "";
 	_response = "";
 	_root = "";
+	_chunked = false;
 	_request_len = 0;
 	_response_len = 0;
 }

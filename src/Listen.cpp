@@ -146,7 +146,6 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
 	char	buffer[4064];
 	int		bytes_read;
-	t_port	listening_port;
 	
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
@@ -173,8 +172,12 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	if (_clients[client_fd]->getServerConfig() == NULL)
 		stop("no match for server configuration");
 	// Parse the request and start filling datas in client class
-	if (_clients[client_fd]->parseRawRequest() == OK && _clients[client_fd]->request_well_formed_optimized() == OK)
+	if (_clients[client_fd]->parseRawRequest() == OK
+		&& _clients[client_fd]->request_well_formed_optimized() == OK
+		&& _clients[client_fd]->isRequestCompleted() == true)
 		_clients[client_fd]->start();
+	if (_clients[client_fd]->isRequestCompleted() != true)
+		handleClientRequest(client_fd, epoll_fd, listen_fd);
 	// Send the response
 	write(client_fd, _clients[client_fd]->getResponse().c_str(), _clients[client_fd]->getResponseLen());
 	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << client_fd << "] : " << RESET;

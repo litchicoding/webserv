@@ -1,78 +1,98 @@
 #include "../inc/Client.hpp"
 
+int	Client::getCompleteRequest(int epoll_fd)
+{
+	char	buffer[4064];
+	int		bytes_read;
+	
+	while (true)
+	{
+		memset(buffer, 0, sizeof(buffer));
+		bytes_read = read(_client_fd, buffer, sizeof(buffer) - 1);
+		if (bytes_read <= 0) {
+			epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
+			// delete this;
+			close(_client_fd);
+			if (bytes_read < 0) {
+				cout << RED "Error: handleClientRequest(): while reading client request." RESET << endl;
+				return ERROR;
+			}
+			break ;
+		}
+		_body += buffer;
+	}
+	if (_body.size() < (size_t)_content_len_target || _body.size() > (size_t)_content_len_target)
+		return (handleError(400), ERROR);
+	if (_config->client_max_body_size < _body.size())
+		return (handleError(413), ERROR);
+	return (OK);
+}
+
+int	Client::isRequestChunked()
+{
+	map<string, string>::iterator transfer;
+	map<string, string>::iterator content_len;
+
+	transfer = _headersMap.find("Transfer-Encoding");
+	content_len = _headersMap.find("Content-Length");
+	if (transfer != _headersMap.end() && transfer->second != "chunked") // can be gzip etc CHECK RFC
+		return(handleError(501), ERROR);
+	else if (transfer != _headersMap.end() && content_len != _headersMap.end()) // both present
+		return(handleError(400), ERROR);
+	else if (transfer != _headersMap.end()) {  // just transfer-encoding
+		_chunked = true;
+		return (OK);
+	}
+	if (content_len == _headersMap.end() && _method == "POST")
+		return (handleError(400), ERROR);
+	else if (content_len != _headersMap.end()) {
+		if (content_len->second.empty() || content_len->second.size() > 19)
+			return (handleError(400), ERROR);
+		for (size_t i = 0; i < content_len->second.size(); i++) {
+			if (!isdigit(content_len->second[i]))
+				return (handleError(400), ERROR);
+		}
+		_chunked = true;
+		_content_len_target = atoi(content_len->second.c_str());
+		if (_content_len_target < 0)
+			return (handleError(400), ERROR);
+	}
+	return (OK);
+}
+
 int	Client::request_well_formed_optimized() {
 
-	string clean_URI = stripQueryString(_URI);
+	string clean_URI;
+	
+	clean_URI = stripQueryString(_URI);
 	// VALIDATION DE L'URI
 	if (_URI.empty() || _URI[0] != '/')
 		return(handleError(400), ERROR);
 	if (_URI.find("..") != std::string::npos)
 		return(handleError(403), ERROR);
 	if (URI_Not_Printable(clean_URI))
-	{
-		cout << "clean_URI : " << YELLOW << clean_URI << RESET << endl;
 		return (handleError(400), ERROR);
-	}
 	if (_URI.size() > 2048)
 		return(handleError(414), ERROR);
-
 	// VALIDATION DE LA VERSION
 	if (_version != "HTTP/1.1")
 		return(handleError(505), ERROR);
-
-	// VALIDATION ROOT LOCATION
+	// VALIDATION ROOT LOCATION AND DIRECTIVES
 	setConfig();
 	if (_config == NULL)
 		return (handleError(500), ERROR);
-	// Est ce que la location dispose d'une redirection ?
-	if (!(_config->redirection.empty()))
-	{
+	if (!_config->redirection.empty()) {
 		string redirectUrl = _config->redirection.begin()->second;
 		return (sendRedirect(redirectUrl), ERROR);
 	}
-	// BodySize respectée ?
 	if (_config->client_max_body_size < _body.size())
 		return (handleError(413), ERROR);
-	// Method autorisée au sein de la location 
-	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
+	if (find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
 		return (handleError(405), ERROR);
-
-
-
 	// VALIDATION DES HEADERS - Ici tout mettre dans une fonction et vérifier les différents HEADERS obligatoire.
-	std::map<std::string, std::string>::iterator transferEncodingIt = _headersMap.find("Transfer-Encoding");
-	std::map<std::string, std::string>::iterator contentLengthIt = _headersMap.find("Content-Length");
-	
-	// TE Existe t-il ? Si oui son contenu est il Chunked ?
-	if (transferEncodingIt != _headersMap.end() && transferEncodingIt->second != "chunked")
-	{
-		// ContentLength existe t-il également ?
-		if (contentLengthIt != _headersMap.end())
-			return (handleError(400), ERROR);
-		return(handleError(501), ERROR);
-	}
-	// Content Lenght existe t-il ?
-	if (contentLengthIt != _headersMap.end())
-	{
-		// Regarder char/char si c'est bien du digitale !
-		for (size_t i = 0; i < contentLengthIt->second.size(); i++)
-		{
-			if (!isdigit(contentLengthIt->second[i]))
-				return (handleError(400), ERROR);
-		}
-		// Regarder si taille non négatif !
-		if (atoll(contentLengthIt->second.c_str()) < 0)
-			return (handleError(400), ERROR);
-	}
-	else
-	{
-		if (_method == "POST")
-			return (handleError(400), ERROR);
-	}
-
-	
-	
-
+	if (isRequestChunked() == ERROR)
+		return (ERROR);
+	// HOST obligatoire en HTTP/1.1
 	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 	cout << endl << "     Method:[\e[0m" << _method << "\e[34m] URI:[\e[0m";
 	cout << _URI << "\e[34m] Version:[\e[0m" << _version;

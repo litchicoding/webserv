@@ -19,6 +19,7 @@ private:
 	Server				*_server_config;
 	t_directives		*_config;
 	/* Request ************************************************************************************/
+	bool				_chunked;
 	string				_method;
 	string				_URI;
 	string				_version;
@@ -28,6 +29,7 @@ private:
 	string				_response;
 	string				_root;
 	int					_request_len;
+	int					_content_len_target;
 	size_t				_response_len;
 
 	/* Parsing ************************************************************************************/
@@ -36,8 +38,10 @@ private:
 	void								handleBody(std::string& line);
 	std::string							getMIME(std::string& URI);
 	bool								URI_Not_Printable(std::string& URI);
+	string								urlDecode(const std::string &str);
+	int									isRequestChunked();
+	int									getCompleteRequest(int epoll_fd);
 	
-
 	/* Response Function ****************************************************************************/
 
 	void								handleError(int code);
@@ -84,9 +88,12 @@ public:
 
 	/* Member Function ****************************************************************************/
 	void								start();
+	void								removeRequest();
+	void								sendResponse(int client_fd);
 	int									parseRawRequest();
 	void								buildResponse();
 	int	    							request_well_formed_optimized();
+	int									requestAnalysis(int epoll_fd);
 
 	/* Setters ************************************************************************************/
 	void				setRequest(const string &request, const int &len);

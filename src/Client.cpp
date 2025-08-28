@@ -5,6 +5,7 @@
 
 Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_config(NULL), _config(NULL)
 {
+	cout << GREEN << "***   Client Connection   ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
 	_client_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&_client_addr), &client_addr_len);
 	if (_client_fd == INVALID) {
@@ -12,25 +13,36 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 		return ;
 	}
 	add_fd_to_epoll(epoll_fd, _client_fd);
-	_method = "";
-	_URI = "";
-	_version = "";
-	_request = "";
-	_body = "";
-	_response = "";
-	_root = "";
+	_server_config = NULL;
+	_config = NULL;
+	_chunked = false;
+	_content_len_target = INVALID;
 	_request_len = 0;
 	_response_len = 0;
 }
 
 Client::~Client()
 {
-	// must delete everything needed
-	// close(_client_fd);
+	cout << GREEN << "***   Client Deconstruction   ***" << RESET << endl;
 }
 
 /**************************************************************************************************/
 /* Parsing ****************************************************************************************/
+
+int	Client::requestAnalysis(int epoll_fd)
+{
+	// Parse the request and start filling datas in client class
+	if (parseRawRequest() != OK || request_well_formed_optimized() != OK)
+		return (ERROR);
+	if (_chunked == true && _method == "POST" && _content_len_target != INVALID) { // chunked avec content-len
+		if (getCompleteRequest(epoll_fd) != OK)
+			return (ERROR);
+	}
+	else if (_chunked == true && _content_len_target == INVALID) // transfer-encoded
+		
+	start();
+	return (OK);
+}
 
 void	Client::start()
 {
@@ -74,6 +86,31 @@ int	Client::parseRawRequest() {
 
 /**************************************************************************************************/
 /* Member Fucntions *******************************************************************************/
+
+void	Client::sendResponse(int client_fd)
+{
+	write(client_fd, getResponse().c_str(), getResponseLen());
+	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << _client_fd << "] : " << RESET;
+	size_t pos = _response.find("\n");
+	cout << _response.substr(0, pos) << endl << endl;
+}
+
+void	Client::removeRequest()
+{
+	_server_config = NULL;
+	_config = NULL;
+	_chunked = false;
+	_method.clear();
+	_URI.clear();
+	_request.clear();
+	_headersMap.clear();
+	_body.clear();
+	_root.clear();
+	_response.clear();
+	_request_len = 0;
+	_content_len_target = INVALID;
+	_response_len = INVALID;
+}
 
 void	Client::setRequest(const string &request, const int &len)
 {

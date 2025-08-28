@@ -1,0 +1,1 @@
+ceci est un fichier test pour gerer les %, ici : %20 (fichier avec un espace dans le nom) 

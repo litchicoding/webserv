@@ -146,17 +146,14 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
 	char	buffer[4064];
 	int		bytes_read;
-	t_port	listening_port;
 	
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
-	if (bytes_read <= 0)
-	{
+	if (bytes_read <= 0) {
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		delete _clients[client_fd];
 		_clients.erase(client_fd);
 		close(client_fd);
-
 		if (bytes_read < 0)
 		{
 			cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
@@ -165,21 +162,13 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 		return OK;
 	}
 	// cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
-
-	// Stocke la requete + la taille de la requete
 	_clients[client_fd]->setRequest(buffer, bytes_read);
-	// Indique le server_block associé au client (grace au match du port)
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
 	if (_clients[client_fd]->getServerConfig() == NULL)
 		stop("no match for server configuration");
-	// Parse the request and start filling datas in client class
-	if (_clients[client_fd]->parseRawRequest() == OK && _clients[client_fd]->request_well_formed_optimized() == OK)
-		_clients[client_fd]->start();
-	// Send the response
-	write(client_fd, _clients[client_fd]->getResponse().c_str(), _clients[client_fd]->getResponseLen());
-	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << client_fd << "] : " << RESET;
-	size_t pos = _clients[client_fd]->getResponse().find("\n");
-	cout << _clients[client_fd]->getResponse().substr(0, pos) << endl << endl;
+	_clients[client_fd]->requestAnalysis(epoll_fd);
+	_clients[client_fd]->sendResponse(client_fd);
+	_clients[client_fd]->removeRequest();
 	return OK;
 }
 
@@ -222,7 +211,7 @@ void	Listen::stop(const string &msg)
 		it->second.listen_fd = INVALID;
 		_epoll_fd = INVALID;
 	}
-   	cout << PURPLE << endl << "🛑 - CONNEXION CLOSED." << RESET << endl;
+   	cout << PURPLE << endl << "🛑 - CONNECTION CLOSED." << RESET << endl;
 }
 
 

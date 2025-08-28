@@ -2,16 +2,15 @@
 
 void	Client::handlePost()
 {
-	string root, filename, message, boundary;
+	string clean_path, filename, message, boundary;
 	int	content_length;
 	map<string, string>::iterator header;
 	ostringstream response;
 
-	cout << GREEN << _body << RESET << endl;
-	root = _config->full_path;
-	if (access(root.c_str(), F_OK) != 0)
+	clean_path = urlDecode(_config->full_path);
+	if (access(clean_path.c_str(), F_OK) != 0)
 		return (handleError(404));
-	if (access(root.c_str(), W_OK) != 0)
+	if (access(clean_path.c_str(), W_OK) != 0)
 		return (handleError(403));
 	/*** 1. Vérifications: ***/ 
 	// Content-Type= multipart/form-data
@@ -37,15 +36,18 @@ void	Client::handlePost()
 	// Lire boundary et découper le body.
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
-	filename = findFileName();
+	filename =urlDecode(findFileName());
 	if (filename.size() > 0)
-		uploadFile(root + "/" + filename, content_length);
+		uploadFile(clean_path + "/" + filename, content_length);
 	else
-		saveData(root + "/data.txt", boundary, content_length);
+		saveData(clean_path + "/data.txt", boundary, content_length);
 	/*** 3.Response HTTP ***/
 	message = "File creation succeeded\n";
 	response << "HTTP/1.1 201 Created\r\n";
-	response << "Location: " + root + "/" + filename + "\r\n";
+	// response << "Location: " + root + "/" + filename + "\r\n";
+	response << "Location: " << _URI;
+	if (!filename.empty())
+		response << ( (_URI[_URI.size() - 1] == '/') ? "" : "/" ) << filename;
 	response << "Content-Type: text/plain\r\n";
 	response << "Content-Length: " << message.size() << "\r\n";
 	response << "Connection: close\r\n";

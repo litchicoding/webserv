@@ -1,2 +1,2 @@
-name = Pierre
-message = L'eau ca mouille et le feu ca brule!
+name = Yann
+message = salut, c'est juste pour tester ta feature :)

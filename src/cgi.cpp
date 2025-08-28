@@ -6,7 +6,7 @@
 /*   By: sdeutsch <sdeutsch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 13:41:57 by sdeutsch          #+#    #+#             */
-/*   Updated: 2025/08/22 19:15:34 by sdeutsch         ###   ########.fr       */
+/*   Updated: 2025/08/27 17:51:07 by sdeutsch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,35 +28,53 @@ bool Client::isCgi()
 
 bool Client::isQueryStringValid()
 {
-	const std::string &qs = _config->query_string;
+    const std::string &qs = _config->query_string;
+    cout << qs << endl;
     if (qs.empty())
         return true;
 
+    bool inKey = true;     // on commence dans une clé
+    bool hasEqual = false; // une clé doit avoir exactement un '='
     char prev = 0;
-    bool expectKey = true;
 
     for (size_t i = 0; i < qs.size(); ++i) {
         char c = qs[i];
 
-        if (isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~' || c == '+')
-            expectKey = false;
-        else if (c == '=')
-		{
-            if (expectKey) return false;
-            expectKey = false;
+        if (isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~' || c == '+') {
+            // caractère valide, rien à faire
         }
-        else if (c == '&')
+		else if (c == '%')
 		{
-            if (prev == '&') return false;
-            expectKey = true;
+			if (i + 2 >= qs.size() || !isxdigit(qs[i+1]) || !isxdigit(qs[i+2]))
+				return false;
+			i += 2; // sauter les deux hexadécimaux
+		} 
+        else if (c == '=') {
+            if (!inKey || hasEqual) {
+                // déjà dans la valeur OU déjà vu un '=' => invalide
+                return false;
+            }
+            hasEqual = true;
+            inKey = false;
         }
-        else
-            return false;
+        else if (c == '&') {
+            if (prev == '&' || !hasEqual) {
+                // && interdit ou clé sans '='
+                return false;
+            }
+            // reset pour prochaine paire
+            inKey = true;
+            hasEqual = false;
+        }
+        else {
+            return false; // caractère non autorisé
+        }
 
         prev = c;
     }
 
-    if (prev == '&' || prev == '=')
+    // La dernière paire doit contenir un '=' et ne pas finir par & ou =
+    if (!hasEqual || prev == '&' || prev == '=')
         return false;
 
     return true;

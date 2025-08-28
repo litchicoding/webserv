@@ -24,39 +24,54 @@ int	Client::request_well_formed_optimized() {
 	setConfig();
 	if (_config == NULL)
 		return (handleError(500), ERROR);
+	// Est ce que la location dispose d'une redirection ?
 	if (!(_config->redirection.empty()))
 	{
 		string redirectUrl = _config->redirection.begin()->second;
 		return (sendRedirect(redirectUrl), ERROR);
 	}
-
+	// BodySize respectée ?
 	if (_config->client_max_body_size < _body.size())
 		return (handleError(413), ERROR);
+	// Method autorisée au sein de la location 
 	if (std::find(_config->methods.begin(), _config->methods.end(), _method) == _config->methods.end())
 		return (handleError(405), ERROR);
-	// if (location_have_redirection(_config) != OK) // voir si redirection précisée dans la location
-	// 	return (handleError(301));
 
-	// if (max_body_size(_config) != OK) // Voir si le body_size est respectée dans le fichier conf.
-	// 	return (handleError(413));
 
-	// if (is_method_allowed(_config) != OK) // Voir si method = GET POST DELETE ou en fonction de ce qui est autorisée dans fichier conf.
-	// 	return (handleError(405));
 
 	// VALIDATION DES HEADERS - Ici tout mettre dans une fonction et vérifier les différents HEADERS obligatoire.
 	std::map<std::string, std::string>::iterator transferEncodingIt = _headersMap.find("Transfer-Encoding");
-	// std::map<std::string, std::string>::iterator contentLengthIt = _headersMap.find("Content-Length");
-		
+	std::map<std::string, std::string>::iterator contentLengthIt = _headersMap.find("Content-Length");
+	
+	// TE Existe t-il ? Si oui son contenu est il Chunked ?
 	if (transferEncodingIt != _headersMap.end() && transferEncodingIt->second != "chunked")
+	{
+		// ContentLength existe t-il également ?
+		if (contentLengthIt != _headersMap.end())
+			return (handleError(400), ERROR);
 		return(handleError(501), ERROR);
-	// else if (transferEncodingIt == _headersMap.end() && contentLengthIt == _headersMap.end() && _method != "POST")
-	// {
-	// 	std::cout << RED "transferencodingit" RESET << std::endl;
-	// 	return (handleError(400));
-	// }
-	// Transfer encoding + content length impossible
-	// Si content-length vérifier que ce soit un nombre valide
-	// HOST obligatoire en HTTP/1.1
+	}
+	// Content Lenght existe t-il ?
+	if (contentLengthIt != _headersMap.end())
+	{
+		// Regarder char/char si c'est bien du digitale !
+		for (size_t i = 0; i < contentLengthIt->second.size(); i++)
+		{
+			if (!isdigit(contentLengthIt->second[i]))
+				return (handleError(400), ERROR);
+		}
+		// Regarder si taille non négatif !
+		if (atoll(contentLengthIt->second.c_str()) < 0)
+			return (handleError(400), ERROR);
+	}
+	else
+	{
+		if (_method == "POST")
+			return (handleError(400), ERROR);
+	}
+
+	
+	
 
 	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 	cout << endl << "     Method:[\e[0m" << _method << "\e[34m] URI:[\e[0m";

@@ -18,6 +18,7 @@ void	Client::handlePost()
 	header = _headersMap.find("Content-Type");
 	if (header == _headersMap.end() || header->second.find("multipart/form-data") == string::npos)
 		return (handleError(415));
+
 	// Boundary is here and correct
 	boundary = searchBoundary(header->second);
 	if (boundary.size() <= 0 || _body.find(boundary) == string::npos)
@@ -25,11 +26,13 @@ void	Client::handlePost()
 		cout << RED "BOUNDARY" RESET << endl;
 		return (handleError(400));
 	}
+
 	// Content-Length coherent
 	header = _headersMap.find("Content-Length");
 	if (header == _headersMap.end() && _headersMap.find("Transfer-Encoding") == _headersMap.end())
 		return (handleError(400));
 	content_length = atoi(header->second.c_str());
+
 	/*** 2. Parsing: ***/
 	// Lire boundary et découper le body.
 	// Cas 1 : header-body = filename -> upload de fichier

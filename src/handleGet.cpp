@@ -2,11 +2,10 @@
 
 void	Client::handleGet() {
 	struct stat st;
-	string root = _config->full_path;
-
-	if (access(root.c_str(), F_OK) != 0)
+	string clean_path = urlDecode(_config->full_path);
+	if (access(clean_path.c_str(), F_OK) != 0)
 		return (handleError(404));
-	if (stat(root.c_str(), &st) != 0)
+	if (stat(clean_path.c_str(), &st) != 0)
 		return (handleError(500));
 	if (S_ISREG(st.st_mode))
 		handleFileRequest();
@@ -21,7 +20,8 @@ void	Client::handleGet() {
 
 void	Client::handleFileRequest()
 {
-	if (access(_config->full_path.c_str(), R_OK) != 0)
+		string clean_path = urlDecode(_config->full_path);
+	if (access(clean_path.c_str(), R_OK) != 0)
 	{
 		cout << YELLOW "not permission" RESET << endl;
 		return (handleError(403));
@@ -32,7 +32,7 @@ void	Client::handleFileRequest()
 		return;
 	}
 
-	std::ifstream	file(_config->full_path.c_str());
+	std::ifstream	file(clean_path.c_str());
 	if (!file.is_open())
 	{
 		std::cout << RED "Error : Cannot open file: " << _config->full_path << RESET << std::endl;

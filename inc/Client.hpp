@@ -38,6 +38,7 @@ private:
 	void								handleBody(std::string& line);
 	std::string							getMIME(std::string& URI);
 	bool								URI_Not_Printable(std::string& URI);
+	string								urlDecode(const std::string &str);
 	int									isRequestChunked();
 	
 	/* Response Function ****************************************************************************/

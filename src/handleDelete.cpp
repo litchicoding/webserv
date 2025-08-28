@@ -11,17 +11,17 @@ void	Client::handleDelete() {
 	// 	return (handleError(403));
 
 	struct stat st;
-	string root = _config->full_path;
-	cout << GREEN << "ROOT is : " << root << RESET << endl;
+	string clean_path = urlDecode(_config->full_path);
+	cout << GREEN << "clean path is : " << clean_path << RESET << endl;
 
-	if (access(root.c_str(), F_OK) != 0)
+	if (access(clean_path.c_str(), F_OK) != 0)
 		return(handleError(404));
-	if (stat(root.c_str(), &st) != 0)
+	if (stat(clean_path.c_str(), &st) != 0)
 	{
 		cout << BLUE << "stat" << RESET << endl;
 		return(handleError(500));
 	}
-	if (access(root.c_str(), W_OK) != 0)
+	if (access(clean_path.c_str(), W_OK) != 0)
 		return handleError(403);
 	if (S_ISREG(st.st_mode))
 		return (isFileDelete());
@@ -38,8 +38,9 @@ void	Client::isFileDelete()
 {
 	// if(isCgiScript(_URI) == OK)
 	//	;
-	cout << YELLOW "isfileDelete _uri = " << _config->full_path << RESET << endl;
-	if (std::remove(_config->full_path.c_str()) != OK)
+	string clean_path = urlDecode(_config->full_path);
+	cout << YELLOW "isfileDelete clean_path = " << clean_path << RESET << endl;
+	if (std::remove(clean_path.c_str()) != OK)
 		return (handleError(500));
 	
 	ostringstream	response;
@@ -68,14 +69,15 @@ void	Client::isDirectoryDelete()
 	// 		return (handleError(403));
 	// }
 
-	if (delete_all_folder_content(_config->full_path) != OK)
+	string clean_path = urlDecode(_config->full_path);
+	if (delete_all_folder_content(clean_path) != OK)
 	{
-		if (access(_config->full_path.c_str(), W_OK) != OK)
+		if (access(clean_path.c_str(), W_OK) != OK)
 			return (handleError(403));
 		return (handleError(500));
 	}
 
-	if (std::remove(_config->full_path.c_str()) != OK)
+	if (std::remove(clean_path.c_str()) != OK)
 		return(handleError(500));
 
 	ostringstream	response;

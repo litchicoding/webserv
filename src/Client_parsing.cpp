@@ -1,14 +1,31 @@
 #include "../inc/Client.hpp"
 
-bool	Client::isRequestCompleted()
+int	Client::getCompleteRequest(int epoll_fd)
 {
-	if (_chunked == true && _method == "POST") {
-		if (_body.size() > _content_length)
-			return (handleError(400), false);
-		if (_body.size() < _content_length)
-			return (false);
+	char	buffer[4064];
+	int		bytes_read;
+	
+	while (true)
+	{
+		memset(buffer, 0, sizeof(buffer));
+		bytes_read = read(_client_fd, buffer, sizeof(buffer) - 1);
+		if (bytes_read <= 0) {
+			epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
+			// delete this;
+			close(_client_fd);
+			if (bytes_read < 0) {
+				cout << RED "Error: handleClientRequest(): while reading client request." RESET << endl;
+				return ERROR;
+			}
+			break ;
+		}
+		_body += buffer;
 	}
-	return (true);
+	if (_body.size() < (size_t)_content_len_target || _body.size() > (size_t)_content_len_target)
+		return (handleError(400), ERROR);
+	if (_config->client_max_body_size < _body.size())
+		return (handleError(413), ERROR);
+	return (OK);
 }
 
 int	Client::isRequestChunked()
@@ -35,8 +52,9 @@ int	Client::isRequestChunked()
 			if (!isdigit(content_len->second[i]))
 				return (handleError(400), ERROR);
 		}
-		_content_length = atoi(content_len->second.c_str());
-		if (_content_length < 0)
+		_chunked = true;
+		_content_len_target = atoi(content_len->second.c_str());
+		if (_content_len_target < 0)
 			return (handleError(400), ERROR);
 	}
 	return (OK);

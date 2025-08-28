@@ -20,7 +20,7 @@ void	Client::handleGet() {
 
 void	Client::handleFileRequest()
 {
-		string clean_path = urlDecode(_config->full_path);
+	string clean_path = urlDecode(_config->full_path);
 	if (access(clean_path.c_str(), R_OK) != 0)
 	{
 		cout << YELLOW "not permission" RESET << endl;

@@ -43,8 +43,9 @@ int	Client::readData(int epoll_fd)
 	if (bytes_read < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			return (OK);
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
-		close(_client_fd);
+		(void)epoll_fd;
+		// epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
+		// close(_client_fd);
 		cout << RED "Error: readData(): while reading request." RESET << endl;
 		return (ERROR);
 	}
@@ -87,11 +88,14 @@ int	Client::processRequest()
 {
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
+	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
+	cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
+	cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
+	if (_config)
+		cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
+	else
+		cout << "\e[34m]\e[0m" << endl;
 	if (isRequestWellFormedOptimized() == OK) {
-		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
-		cout << endl << "     Method:[\e[0m" << _request.getMethod() << "\e[34m] URI:[\e[0m";
-		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
-		cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]" << endl;
 		if (method == "GET")
 			handleGet();
 		else if (method == "POST")
@@ -100,8 +104,8 @@ int	Client::processRequest()
 			handleDelete();
 		else
 			_request.code = 501;
-		buildResponse(_request.code);
 	}
+	buildResponse(_request.code);
 	return (ERROR);
 }
 

@@ -3,7 +3,6 @@
 void	Client::handlePost()
 {
 	string clean_path, filename, message, boundary, URI;
-	int	content_length;
 	map<string, string>::const_iterator header;
 	ostringstream response;
 
@@ -31,22 +30,15 @@ void	Client::handlePost()
 		_request.code = 400;
 		return ;
 	}
-	// Content-Length coherent
-	header = headerMap.find("Content-Length");
-	if (header == headerMap.end() && headerMap.find("Transfer-Encoding") == headerMap.end()) {
-		_request.code = 400;
-		return ;
-	}
-	content_length = atoi(header->second.c_str());
 	/*** 2. Parsing: ***/
 	// Lire boundary et découper le body.
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
 	if (filename.size() > 0)
-		uploadFile(clean_path + "/" + filename, content_length);
+		uploadFile(clean_path + "/" + filename);
 	else
-		saveData(clean_path + "/data.txt", boundary, content_length);
+		saveData(clean_path + "/data.txt", boundary);
 	/*** 3.Response HTTP ***/
 	URI = _request.getURI();
 	message = "File creation succeeded\n";
@@ -63,18 +55,19 @@ void	Client::handlePost()
 	_request.response = response.str();
 }
 
-void	Client::saveData(const string &root, const string &boundary, int size)
+void	Client::saveData(const string &root, const string &boundary)
 {
-	size_t	pos, start, end, count;
+	size_t	pos, start, end;
 	string	key, value, target;
 
 	pos = 0;
-	count = 0;
 	target = "name=\"";
 	string	body(_request.getBody().begin(), _request.getBody().end());
 	ofstream file(root.c_str(), ofstream::out);
-	if (!file.is_open())
-		return (handleError(500));
+	if (!file.is_open()) {
+		_request.code = 500;
+		return ;
+	}
 	while (true)
 	{
 		// header = key
@@ -87,11 +80,11 @@ void	Client::saveData(const string &root, const string &boundary, int size)
 			break ;
 		key = body.substr(start, end - start);
 		// \n
-		pos = body.find("\n", end);
+		pos = body.find("\r\n\r\n", end);
 		if (pos == string::npos)
 			break ;
 		// data = value
-		start = pos + 1;
+		start = pos + 4;
 		end = body.find("--" + boundary, pos);
 		if (end == string::npos)
 			break ;
@@ -99,36 +92,33 @@ void	Client::saveData(const string &root, const string &boundary, int size)
 		value = body.substr(start, end - start);
 		// boundary
 		pos = end + 2 + boundary.size();
-		count += key.size() + value.size();
-		file << key + " = " + value + "\n";
+		file << key + " = " + value;
 	}
-	if (count != (size_t)size)
-		return (handleError(400));
 	file.close();
 }
 
-void	Client::uploadFile(const string &filename, int size)
+void	Client::uploadFile(const string &filename)
 {
 	size_t	start, end, pos;
 
 	string	body(_request.getBody().begin(), _request.getBody().end());
 	ofstream file(filename.c_str(), ofstream::out);
-	if (!file.is_open())
-		return (handleError(500));
+	if (!file.is_open()) {
+		_request.code = 500;
+		return ;
+	}
 	// Copy file and skip boundaries + headers
 	pos = body.find("Content-Type");
 	if (pos == string::npos)
 		return ;
-	start = body.find("\n", pos);
+	start = body.find("\r\n\r\n", pos);
 	if (start == string::npos)
 		return ;
-	start += 1;
+	start += 3;
 	end = body.find("--", start);
 	if (end == string::npos)
 		return ;
-	end -= 1;
-	if ((size_t)size != end - start)
-		return (handleError(400));
+	end -= 3;
 	file << body.substr(start, end - start);
 	file.close();
 }

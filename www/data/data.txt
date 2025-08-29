@@ -1,2 +1,1 @@
-name = Yann
-message = salut, c'est juste pour tester ta feature :)
+name = Patriciamessage = J'ai hate que la methode POST fonctionne correctement!!!!!!!!!!!!!!!

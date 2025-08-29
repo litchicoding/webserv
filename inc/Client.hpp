@@ -65,8 +65,8 @@ private:
 	void				isFilePost();
 	// void				isDirectoryPost();
 	string				findFileName();
-	void				uploadFile(const string &filename, int size);
-	void				saveData(const string &root,  const string &boundary, int size);
+	void				uploadFile(const string &filename);
+	void				saveData(const string &root,  const string &boundary);
 	string				searchBoundary(const string &arg);
 
 	/* CGI ***************************************************************************************/

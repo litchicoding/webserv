@@ -16,6 +16,7 @@ Client::Client(int listen_fd, int epoll_fd) : _listen_fd(listen_fd), _server_con
 	_server_config = NULL;
 	_config = NULL;
 	_chunked = false;
+	_bodyCompleted = true;
 	_content_len_target = INVALID;
 	_request_len = 0;
 	_response_len = 0;
@@ -29,17 +30,19 @@ Client::~Client()
 /**************************************************************************************************/
 /* Parsing ****************************************************************************************/
 
-int	Client::requestAnalysis(int epoll_fd)
+bool	Client::isChunked()
+{
+	if (_bodyCompleted == false && _method == "POST")
+		return (true);
+	return (false);
+}
+
+int	Client::requestAnalysis()
 {
 	// Parse the request and start filling datas in client class
-	if (parseRawRequest() != OK || request_well_formed_optimized() != OK)
+	if (parseRawRequest() != OK || request_well_formed_optimized() != OK
+		|| _chunked == true || _bodyCompleted == false)
 		return (ERROR);
-	if (_chunked == true && _method == "POST" && _content_len_target != INVALID) { // chunked avec content-len
-		if (getCompleteRequest(epoll_fd) != OK)
-			return (ERROR);
-	}
-	else if (_chunked == true && _content_len_target == INVALID) // transfer-encoded
-		
 	start();
 	return (OK);
 }
@@ -79,6 +82,7 @@ int	Client::parseRawRequest() {
 		}
 		else
 			handleBody(line);
+		
 	}
 	return OK;
 }
@@ -89,7 +93,7 @@ int	Client::parseRawRequest() {
 
 void	Client::sendResponse(int client_fd)
 {
-	write(client_fd, getResponse().c_str(), getResponseLen());
+	write(client_fd, _response.c_str(), _response_len);
 	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << _client_fd << "] : " << RESET;
 	size_t pos = _response.find("\n");
 	cout << _response.substr(0, pos) << endl << endl;
@@ -100,6 +104,7 @@ void	Client::removeRequest()
 	_server_config = NULL;
 	_config = NULL;
 	_chunked = false;
+	_bodyCompleted = true;
 	_method.clear();
 	_URI.clear();
 	_request.clear();
@@ -114,6 +119,10 @@ void	Client::removeRequest()
 
 void	Client::setRequest(const string &request, const int &len)
 {
+	if (_chunked == true) {
+		_body.append(request, len);
+		return ;
+	}
 	_request = request;
 	_request_len = len;
 }

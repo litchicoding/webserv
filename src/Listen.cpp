@@ -144,7 +144,7 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
-	char	buffer[4064];
+	char	buffer[8192];
 	int		bytes_read;
 	
 	memset(buffer, 0, sizeof(buffer));
@@ -162,11 +162,20 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 		return OK;
 	}
 	// cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
-	_clients[client_fd]->setRequest(buffer, bytes_read);
-	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
-	if (_clients[client_fd]->getServerConfig() == NULL)
-		stop("no match for server configuration");
-	_clients[client_fd]->requestAnalysis(epoll_fd);
+	if (_clients[client_fd]->isChunked()) {
+		if (_clients[client_fd]->getCompleteRequest(buffer, bytes_read) == OK)
+			_clients[client_fd]->start();
+		else
+			return ERROR;
+	}
+	else {
+		_clients[client_fd]->setRequest(buffer, bytes_read);
+		_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
+		if (_clients[client_fd]->getServerConfig() == NULL)
+			stop("no match for server configuration");
+		if (_clients[client_fd]->requestAnalysis() != OK)
+			return (ERROR);
+	}
 	_clients[client_fd]->sendResponse(client_fd);
 	_clients[client_fd]->removeRequest();
 	return OK;

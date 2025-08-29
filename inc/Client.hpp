@@ -20,6 +20,7 @@ private:
 	t_directives		*_config;
 	/* Request ************************************************************************************/
 	bool				_chunked;
+	bool				_bodyCompleted;
 	string				_method;
 	string				_URI;
 	string				_version;
@@ -40,7 +41,6 @@ private:
 	bool								URI_Not_Printable(std::string& URI);
 	string								urlDecode(const std::string &str);
 	int									isRequestChunked();
-	int									getCompleteRequest(int epoll_fd);
 	
 	/* Response Function ****************************************************************************/
 
@@ -93,7 +93,9 @@ public:
 	int									parseRawRequest();
 	void								buildResponse();
 	int	    							request_well_formed_optimized();
-	int									requestAnalysis(int epoll_fd);
+	int									requestAnalysis();
+	bool								isChunked();
+	int									getCompleteRequest(const string &buffer, int bytes);
 
 	/* Setters ************************************************************************************/
 	void				setRequest(const string &request, const int &len);

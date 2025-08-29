@@ -1,31 +1,25 @@
 #include "../inc/Client.hpp"
 
-int	Client::getCompleteRequest(int epoll_fd)
+int	Client::getCompleteRequest(const string &buffer, int bytes)
 {
-	char	buffer[4064];
-	int		bytes_read;
-	
-	while (true)
-	{
-		memset(buffer, 0, sizeof(buffer));
-		bytes_read = read(_client_fd, buffer, sizeof(buffer) - 1);
-		if (bytes_read <= 0) {
-			epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
-			// delete this;
-			close(_client_fd);
-			if (bytes_read < 0) {
-				cout << RED "Error: handleClientRequest(): while reading client request." RESET << endl;
-				return ERROR;
-			}
-			break ;
-		}
-		_body += buffer;
+	if (!buffer.empty()) {
+		// (void)bytes;
+		_body.append(buffer.c_str(), bytes);
+		// _body += buffer;
 	}
-	if (_body.size() < (size_t)_content_len_target || _body.size() > (size_t)_content_len_target)
-		return (handleError(400), ERROR);
-	if (_config->client_max_body_size < _body.size())
-		return (handleError(413), ERROR);
-	return (OK);
+	size_t total = _body.size();
+	// cout << total << " " << _content_len_target << endl;
+	// if (total < (size_t)_content_len_target || total > (size_t)_content_len_target)
+	// 	return (handleError(400), OK);
+	// if (_config->client_max_body_size < total)
+	// 	return (handleError(413), OK);
+	if ((int)total == _content_len_target) {
+		cout << "OKKKKK BODY IS COMPLETED" << endl;
+		// _chunked = false;
+		_bodyCompleted = true;
+		return (OK);
+	}
+	return (ERROR);
 }
 
 int	Client::isRequestChunked()
@@ -46,13 +40,13 @@ int	Client::isRequestChunked()
 	if (content_len == _headersMap.end() && _method == "POST")
 		return (handleError(400), ERROR);
 	else if (content_len != _headersMap.end()) {
-		if (content_len->second.empty() || content_len->second.size() > 19)
+		if (content_len->second.empty() || content_len->second.length() > 19)
 			return (handleError(400), ERROR);
-		for (size_t i = 0; i < content_len->second.size(); i++) {
-			if (!isdigit(content_len->second[i]))
+		for (size_t i = 0; i < content_len->second.length(); i++) {
+			if (content_len->second[i] < '0' && content_len->second[i] > '9')
 				return (handleError(400), ERROR);
 		}
-		_chunked = true;
+		_bodyCompleted = false;
 		_content_len_target = atoi(content_len->second.c_str());
 		if (_content_len_target < 0)
 			return (handleError(400), ERROR);

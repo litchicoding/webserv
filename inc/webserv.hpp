@@ -26,6 +26,7 @@
 # include <algorithm>
 #include <sys/wait.h>
 
+# include "HTTPRequest.hpp"
 # include "Server.hpp"
 # include "Client.hpp"
 # include "Listen.hpp"
@@ -54,6 +55,7 @@ using namespace std;
 
 class	Server;
 class   Client;
+class   HTTPRequest;
 
 void		signal_handler(int signal);
 int			add_fd_to_epoll(int epoll_fd, int fd);

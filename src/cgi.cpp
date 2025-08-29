@@ -108,21 +108,21 @@ char** Client::buildCgiEnv()
 {
 	vector<string> env;
 	
-	env.push_back("REQUEST_METHOD=" + _method);
+	env.push_back("REQUEST_METHOD=" + _request.getMethod());
 	env.push_back("SCRIPT_FILENAME=" + _config->full_path);
 	env.push_back("REDIRECT_STATUS=200");
 
-	if (_method == "GET")
+	if (_request.getMethod() == "GET")
 		env.push_back("QUERY_STRING=" + _config->query_string);
-	else if (_method == "POST")
+	else if (_request.getMethod() == "POST")
 	{
 		stringstream ss;
-		ss << _body.size();
+		ss << _request.getBody().size();
 		env.push_back("CONTENT_LENGTH=" + ss.str());
 		
-		map<string,string>::iterator it = _headersMap.find("Content-Type");
+		map<string,string>::const_iterator it = _request.getHeaders().find("Content-Type");
 		string contentType = "";
-		if (it != _headersMap.end())
+		if (it != _request.getHeaders().end())
 			contentType = trim(it->second);
 		env.push_back("CONTENT_TYPE=" + contentType);
 	}
@@ -170,9 +170,7 @@ void Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 	response << "Content-Length: " << body.size() << "\r\n";
 	response << "Connection: close\r\n\r\n";
 	response << body;
-	
-	_response = response.str();
-	_response_len = _response.size();
+	_request.response = response.str();
 }
 
 
@@ -250,8 +248,10 @@ void Client::handleCGI()
 	close(requestPipe[0]);
 	close(responsePipe[1]);
 
-	if (_method == "POST")
-		write(requestPipe[1], _body.c_str(), _body.size());
+	if (_request.getMethod() == "POST") {
+		for (vector<char>::const_iterator it = _request.getBody().begin(); it != _request.getBody().end(); it++)
+			write(requestPipe[1], &(*it), 1);
+	}
 	close(requestPipe[1]);
 
 	string cgiOutput;

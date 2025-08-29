@@ -144,41 +144,20 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
-	char	buffer[8192];
-	int		bytes_read;
-	
-	memset(buffer, 0, sizeof(buffer));
-	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
-	if (bytes_read <= 0) {
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-		delete _clients[client_fd];
-		_clients.erase(client_fd);
-		close(client_fd);
-		if (bytes_read < 0)
-		{
-			cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
-			return ERROR;
-		}
-		return OK;
+	if (_clients[client_fd]->readData(epoll_fd) != OK)
+		return (ERROR);
+	if (_clients[client_fd]->state != READ_END)
+		return (OK);
+	(void)listen_fd;
+	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
+	if (_clients[client_fd]->getServerConfig() == NULL) {
+		stop("no match for server configuration");
+		return (ERROR);
 	}
-	// cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
-	if (_clients[client_fd]->isChunked()) {
-		if (_clients[client_fd]->getCompleteRequest(buffer, bytes_read) == OK)
-			_clients[client_fd]->start();
-		else
-			return ERROR;
-	}
-	else {
-		_clients[client_fd]->setRequest(buffer, bytes_read);
-		_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
-		if (_clients[client_fd]->getServerConfig() == NULL)
-			stop("no match for server configuration");
-		if (_clients[client_fd]->requestAnalysis() != OK)
-			return (ERROR);
-	}
-	_clients[client_fd]->sendResponse(client_fd);
-	_clients[client_fd]->removeRequest();
-	return OK;
+	_clients[client_fd]->processRequest();
+	_clients[client_fd]->sendResponse();
+	_clients[client_fd]->resetRequest();
+	return (OK);
 }
 
 Server*	Listen::findServerConfig(const int &listen_fd)
@@ -228,16 +207,6 @@ void	Listen::stop(const string &msg)
 /* Getters ***************************************************************************************/
 
 map<int, t_port>&	Listen::getListeningPorts() { return _listeningPorts; }
-
-// t_port&	Listen::getListeningPort(int listen_fd)
-// {
-// 	map<int, t_port>::iterator it = _listeningPorts.find(listen_fd);
-// 	if (it != _listeningPorts.end())
-// 		return it->second;
-// 	t_port error;
-// 	error.listen_fd = INVALID;
-// 	return error;
-// }
 
 map<int, Client*>&	Listen::getClients() { return _clients; }
 	

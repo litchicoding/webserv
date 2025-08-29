@@ -14,23 +14,27 @@ void	Client::handleDelete() {
 	string clean_path = urlDecode(_config->full_path);
 	cout << GREEN << "clean path is : " << clean_path << RESET << endl;
 
-	if (access(clean_path.c_str(), F_OK) != 0)
-		return(handleError(404));
+	if (access(clean_path.c_str(), F_OK) != 0) {
+		_request.code = 404;
+		return ;
+	}
 	if (stat(clean_path.c_str(), &st) != 0)
 	{
 		cout << BLUE << "stat" << RESET << endl;
-		return(handleError(500));
+		_request.code = 500;
+		return ;
 	}
 	if (access(clean_path.c_str(), W_OK) != 0)
-		return handleError(403);
+		_request.code = 403;
 	if (S_ISREG(st.st_mode))
 		return (isFileDelete());
 	else if (S_ISDIR(st.st_mode))
 		return (isDirectoryDelete());
 	else
 	{
-		std::cout << RED "Error handleDelete() : Not a regular file or directory: " << _URI << RESET << std::endl;
-		return (handleError(403));
+		std::cout << RED "Error handleDelete() : Not a regular file or directory: " << _request.getURI() << RESET << std::endl;
+		_request.code = 403;
+		return ;
 	}
 }
 
@@ -47,14 +51,13 @@ void	Client::isFileDelete()
 	response << "HTTP/1.1 204 No Content\r\n";
 	response << "Connection: close\r\n";
 	response << "\r\n";
-
-	_response = response.str();
-	_response_len = _response.size();
+	_request.response = response.str();
 }
 
 void	Client::isDirectoryDelete()
 {
-	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
+	string URI = _request.getURI();
+	if (URI.empty() || URI[URI.size() - 1] != '/')
 		return (handleError(409));
 
 	// if(isCgiScript(_URI) == OK)
@@ -84,9 +87,7 @@ void	Client::isDirectoryDelete()
 	response << "HTTP/1.1 204 No Content\r\n";
 	response << "Connection: close\r\n";
 	response << "\r\n";
-
-	_response = response.str();
-	_response_len = _response.size();
+	_request.response = response.str();
 }
 
 int Client::delete_all_folder_content(std::string dirPath)

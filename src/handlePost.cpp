@@ -36,7 +36,7 @@ void	Client::handlePost()
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
 	if (filename.size() > 0)
-		uploadFile(clean_path + "/" + filename);
+		uploadFile(clean_path + "/" + filename, boundary);
 	else
 		saveData(clean_path + "/data.txt", boundary);
 	/*** 3.Response HTTP ***/
@@ -97,29 +97,46 @@ void	Client::saveData(const string &root, const string &boundary)
 	file.close();
 }
 
-void	Client::uploadFile(const string &filename)
+void	Client::uploadFile(const string &filename, const string &boundary)
 {
-	size_t	start, end, pos;
+	const vector<char>&	body_original = _request.getBody();
+	string		body(body_original.begin(), body_original.end());
+	string		start_boundary, end_boundary;
+	ofstream	file;
+	size_t		pos, start, end;
 
-	string	body(_request.getBody().begin(), _request.getBody().end());
-	ofstream file(filename.c_str(), ofstream::out);
+	file.open(filename.c_str(), ofstream::out | ofstream::binary);
 	if (!file.is_open()) {
 		_request.code = 500;
 		return ;
 	}
-	// Copy file and skip boundaries + headers
-	pos = body.find("Content-Type");
-	if (pos == string::npos)
-		return ;
-	start = body.find("\r\n\r\n", pos);
-	if (start == string::npos)
-		return ;
-	start += 3;
-	end = body.find("--", start);
-	if (end == string::npos)
-		return ;
-	end -= 3;
-	file << body.substr(start, end - start);
+	start_boundary = "--" + boundary;
+	end_boundary = "--" + boundary + "--";
+	pos = 0;
+	while (true)
+	{
+		pos = body.find(start_boundary, pos);
+		if (pos == string::npos)
+			break ;
+		pos = body.find("\r\n\r\n", (pos + start_boundary.length()));
+		if (pos == string::npos)
+			break ;
+		start = pos + 4;
+		pos = body.find("\r\n--" + boundary, start);
+		if (pos != string::npos)
+			end = pos;
+		else {
+			pos = body.find("\r\n" + end_boundary, start);
+			if (pos != string::npos) {
+				end = pos;
+				end -= 2;
+			}
+			else
+				end = body_original.size();
+		}
+		file.write(&body_original[start], end - start);
+		pos = end + 2 + boundary.length();
+	}
 	file.close();
 }
 
@@ -135,7 +152,7 @@ string	Client::searchBoundary(const string &arg)
 	if (start == string::npos)
 		return ("");
 	start++;
-	boundary = arg.substr(start, arg.length() - start);
+	boundary = arg.substr(start, (arg.length() - 1) - start);
 	return (boundary);
 }
 

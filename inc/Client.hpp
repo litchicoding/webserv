@@ -33,6 +33,7 @@ private:
 	t_directives		*_config;
 	HTTPRequest			_request;
 	string				_buffer;
+	bool				_keep_alive;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
@@ -87,6 +88,7 @@ public:
 	int					getClientFd() const { return _client_fd; }
 	Server*				getServerConfig() const { return _server; }
 	int					getListenFd() const { return _listen_fd; }
+	bool				isKeepAliveConnection() const { return _keep_alive; }
 	HTTPRequest&		getRequest() { return _request; }
 };
 

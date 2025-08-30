@@ -16,6 +16,13 @@ Listen::~Listen()
 		close(it->first);
 		delete it->second;
 	}
+	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
+	{
+		if (it->first >= 0)
+			close(it->first);
+	}
+	if (_epoll_fd >= 0)
+		close(_epoll_fd);
 	_listeningPorts.clear();
 	_clients.clear();
 	_serv_blocks.clear();
@@ -111,9 +118,10 @@ int	Listen::update_connexion()
 	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
-		if ((nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
+		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
+		if (nfds < 0) {
 			if (errno != EINTR)
-				return perror("epoll_wait"), ERROR;
+				return (perror("epoll_wait"), ERROR);
 			continue ;
 		}
 		for (int i = 0; i < nfds; ++i)
@@ -156,7 +164,21 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 	_clients[client_fd]->processRequest();
 	_clients[client_fd]->sendResponse();
 	_clients[client_fd]->resetRequest();
+	if (_clients[client_fd]->isKeepAliveConnection() == false)
+		closeClientConnection(client_fd);
 	return (OK);
+}
+
+void	Listen::closeClientConnection(int client_fd)
+{
+	if (client_fd < 0)
+		return ;
+	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+	map<int, Client*>::iterator it = _clients.find(client_fd);
+	if (it != _clients.end()) {
+		delete it->second;
+		_clients.erase(it);
+	}
 }
 
 Server*	Listen::findServerConfig(const int &listen_fd)

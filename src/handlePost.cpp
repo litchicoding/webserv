@@ -51,7 +51,11 @@ void	Client::handlePost()
 		response << ( (URI[URI.size() - 1] == '/') ? "" : "/" ) << filename + "\r\n";
 	response << "Content-Type: text/plain\r\n";
 	response << "Content-Length: " << message.size() << "\r\n";
-	response << "Connection: close\r\n";
+	header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+		response << "Connection: keep-alive\r\n";
+	else
+		response << "Connection: close\r\n";
 	response << "\r\n";
 	response << message;
 	_request.response = response.str();

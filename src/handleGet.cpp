@@ -144,7 +144,11 @@ void	Client::generateDirectoryListing()
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: text/html\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
-	response << "Connection: close\r\n";
+	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+		response << "Connection: keep-alive\r\n";
+	else
+		response << "Connection: close\r\n";
 	response << "\r\n";
 	response << body.str();
 	_request.response = response.str();

@@ -4,7 +4,7 @@
 /* Constructor and Deconstructor *****************************************************************/
 
 Client::Client(int listen_fd, int epoll_fd)
-: state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL)
+: state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(false)
 {
 	cout << GREEN << "***   Client Connection   ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
@@ -19,6 +19,8 @@ Client::Client(int listen_fd, int epoll_fd)
 Client::~Client()
 {
 	cout << GREEN << "***   Client Deconstruction   ***" << RESET << endl;
+	if (_client_fd >= 0)
+		close(_client_fd);
 }
 
 /*************************************************************************************************/
@@ -263,6 +265,11 @@ string Client::urlDecode(const string &str)
 void	Client::resetRequest()
 {
 	state = READ_HEADERS;
+	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+		_keep_alive = true;
+	else
+		_keep_alive = false;
 	_config = NULL;
 	_request.resetRequest();
 	_buffer.clear();
@@ -293,7 +300,11 @@ void	Client::sendRedirect(const string &URI)
 
 	response << "HTTP/1.1 301 Moved Permanently" << "\r\n";
 	response << "Location: " << URI << "\r\n";
-	response << "Connection: close\r\n";
+	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+		response << "Connection: keep-alive\r\n";
+	else
+		response << "Connection: close\r\n";
 	response << "Content-Length: 0\r\n";
 	response << "\r\n";
 	_request.response = response.str();

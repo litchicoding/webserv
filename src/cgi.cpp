@@ -168,7 +168,11 @@ void Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 	response << "HTTP/1.1 " << statusCode << " OK\r\n";
 	response << "Content-Type: " << contentType << "\r\n";
 	response << "Content-Length: " << body.size() << "\r\n";
-	response << "Connection: close\r\n\r\n";
+	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+		response << "Connection: keep-alive\r\n";
+	else
+		response << "Connection: close\r\n";
 	response << body;
 	_request.response = response.str();
 }

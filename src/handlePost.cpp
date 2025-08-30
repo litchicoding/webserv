@@ -35,18 +35,20 @@ void	Client::handlePost()
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
+	// filename = urlDecode(findFileName());
 	if (filename.size() > 0)
 		uploadFile(clean_path + "/" + filename, boundary);
-	else
-		saveData(clean_path + "/data.txt", boundary);
+	else {
+		filename = extractName() + ".txt";
+		saveData(clean_path + "/" + filename, boundary);
+	}
 	/*** 3.Response HTTP ***/
 	URI = _request.getURI();
 	message = "File creation succeeded\n";
 	response << "HTTP/1.1 201 Created\r\n";
-	// response << "Location: " + root + "/" + filename + "\r\n";
 	response << "Location: " << URI;
 	if (!filename.empty())
-		response << ( (URI[URI.size() - 1] == '/') ? "" : "/" ) << filename;
+		response << ( (URI[URI.size() - 1] == '/') ? "" : "/" ) << filename + "\r\n";
 	response << "Content-Type: text/plain\r\n";
 	response << "Content-Length: " << message.size() << "\r\n";
 	response << "Connection: close\r\n";
@@ -172,6 +174,26 @@ string	Client::findFileName()
 	end = start;
 	while (body[end] != '\0' && body[end] != 34)
 		end++;
+	filename = body.substr(start, end - start);
+	return (filename);
+}
+
+string	Client::extractName()
+{
+	string	body(_request.getBody().begin(), _request.getBody().end());
+	string	filename, target;
+	size_t	start, end;
+
+	target = "\r\n\r\n";
+	start = body.find("\r\n\r\n");
+	if (start == string::npos)
+		return ("");
+	start += target.length();
+	end = body.find("--", start);
+	if (end == string::npos)
+		return ("");
+	end -= 2;
+	cout << YELLOW << body[end] << endl;
 	filename = body.substr(start, end - start);
 	return (filename);
 }

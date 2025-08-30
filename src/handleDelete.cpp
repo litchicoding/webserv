@@ -1,19 +1,10 @@
 #include "../inc/Client.hpp"
 
 
-void	Client::handleDelete() {
-
-	// if (_URI.rfind("/upload/", 0) != OK)
-	// 	return (handleError(403));
-
-
-	// if (_URI == "/upload/")
-	// 	return (handleError(403));
-
+void	Client::handleDelete()\
+{
 	struct stat st;
 	string clean_path = urlDecode(_config->full_path);
-	cout << GREEN << "clean path is : " << clean_path << RESET << endl;
-
 	if (access(clean_path.c_str(), F_OK) != 0) {
 		_request.code = 404;
 		return ;
@@ -43,7 +34,6 @@ void	Client::isFileDelete()
 	// if(isCgiScript(_URI) == OK)
 	//	;
 	string clean_path = urlDecode(_config->full_path);
-	cout << YELLOW "isfileDelete clean_path = " << clean_path << RESET << endl;
 	if (std::remove(clean_path.c_str()) != OK)
 		return (handleError(500));
 	

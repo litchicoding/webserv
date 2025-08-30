@@ -114,7 +114,7 @@ int	Listen::update_connexion()
 		if ((nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
 			if (errno != EINTR)
 				return perror("epoll_wait"), ERROR;
-			return OK;
+			continue ;
 		}
 		for (int i = 0; i < nfds; ++i)
 		{

@@ -43,9 +43,8 @@ int	Client::readData(int epoll_fd)
 	if (bytes_read < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			return (OK);
-		(void)epoll_fd;
-		// epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
-		// close(_client_fd);
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
+		close(_client_fd);
 		cout << RED "Error: readData(): while reading request." RESET << endl;
 		return (ERROR);
 	}
@@ -65,10 +64,8 @@ int	Client::processBuffer()
 			_buffer = _buffer.substr(pos + 4);
 			state = READ_BODY;
 		}
-		else {
-			cout << YELLOW "No /r/n/r/n in headers" RESET << endl;
-			return (ERROR); // ?
-		}
+		else
+			return (ERROR); // error 400 ?
 	}
 	if (state == READ_BODY) {
 		// IMPLEMENT CHUNKED BODY

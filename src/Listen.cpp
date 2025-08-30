@@ -148,7 +148,6 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 		return (ERROR);
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);
-	(void)listen_fd;
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
 	if (_clients[client_fd]->getServerConfig() == NULL) {
 		stop("no match for server configuration");

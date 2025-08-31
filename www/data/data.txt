@@ -1,2 +1,0 @@
-name = Yann
-message = salut, c'est juste pour tester ta feature :)

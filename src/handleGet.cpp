@@ -47,15 +47,14 @@ void	Client::handleFileRequest()
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
-	map<string, string>::iterator header = _headersMap.find("Connection");
-	if (header != _headersMap.end() && header->second.find("keep-alive") != string::npos)
+	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
 		response << "Connection: keep-alive\r\n";
 	else
 		response << "Connection: close\r\n";
 	response << "\r\n";
 	response << body.str();
-	_response = response.str();
-	_response_len = _response.size();
+	_request.response = response.str();
 }
 
 void	Client::handleDirectoryRequest()
@@ -106,10 +105,10 @@ void	Client::generateDirectoryListing()
 	ostringstream body;
 	string path = _config->full_path;
 
-	body << "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " << _URI << "</title>\n";
+	body << "<!DOCTYPE html>\n<html>\n<head>\n<title>Index of " << _request.getURI() << "</title>\n";
 	body << "<style>body { font-family: monospace; } a { text-decoration: none; }</style>\n";
 	body << "</head>\n<body>\n";
-	body << "<h1>Index of " << _URI << "</h1>\n<hr>\n<ul>\n";
+	body << "<h1>Index of " << _request.getURI() << "</h1>\n<hr>\n<ul>\n";
 
 	DIR *dir = opendir(path.c_str());
 	if (!dir)
@@ -124,7 +123,7 @@ void	Client::generateDirectoryListing()
 			continue ;
 
 		string fullPath = path + name;
-		string link = _URI;
+		string link = _request.getURI();
 
 		if (!link.empty() && link[link.size() - 1] != '/')
 			link += '/';
@@ -145,10 +144,12 @@ void	Client::generateDirectoryListing()
 	response << "HTTP/1.1 200 OK\r\n";
 	response << "Content-Type: text/html\r\n";
 	response << "Content-Length: " << body.str().size() << "\r\n";
-	response << "Connection: close\r\n";
+	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+		response << "Connection: keep-alive\r\n";
+	else
+		response << "Connection: close\r\n";
 	response << "\r\n";
 	response << body.str();
-
-	_response = response.str();
-	_response_len = _response.size();
+	_request.response = response.str();
 }

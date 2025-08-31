@@ -49,3 +49,11 @@ std::string stripQueryString(const std::string &uri)
         return uri.substr(0, pos);
     return uri;
 }
+
+void	signal_handler(int signal)
+{
+	if (signal == SIGINT && g_global_instance != NULL)
+		g_global_instance->stop("");
+	g_global_instance = NULL;
+	// exit(EXIT_SUCCESS);
+}

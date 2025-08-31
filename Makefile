@@ -21,9 +21,9 @@ RESET = \033[0;m
 ########### source files and objects ##########################################
 ###############################################################################
 
-SRC_FILES = main.cpp Server.cpp signal_handler.cpp utils.cpp \
-			cgi.cpp Client_parsing.cpp Client.cpp Client_utils.cpp config_parser.cpp \
-			tokenizer.cpp Listen.cpp handleDelete.cpp handleGet.cpp handlePost.cpp response.cpp
+SRC_FILES = main.cpp utils.cpp cgi.cpp config_parser.cpp tokenizer.cpp \
+			Listen.cpp Server.cpp HTTPRequest.cpp \
+			Client.cpp handleDelete.cpp handleGet.cpp handlePost.cpp
 
 OBJ = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 

@@ -16,6 +16,13 @@ Listen::~Listen()
 		close(it->first);
 		delete it->second;
 	}
+	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
+	{
+		if (it->first >= 0)
+			close(it->first);
+	}
+	if (_epoll_fd >= 0)
+		close(_epoll_fd);
 	_listeningPorts.clear();
 	_clients.clear();
 	_serv_blocks.clear();
@@ -111,10 +118,11 @@ int	Listen::update_connexion()
 	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
-		if ((nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT)) == ERROR) {
+		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
+		if (nfds < 0) {
 			if (errno != EINTR)
-				return perror("epoll_wait"), ERROR;
-			return OK;
+				return (perror("epoll_wait"), ERROR);
+			continue ;
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
@@ -144,46 +152,33 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
-	char	buffer[4064];
-	int		bytes_read;
-
-	memset(buffer, 0, sizeof(buffer));
-	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
-	if (bytes_read <= 0) {
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-		delete _clients[client_fd];
-		_clients.erase(client_fd);
-		close(client_fd);
-		if (bytes_read < 0)
-		{
-			cout << RED << "Error: handleClientRequest(): while reading client request." << RESET << endl;
-			return ERROR;
-		}
-		return OK;
-	}
-	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
-	_clients[client_fd]->setRequest(buffer, bytes_read);
+	if (_clients[client_fd]->readData(epoll_fd) != OK)
+		return (ERROR);
+	if (_clients[client_fd]->state != READ_END)
+		return (OK);
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
-	if (_clients[client_fd]->getServerConfig() == NULL)
+	if (_clients[client_fd]->getServerConfig() == NULL) {
 		stop("no match for server configuration");
-	int ret =_clients[client_fd]->requestAnalysis(epoll_fd);
-	if (ret == INCOMPLETE)
-		return OK;
-	if (ret == ERROR)
-	{
-		// Préparer la réponse d'erreur
-		_clients[client_fd]->sendResponse(client_fd); // envoie 400/501 etc.
-		
-		// Puis cleanup
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-		delete _clients[client_fd];
-		_clients.erase(client_fd);
-		close(client_fd);
-		return ERROR;
+		return (ERROR);
 	}
-	_clients[client_fd]->sendResponse(client_fd);
-	_clients[client_fd]->removeRequest();
-	return OK;
+	_clients[client_fd]->processRequest();
+	_clients[client_fd]->sendResponse();
+	_clients[client_fd]->resetRequest();
+	if (_clients[client_fd]->isKeepAliveConnection() == false)
+		closeClientConnection(client_fd);
+	return (OK);
+}
+
+void	Listen::closeClientConnection(int client_fd)
+{
+	if (client_fd < 0)
+		return ;
+	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+	map<int, Client*>::iterator it = _clients.find(client_fd);
+	if (it != _clients.end()) {
+		delete it->second;
+		_clients.erase(it);
+	}
 }
 
 Server*	Listen::findServerConfig(const int &listen_fd)
@@ -233,16 +228,6 @@ void	Listen::stop(const string &msg)
 /* Getters ***************************************************************************************/
 
 map<int, t_port>&	Listen::getListeningPorts() { return _listeningPorts; }
-
-// t_port&	Listen::getListeningPort(int listen_fd)
-// {
-// 	map<int, t_port>::iterator it = _listeningPorts.find(listen_fd);
-// 	if (it != _listeningPorts.end())
-// 		return it->second;
-// 	t_port error;
-// 	error.listen_fd = INVALID;
-// 	return error;
-// }
 
 map<int, Client*>&	Listen::getClients() { return _clients; }
 	

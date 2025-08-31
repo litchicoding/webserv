@@ -146,7 +146,7 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 {
 	char	buffer[4064];
 	int		bytes_read;
-	
+
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
 	if (bytes_read <= 0) {
@@ -161,12 +161,26 @@ int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
 		}
 		return OK;
 	}
-	// cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
+	cout << BLUE << "📨 Requête reçue :\n" << RESET << buffer;
 	_clients[client_fd]->setRequest(buffer, bytes_read);
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
 	if (_clients[client_fd]->getServerConfig() == NULL)
 		stop("no match for server configuration");
-	_clients[client_fd]->requestAnalysis(epoll_fd);
+	int ret =_clients[client_fd]->requestAnalysis(epoll_fd);
+	if (ret == INCOMPLETE)
+		return OK;
+	if (ret == ERROR)
+	{
+		// Préparer la réponse d'erreur
+		_clients[client_fd]->sendResponse(client_fd); // envoie 400/501 etc.
+		
+		// Puis cleanup
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+		delete _clients[client_fd];
+		_clients.erase(client_fd);
+		close(client_fd);
+		return ERROR;
+	}
 	_clients[client_fd]->sendResponse(client_fd);
 	_clients[client_fd]->removeRequest();
 	return OK;

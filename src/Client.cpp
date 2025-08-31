@@ -34,12 +34,21 @@ int	Client::requestAnalysis(int epoll_fd)
 	// Parse the request and start filling datas in client class
 	if (parseRawRequest() != OK || request_well_formed_optimized() != OK)
 		return (ERROR);
+		
+    cout << YELLOW << "Entrée : chunked=" << _chunked << ", content_len=" << _content_len_target << RESET << endl;
+	
 	if (_chunked == true && _method == "POST" && _content_len_target != INVALID) { // chunked avec content-len
 		if (getCompleteRequest(epoll_fd) != OK)
 			return (ERROR);
 	}
 	else if (_chunked == true && _content_len_target == INVALID) // transfer-encoded
-		
+	{
+		int ret = getChunkedRequest(epoll_fd);
+		if (ret == INCOMPLETE)
+			return (INCOMPLETE);
+		else if (ret != OK)
+			return (ERROR);
+	}
 	start();
 	return (OK);
 }
@@ -89,7 +98,8 @@ int	Client::parseRawRequest() {
 
 void	Client::sendResponse(int client_fd)
 {
-	write(client_fd, getResponse().c_str(), getResponseLen());
+	write(client_fd, _response.c_str(), _response_len);
+	cout << RED << _response << " : " << _response_len << endl;
 	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << _client_fd << "] : " << RESET;
 	size_t pos = _response.find("\n");
 	cout << _response.substr(0, pos) << endl << endl;

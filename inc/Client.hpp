@@ -26,6 +26,7 @@ private:
 	string				_request;
 	map<string, string>	_headersMap;
 	string				_body;
+	string				_raw_body;
 	string				_response;
 	string				_root;
 	int					_request_len;
@@ -41,6 +42,8 @@ private:
 	string								urlDecode(const std::string &str);
 	int									isRequestChunked();
 	int									getCompleteRequest(int epoll_fd);
+	int									getChunkedRequest(int epoll_fd);
+	int									separateHeadersFromChunkedBody();
 	
 	/* Response Function ****************************************************************************/
 

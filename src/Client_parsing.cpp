@@ -28,6 +28,143 @@ int	Client::getCompleteRequest(int epoll_fd)
 	return (OK);
 }
 
+int	Client::getChunkedRequest(int epoll_fd)
+{
+	char	buffer[4064];
+	int		bytes_read;
+	
+	cout << BLUE "Chunked Detected !" RESET << endl;
+
+    cout << BLUE "Current _raw_body content: [" << _raw_body << "]" RESET << endl;
+    
+    // IMPORTANT: _raw_body contient probablement encore les en-têtes HTTP
+    // Il faut les séparer d'abord
+    
+    // Chercher où finissent les en-têtes HTTP (\r\n\r\n)
+    size_t headers_end = _raw_body.find("\r\n\r\n");
+    if (headers_end != string::npos) {
+        // Les en-têtes se terminent, le body chunked commence après
+        string temp_body = _raw_body.substr(headers_end + 4);
+        _raw_body = temp_body; // Garder seulement la partie chunked
+        cout << CYAN "Separated chunked body: [" << _raw_body << "]" RESET << endl;
+    }
+
+	while (true)
+    {
+        cout << BLUE " Reading more chunks..." << RESET << endl;
+        
+        // Vérifier si on a déjà la fin des chunks
+        if (_raw_body.find("0\r\n\r\n") != string::npos) {
+            cout << GREEN "Found end of chunks!" RESET << endl;
+            break;
+        }
+        
+        memset(buffer, 0, sizeof(buffer));
+        bytes_read = read(_client_fd, buffer, sizeof(buffer) - 1);
+        
+        if (bytes_read < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) 
+                return INCOMPLETE;
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
+            close(_client_fd);
+            cout << RED "Error: getChunked - read failed." << RESET << endl;
+            return (handleError(400), ERROR);
+        }
+        else if (bytes_read == 0)
+        {
+            cout << YELLOW "Connection closed by client" << RESET << endl;
+            // Connexion fermée, vérifier si on a tout reçu
+            if (_raw_body.find("0\r\n\r\n") == string::npos) {
+                return (handleError(400), ERROR);
+            }
+            break;
+        }
+
+        _raw_body.append(buffer, bytes_read);
+        cout << YELLOW << "Updated _raw_body: [" << _raw_body << "]" RESET << endl;
+        
+        // Protection contre les requêtes trop longues
+        if (_raw_body.size() > 1048576) {
+            return (handleError(413), ERROR);
+        }
+    }
+    
+    // Maintenant parser les chunks dans _raw_body
+    cout << BLUE "Starting to parse chunks from: [" << _raw_body << "]" << RESET << endl;
+    
+    // Retirer la terminaison finale si présente
+    size_t end_pos = _raw_body.find("0\r\n\r\n");
+    if (end_pos != string::npos) {
+        _raw_body = _raw_body.substr(0, end_pos);
+        cout << BLUE "Cleaned _raw_body: [" << _raw_body << "]" << RESET << endl;
+    }
+
+    // Parser les chunks
+    size_t pos = 0;
+    _body.clear(); // S'assurer que _body est vide
+    
+    while (pos < _raw_body.size())
+    {
+        cout << CYAN "Parsing at position: " << pos << RESET << endl;
+        
+        // Chercher la fin de la taille du chunk
+        size_t end_size = _raw_body.find("\r\n", pos);
+        if (end_size == string::npos) {
+            cout << RED "No \\r\\n found for chunk size" << RESET << endl;
+            return (handleError(400), ERROR);
+        }
+    
+        // Extraire la taille hexadécimale
+        string hex_size = _raw_body.substr(pos, end_size - pos);
+        cout << CYAN "Hex size: [" << hex_size << "]" << RESET << endl;
+        
+        // Validation de la chaîne hexadécimale
+        if (hex_size.empty()) {
+            return (handleError(400), ERROR);
+        }
+        
+        // Convertir en entier
+        char* endptr;
+        errno = 0;
+        long chunk_size = strtol(hex_size.c_str(), &endptr, 16);
+        
+        if (errno != 0 || *endptr != '\0' || chunk_size < 0) {
+            cout << RED "Invalid hex conversion" << RESET << endl;
+            return (handleError(400), ERROR);
+        }
+        
+        cout << CYAN "Chunk size: " << chunk_size << RESET << endl;
+        pos = end_size + 2; // Passer le \r\n
+
+        // Si chunk de taille 0, c'est la fin
+        if (chunk_size == 0) {
+            break;
+        }
+
+        // Vérifier qu'on a assez de données
+        if (pos + chunk_size > _raw_body.size()) {
+            cout << RED "Not enough data for chunk" << RESET << endl;
+            return (handleError(400), ERROR);
+        }
+
+        // Extraire les données du chunk
+        string chunk_data = _raw_body.substr(pos, chunk_size);
+        cout << CYAN "Chunk data: [" << chunk_data << "]" << RESET << endl;
+        _body += chunk_data;
+        pos += chunk_size + 2; // chunk_size + \r\n à la fin du chunk
+    }
+
+    // Vérification finale de la taille
+    if (_config && _config->client_max_body_size > 0 && 
+        _body.size() > _config->client_max_body_size) {
+        return (handleError(413), ERROR);
+    }
+    
+    cout << GREEN "Final parsed body: [" << _body << "]" << RESET << endl;
+    cout << GREEN "Body length: " << _body.size() << RESET << endl;
+    return OK;
+}
+
 int	Client::isRequestChunked()
 {
 	map<string, string>::iterator transfer;
@@ -35,7 +172,7 @@ int	Client::isRequestChunked()
 
 	transfer = _headersMap.find("Transfer-Encoding");
 	content_len = _headersMap.find("Content-Length");
-	if (transfer != _headersMap.end() && transfer->second != "chunked") // can be gzip etc CHECK RFC
+	if (transfer != _headersMap.end() && trim(transfer->second) != "chunked") // can be gzip etc CHECK RFC
 		return(handleError(501), ERROR);
 	else if (transfer != _headersMap.end() && content_len != _headersMap.end()) // both present
 		return(handleError(400), ERROR);
@@ -57,11 +194,11 @@ int	Client::isRequestChunked()
 		if (_content_len_target < 0)
 			return (handleError(400), ERROR);
 	}
+
 	return (OK);
 }
 
 int	Client::request_well_formed_optimized() {
-
 	string clean_URI;
 	
 	clean_URI = stripQueryString(_URI);

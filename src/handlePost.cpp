@@ -21,10 +21,7 @@ void	Client::handlePost()
 	// Boundary is here and correct
 	boundary = searchBoundary(header->second);
 	if (boundary.size() <= 0 || _body.find(boundary) == string::npos)
-	{
-		cout << RED "BOUNDARY" RESET << endl;
 		return (handleError(400));
-	}
 
 	// Content-Length coherent
 	header = _headersMap.find("Content-Length");
@@ -104,24 +101,25 @@ void	Client::uploadFile(const string &filename, int size)
 {
 	size_t	start, end, pos;
 
-	ofstream file(filename.c_str(), ofstream::out);
+	ofstream file(filename.c_str(), ios::binary);
 	if (!file.is_open())
 		return (handleError(500));
 	// Copy file and skip boundaries + headers
 	pos = _body.find("Content-Type");
 	if (pos == string::npos)
 		return ;
-	start = _body.find("\n", pos);
+	start = _body.find("\r\n\r\n", pos);
 	if (start == string::npos)
 		return ;
-	start += 1;
-	end = _body.find("--", start);
+	start += 4;
+	end = _body.find("------WebKitFormBoundary", start);
 	if (end == string::npos)
 		return ;
 	end -= 1;
 	if ((size_t)size != end - start)
 		return (handleError(400));
-	file << _body.substr(start, end - start);
+	file.write(_body.c_str() + start, end - start);
+	// file << _body.substr(start, end - start);
 	file.close();
 }
 

@@ -6,6 +6,7 @@
 # define READ_HEADERS 101
 # define READ_BODY 202
 # define READ_END 303
+# define CHUNKED 2
 
 class Server;
 class HTTPRequest;
@@ -39,6 +40,7 @@ private:
 	int					processBuffer();
 	int	    			isRequestWellFormedOptimized();
 	int					isRequestWellChunked(const map<string, string> &headers);
+	size_t				parseChunked(string &data);
 	string				getMIME(string& URI);
 	bool				URI_Not_Printable(string& URI);
 	string				urlDecode(const string &str);

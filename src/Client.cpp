@@ -34,19 +34,14 @@ void	Client::sendResponse()
 	cout << _request.response.substr(0, pos) << endl << endl;
 }
 
-int	Client::readData(int epoll_fd)
+int	Client::readData()
 {
 	char	buffer[8192];
 	ssize_t	bytes_read;
 
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = recv(_client_fd, buffer, sizeof(buffer), 0);
-	// bytes_read = read(_client_fd, buffer, sizeof(buffer) - 1);
 	if (bytes_read < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return (OK);
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
-		close(_client_fd);
 		cout << RED "Error: readData(): while reading request." RESET << endl;
 		return (ERROR);
 	}
@@ -107,14 +102,14 @@ int	Client::processRequest()
 {
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
-	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
-	cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
-	cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
-	if (_config)
-		cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
-	else
-		cout << "\e[34m]\e[0m" << endl;
 	if (isRequestWellFormedOptimized() == OK) {
+		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
+		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
+		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
+		if (_config)
+			cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
+		else
+			cout << "\e[34m]\e[0m" << endl;
 		if (method == "GET")
 			handleGet();
 		else if (method == "POST")
@@ -281,7 +276,6 @@ string Client::urlDecode(const string &str)
             result += str[i++];
         }
     }
-
     return result;
 }
 
@@ -393,7 +387,8 @@ void	Client::buildResponse(int code)
 		handleError(code);
 	else if (code == 301) {
 		string redirectUrl = _config->redirection.begin()->second;
-		sendRedirect(redirectUrl);
+		cout << "REDIRECTION EFFECTUEE\n";
+		// sendRedirect(redirectUrl);
 	}
 	// else {
 
@@ -417,63 +412,59 @@ void	Client::sendRedirect(const string &URI)
 	_request.response = response.str();
 }
 
-static void	getErrorData(int code, string &message, string &error_path)
+static void	getErrorMessage(int code, string &message)
 {
 	switch (code) {
 		case 400:
 			message = "400 Bad Request";
-			error_path = "www/error_pages/400.html";
 			break;
 		case 403:
   			message = "403 Forbidden";
-			error_path = "www/error_pages/403.html";
 			break;
 		case 404:
 			message = "404 Not Found";
-			error_path = "www/error_pages/404.html";			
 			break;
 		case 405:
 			message = "405 Method Not Allowed";
-			error_path = "www/error_pages/405.html";			
 			break;
 		case 409:
 			message = "409 Conflict";
-			error_path = "www/error_pages/409.html";			
 			break;		
 		case 413:
 			message = "413 Playload Too Large";
-			error_path = "www/error_pages/413.html";			
 			break;
 		case 415:
 			message = "415 Unsupported Media Type";
-			error_path = "www/error_pages/415.html";			
 			break;
 		case 500:
 			message = "500 Internal Server Error";
-			error_path = "www/error_pages/500.html";			
 			break;
 		case 501:
 			message = "501 Not Implemented";
-			error_path = "www/error_pages/501.html";			
 			break;
 		case 505:
 			message = "505 HTTP Version Not Supported";
-			error_path = "www/error_pages/505.html";			
 			break;
 	}
 }
 
 void	Client::handleError(int code)
 {
-	string			message, error_path;
+	string			message;
 	ostringstream	response, body;
 	ifstream		error_file;
 
-	getErrorData(code, message, error_path);
-	error_file.open(error_path.c_str());
-	if (!error_file.is_open())
+	getErrorMessage(code, message);
+	map<int, string>::iterator it = _config->error_page.find(code);
+	if (it == _config->error_page.end())
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 	else {
+		if (!it->second.empty())
+			error_file.open(it->second.c_str());
+		if (!error_file.is_open()) {
+			_request.code = 500;
+			return ;
+		}
 		body << error_file.rdbuf();
 		error_file.close();
 	}

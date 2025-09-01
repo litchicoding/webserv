@@ -120,8 +120,8 @@ int	Listen::update_connexion()
 		signal(SIGINT, &signal_handler);
 		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
 		if (nfds < 0) {
-			if (errno != EINTR)
-				return (perror("epoll_wait"), ERROR);
+			// if (errno != EINTR)
+			// 	return (perror("epoll_wait"), ERROR);
 			continue ;
 		}
 		for (int i = 0; i < nfds; ++i)
@@ -134,7 +134,8 @@ int	Listen::update_connexion()
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
-				handleClientRequest(events[i].data.fd, _epoll_fd, listen_fd);
+				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
+					closeClientConnection(events[i].data.fd);
 			}
 		}
 	}
@@ -150,9 +151,9 @@ bool	Listen::isListeningSocket(int fd)
 }
 
 
-int	Listen::handleClientRequest(int client_fd, int epoll_fd, int listen_fd)
+int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	if (_clients[client_fd]->readData(epoll_fd) != OK)
+	if (_clients[client_fd]->readData() != OK)
 		return (ERROR);
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);

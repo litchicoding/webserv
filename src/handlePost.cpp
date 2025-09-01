@@ -7,22 +7,28 @@ void	Client::handlePost()
 	ostringstream response;
 
 	clean_path = urlDecode(_config->full_path);
-	if (access(clean_path.c_str(), F_OK) != 0) {
-		_request.code = 404;
+	if (isValidPostRequest(clean_path) != OK)
 		return ;
-	}
-	if (access(clean_path.c_str(), W_OK) != 0) {
-		_request.code = 403;
-		return ;
-	}
+	if (isCgi())
+		handleCGI();
 	/*** 1. Vérifications: ***/ 
 	// Content-Type= multipart/form-data
 	map<string, string>	headerMap = _request.getHeaders();
 	header = headerMap.find("Content-Type");
-	if (header == headerMap.end() || header->second.find("multipart/form-data") == string::npos) {
+	if (header == headerMap.end()) {
+		_request.code = 400;
+		return ;
+	}
+		// else if (header->second.find("application/x-www-form-urlencoded") != string::npos || handleEncodedForm(clean_path) != OK)
+	// 	return ;
+	// if (header->second.find("multipart/form-data") != string::npos || handleMultipartForm(clean_path) != OK)
+	// 	return ;
+	// else {
+	if (header->second.find("multipart/form-data") == string::npos) {
 		_request.code = 415;
 		return ;
 	}
+
 	// Boundary is here and correct
 	boundary = searchBoundary(header->second);
 	string	body(_request.getBody().begin(), _request.getBody().end());
@@ -35,7 +41,6 @@ void	Client::handlePost()
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
-	// filename = urlDecode(findFileName());
 	if (filename.size() > 0)
 		uploadFile(clean_path + "/" + filename, boundary);
 	else {
@@ -202,19 +207,51 @@ string	Client::extractName()
 	return (filename);
 }
 
-// void    Client::isDirectoryPost()
-// {
-//    	if (_URI.empty() || _URI[_URI.size() - 1] != '/')
-// 	{
-// 		std::string redirectUri = _URI + "/";
-// 		return ;
-// 	}
-// 	std::string indexFile = findIndexFile();
-// 	if (!indexFile.empty())
-// 	{
-// 	    _URI = indexFile;
-// 	    return ;
-// 	}
-// 	else
-// 		return (handleError(403));
-// }
+int    Client::isDirectoryPost()
+{
+	string URI = _request.getURI();
+   	if (URI.empty() || URI[URI.size() - 1] != '/')
+	{
+		_request.getURI() = URI + "/";
+		_request.code = 301;
+		return (OK);
+	}
+	std::string indexFile = findIndexFile();
+	if (!indexFile.empty())
+	{
+	    _request.getURI() = indexFile;
+	    return (OK);
+	}
+	else {
+		_request.code = 403;
+		return (ERROR);
+	}
+}
+int	Client::isValidPostRequest(const string &path)
+{
+	struct stat st;
+
+	if (access(path.c_str(), F_OK) != 0) {
+		_request.code = 404;
+		return (ERROR);
+	}
+	if (access(path.c_str(), W_OK) != 0) {
+		_request.code = 403;
+		return (ERROR);
+	}
+	if (stat(path.c_str(), &st) != 0) {
+		_request.code = 500;
+		return (ERROR);
+	}
+	if (S_ISREG(st.st_mode))
+		return (OK);
+	else if (S_ISDIR(st.st_mode)) {
+		if (isDirectoryPost() != OK)
+			return (ERROR);
+	}
+	else {
+		_request.code = 403;
+		return (ERROR);
+	}
+	return (ERROR);
+}

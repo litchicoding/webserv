@@ -38,7 +38,7 @@ public:
 	size_t						getExpectedBodyLen() const { return _expected_body_len; }
 	size_t						getBodyLen() const { return _body.size(); }
 	const string&				getMethod() const { return _method; }
-	const string&				getURI() const { return _URI; }
+	string&						getURI() { return _URI; }
 	const string&				getVersion() const { return _version; }
 	const map<string, string>&	getHeaders() const { return _headers; }
 	const vector<char>&			getBody() const { return _body; }

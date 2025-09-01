@@ -21,7 +21,7 @@ public:
 	~Client();
 	
 	int					state;
-	int					readData(int epoll_fd);
+	int					readData();
 	int					processRequest();
 	void				sendResponse();
 	void				resetRequest();
@@ -35,6 +35,7 @@ private:
 	HTTPRequest			_request;
 	string				_buffer;
 	bool				_keep_alive;
+	// string				_current_redirection;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
@@ -66,12 +67,15 @@ private:
 	/* Post Method *******************************************************************************/
 	void				handlePost();
 	void				isFilePost();
-	// void				isDirectoryPost();
+	int					handleMultipartForm(const string &path);
+	int					handleEncodedForm(const string &path);
+	int					isDirectoryPost();
 	string				findFileName();
 	string				extractName();
 	void				uploadFile(const string &filename, const string &boundary);
 	void				saveData(const string &root,  const string &boundary);
 	string				searchBoundary(const string &arg);
+	int					isValidPostRequest(const string &path);
 
 	/* CGI ***************************************************************************************/
 	bool				isCgi();

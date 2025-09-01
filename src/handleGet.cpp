@@ -3,8 +3,10 @@
 void	Client::handleGet() {
 	struct stat st;
 	string clean_path = urlDecode(_config->full_path);
-	if (access(clean_path.c_str(), F_OK) != 0)
-		return (handleError(404));
+	if (access(clean_path.c_str(), F_OK) != 0) {
+		_request.code = 404;
+		return ;
+	}
 	if (stat(clean_path.c_str(), &st) != 0)
 		return (handleError(500));
 	if (S_ISREG(st.st_mode))
@@ -13,7 +15,6 @@ void	Client::handleGet() {
 		handleDirectoryRequest();
 	else
 	{
-		cout << "handleGet(): Not a File and Not a Dir" << endl;
 		return (handleError(403));
 	}
 }
@@ -23,8 +24,8 @@ void	Client::handleFileRequest()
 	string clean_path = urlDecode(_config->full_path);
 	if (access(clean_path.c_str(), R_OK) != 0)
 	{
-		cout << YELLOW "not permission" RESET << endl;
-		return (handleError(403));
+		_request.code = 403;
+		return ;
 	}
 	if (isCgi())
 	{
@@ -35,7 +36,6 @@ void	Client::handleFileRequest()
 	std::ifstream	file(clean_path.c_str());
 	if (!file.is_open())
 	{
-		std::cout << RED "Error : Cannot open file: " << _config->full_path << RESET << std::endl;
 		return (handleError(500));
 	}
 
@@ -62,11 +62,10 @@ void	Client::handleDirectoryRequest()
 	string	uri = _config->full_path;
 	if (uri.empty() || uri[uri.size() - 1] != '/')
 	{
-		string redirectUri = uri + "/";
-		cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
-		return (sendRedirect(redirectUri));
+		// _current_redirection = uri + "/";
+		_request.code = 301;
+		return ;
 	}
-
 	// Chercher un fichier index
 	std::string indexFile = findIndexFile();
 	if (!indexFile.empty()) {

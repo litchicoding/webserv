@@ -208,12 +208,12 @@ string	Client::extractName()
 }
 
 int    Client::isDirectoryPost()
-{
+{	
 	string URI = _request.getURI();
    	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
-		_request.getURI() = URI + "/";
-		_request.code = 301;
+		_request.setRedirectURI(URI + "/");
+		_request.setCode(301);
 		return (OK);
 	}
 	std::string indexFile = findIndexFile();

@@ -120,7 +120,7 @@ int	Client::processRequest()
 			_request.code = 501;
 	}
 	buildResponse(_request.code);
-	return (ERROR);
+	return (OK);
 }
 
 int	Client::isRequestWellFormedOptimized() {
@@ -386,13 +386,11 @@ void	Client::buildResponse(int code)
 	else if (code >= 400 && code <= 600)
 		handleError(code);
 	else if (code == 301) {
-		string redirectUrl = _config->redirection.begin()->second;
-		cout << "REDIRECTION EFFECTUEE\n";
-		// sendRedirect(redirectUrl);
+		string redirectUrl = _request.getRedirectURI();
+		sendRedirect(redirectUrl);
 	}
-	// else {
-
-	// }
+	else
+		return ;
 }
 
 

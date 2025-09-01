@@ -59,12 +59,12 @@ void	Client::handleFileRequest()
 
 void	Client::handleDirectoryRequest()
 {
-	string	uri = _config->full_path;
-	if (uri.empty() || uri[uri.size() - 1] != '/')
+	string	URI = _config->full_path;
+	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
-		string redirectUri = uri + "/";
-		cout << RED "Redirecting to: " << redirectUri << RESET << std::endl;
-		return (sendRedirect(redirectUri));
+		_request.setRedirectURI(URI + "/");
+		_request.setCode(301);
+		return ;
 	}
 
 	// Chercher un fichier index

@@ -101,13 +101,13 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		location = _locations.begin();
 		while (location != _locations.end())
 		{
-			cout << YELLOW << "path = " << location->first << endl;
+			// cout << YELLOW << "path = " << location->first << endl;
 			if (path_only.rfind(location->first, 0) != string::npos && location->first.length() > prev_match_len) {
 				// cout << "Path_only == " << path_only << endl;
 				// cout << "location->first == " << location->first << endl;
 				match = location->first;
 				prev_match_len = match.length();
-				cout << BLUE << "match = " << match << RESET << endl;
+				// cout << BLUE << "match = " << match << RESET << endl;
 			}
 			location++;
 		}
@@ -129,11 +129,11 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 				result = NULL;
 		}
 	}
-	cout << GREEN << "path_only { " << path_only << " }" RESET << endl;
-	cout << GREEN << "root { " << result->root << " }" RESET << endl;
+	// cout << GREEN << "path_only { " << path_only << " }" RESET << endl;
+	// cout << GREEN << "root { " << result->root << " }" RESET << endl;
 
 	result->full_path = result->root + path_only;
-	cout << GREEN << "Full_path { " << result->full_path << " }" RESET << endl;
+	// cout << GREEN << "Full_path { " << result->full_path << " }" RESET << endl;
 	result->query_string = query_string;
 	return result;
 }

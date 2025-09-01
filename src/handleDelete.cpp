@@ -11,7 +11,6 @@ void	Client::handleDelete()\
 	}
 	if (stat(clean_path.c_str(), &st) != 0)
 	{
-		cout << BLUE << "stat" << RESET << endl;
 		_request.code = 500;
 		return ;
 	}
@@ -35,7 +34,10 @@ void	Client::isFileDelete()
 	//	;
 	string clean_path = urlDecode(_config->full_path);
 	if (std::remove(clean_path.c_str()) != OK)
-		return (handleError(500));
+	{
+		_request.setCode(500);
+		return ;
+	}
 	
 	ostringstream	response;
 	response << "HTTP/1.1 204 No Content\r\n";
@@ -52,7 +54,10 @@ void	Client::isDirectoryDelete()
 {
 	string URI = _request.getURI();
 	if (URI.empty() || URI[URI.size() - 1] != '/')
-		return (handleError(409));
+	{
+		_request.setCode(409);
+		return ;
+	}
 
 	// if(isCgiScript(_URI) == OK)
 	// {
@@ -70,12 +75,19 @@ void	Client::isDirectoryDelete()
 	if (delete_all_folder_content(clean_path) != OK)
 	{
 		if (access(clean_path.c_str(), W_OK) != OK)
-			return (handleError(403));
-		return (handleError(500));
+		{
+			_request.setCode(403);
+			return ;
+		}
+		_request.setCode(500);
+		return ;
 	}
 
 	if (std::remove(clean_path.c_str()) != OK)
-		return(handleError(500));
+	{
+		_request.setCode(500);
+		return ;
+	}
 
 	ostringstream	response;
 	response << "HTTP/1.1 204 No Content\r\n";

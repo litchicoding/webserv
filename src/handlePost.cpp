@@ -5,65 +5,69 @@ void	Client::handlePost()
 	string clean_path, filename, message, boundary, URI;
 	map<string, string>::const_iterator header;
 	ostringstream response;
-
+	
 	clean_path = urlDecode(_config->full_path);
-	if (isValidPostRequest(clean_path) != OK)
-		return ;
-	if (isCgi())
-		handleCGI();
-	/*** 1. Vérifications: ***/ 
-	// Content-Type= multipart/form-data
-	map<string, string>	headerMap = _request.getHeaders();
-	header = headerMap.find("Content-Type");
-	if (header == headerMap.end()) {
-		_request.code = 400;
-		return ;
-	}
+	if (find(_config->methods.begin(), _config->methods.end(), "POST") != _config->methods.end())
+	{
+		/*** 1. Vérifications: ***/ 
+		// Content-Type= multipart/form-data
+		map<string, string>	headerMap = _request.getHeaders();
+		header = headerMap.find("Content-Type");
+		if (header == headerMap.end()) {
+			_request.code = 400;
+			return ;
+		}
 		// else if (header->second.find("application/x-www-form-urlencoded") != string::npos || handleEncodedForm(clean_path) != OK)
-	// 	return ;
-	// if (header->second.find("multipart/form-data") != string::npos || handleMultipartForm(clean_path) != OK)
-	// 	return ;
-	// else {
-	if (header->second.find("multipart/form-data") == string::npos) {
-		_request.code = 415;
-		return ;
-	}
+		// 	return ;
+		// if (header->second.find("multipart/form-data") != string::npos || handleMultipartForm(clean_path) != OK)
+		// 	return ;
+		// else {
+		if (header->second.find("multipart/form-data") == string::npos) {
+			_request.code = 415;
+			return ;
+		}
 
-	// Boundary is here and correct
-	boundary = searchBoundary(header->second);
-	string	body(_request.getBody().begin(), _request.getBody().end());
-	if (boundary.size() <= 0 || body.find(boundary) == string::npos) {
-		_request.code = 400;
+		// Boundary is here and correct
+		boundary = searchBoundary(header->second);
+		string	body(_request.getBody().begin(), _request.getBody().end());
+		if (boundary.size() <= 0 || body.find(boundary) == string::npos) {
+			_request.code = 400;
+			return ;
+		}
+		/*** 2. Parsing: ***/
+		// Lire boundary et découper le body.
+		// Cas 1 : header-body = filename -> upload de fichier
+		// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
+		filename = urlDecode(findFileName());
+		if (filename.size() > 0)
+			uploadFile(clean_path + "/" + filename, boundary);
+		else {
+			filename = extractName() + ".txt";
+			saveData(clean_path + "/" + filename, boundary);
+		}
+		/*** 3.Response HTTP ***/
+		URI = _request.getURI();
+		message = "File creation succeeded\n";
+		response << "HTTP/1.1 201 Created\r\n";
+		response << "Location: " << URI;
+		if (!filename.empty())
+			response << ( (URI[URI.size() - 1] == '/') ? "" : "/" ) << filename + "\r\n";
+		response << "Content-Type: text/plain\r\n";
+		response << "Content-Length: " << message.size() << "\r\n";
+		header = _request.getHeaders().find("Connection");
+		if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
+			response << "Connection: keep-alive\r\n";
+		else
+			response << "Connection: close\r\n";
+		response << "\r\n";
+		response << message;
+		_request.response = response.str();
+	}
+	else
+	{
+		isValidPostRequest(clean_path);
 		return ;
 	}
-	/*** 2. Parsing: ***/
-	// Lire boundary et découper le body.
-	// Cas 1 : header-body = filename -> upload de fichier
-	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
-	filename = urlDecode(findFileName());
-	if (filename.size() > 0)
-		uploadFile(clean_path + "/" + filename, boundary);
-	else {
-		filename = extractName() + ".txt";
-		saveData(clean_path + "/" + filename, boundary);
-	}
-	/*** 3.Response HTTP ***/
-	URI = _request.getURI();
-	message = "File creation succeeded\n";
-	response << "HTTP/1.1 201 Created\r\n";
-	response << "Location: " << URI;
-	if (!filename.empty())
-		response << ( (URI[URI.size() - 1] == '/') ? "" : "/" ) << filename + "\r\n";
-	response << "Content-Type: text/plain\r\n";
-	response << "Content-Length: " << message.size() << "\r\n";
-	header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	response << message;
-	_request.response = response.str();
 }
 
 void	Client::saveData(const string &root, const string &boundary)
@@ -219,7 +223,11 @@ int    Client::isDirectoryPost()
 	std::string indexFile = findIndexFile();
 	if (!indexFile.empty())
 	{
-	    _request.getURI() = indexFile;
+	    _request.setURI(indexFile);
+		if (isCgi())
+			handleCGI();
+		else
+			_request.setCode(403);
 	    return (OK);
 	}
 	else {
@@ -244,7 +252,13 @@ int	Client::isValidPostRequest(const string &path)
 		return (ERROR);
 	}
 	if (S_ISREG(st.st_mode))
-		return (OK);
+	{
+		if (isCgi())
+			handleCGI();
+		else
+			_request.setCode(403);
+		return (ERROR);
+	}
 	else if (S_ISDIR(st.st_mode)) {
 		if (isDirectoryPost() != OK)
 			return (ERROR);

@@ -476,14 +476,15 @@ void	Client::handleError(int code)
 	}
 	else {
 		string error_path = _config->root + "/" + it->second;
-		// cout << BLUE "Test = " << error_path << RESET << endl;
 		error_file.open(error_path.c_str());
 		if (!error_file.is_open()) {
-			_request.code = 500;
-			return ;
+			body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 		}
-		body << error_file.rdbuf();
-		error_file.close();
+		else
+		{
+			body << error_file.rdbuf();
+			error_file.close();
+		}
 		// cout << " Body = " << body << endl;
 	}
 	response << "HTTP/1.1 " << message << "\r\n";

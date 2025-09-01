@@ -56,106 +56,6 @@ int	Client::readData(int epoll_fd)
 	return (processBuffer());
 }
 
-size_t Client::parseChunked(std::string &buffer)
-{
-    size_t total_processed = 0;
-    
-    std::cout << "=== DEBUG parseChunked (appel " << static_cast<void*>(this) << ") ===" << std::endl;
-    std::cout << "Buffer size: " << buffer.size() << std::endl;
-    std::cout << "Buffer content (first 100 chars): " << std::endl;
-    std::cout << buffer.substr(0, 100) << std::endl;
-    std::cout << "Buffer hex dump (first 30 bytes): ";
-    for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
-        printf("%02X ", (unsigned char)buffer[i]);
-    }
-    std::cout << std::endl;
-    
-    while (true)
-    {
-        size_t pos = total_processed;
-        
-        // 1. Chercher la fin de la ligne de taille (CRLF)
-        size_t endline = buffer.find("\r\n", pos);
-        if (endline == std::string::npos)
-        {
-            std::cout << "DEBUG: Pas de CRLF trouvé à partir de pos=" << pos << std::endl;
-            break;
-        }
-
-        // 2. Extraire et convertir la taille hexadécimale
-        std::string hexsize = buffer.substr(pos, endline - pos);
-        std::cout << "DEBUG: Ligne de taille extraite: '" << hexsize << "'" << std::endl;
-        
-        // Nettoyer la ligne de taille (supprimer espaces)
-        hexsize.erase(0, hexsize.find_first_not_of(" \t"));
-        hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
-        
-        std::cout << "DEBUG: Ligne nettoyée: '" << hexsize << "'" << std::endl;
-        
-        std::istringstream iss(hexsize);
-        size_t chunk_size = 0;
-        iss >> std::hex >> chunk_size;
-
-        if (iss.fail()) {
-            std::cout << "DEBUG: Échec de conversion hexadécimale pour: '" << hexsize << "'" << std::endl;
-            _request.code = 400;
-            return ERROR;
-        }
-        
-        std::cout << "DEBUG: Taille du chunk: " << chunk_size << std::endl;
-
-        pos = endline + 2; // Position après le CRLF de la taille
-
-        // 3. Vérifier si on a reçu tout le chunk + son CRLF final
-        size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
-        if (buffer.size() < needed_data)
-        {
-            std::cout << "DEBUG: Pas assez de données. Besoin de " << needed_data << ", disponible: " << buffer.size() << std::endl;
-            break;
-        }
-
-        // 4. Traiter le chunk
-        if (chunk_size > 0) {
-            std::cout << "DEBUG: Ajout de " << chunk_size << " bytes au body" << std::endl;
-            _request.appendBodyData(buffer.c_str() + pos, chunk_size);
-        }
-        
-        pos += chunk_size;
-
-        // 5. Vérifier et skip le CRLF après le chunk
-        if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
-            std::cout << "DEBUG: CRLF manquant après chunk. Trouvé: '";
-            if (pos + 2 <= buffer.size()) {
-                for (int i = 0; i < 2; i++) {
-                    printf("%02X ", (unsigned char)buffer[pos + i]);
-                }
-            }
-            std::cout << "'" << std::endl;
-            _request.code = 400;
-            return ERROR;
-        }
-        pos += 2;
-
-        total_processed = pos;
-
-        // 6. Fin du dernier chunk
-        if (chunk_size == 0)
-        {
-            std::cout << "DEBUG: Chunk final (taille 0) trouvé" << std::endl;
-            state = READ_END;
-            break;
-        }
-    }
-
-    // 7. Supprimer les données traitées
-    if (total_processed > 0) {
-        std::cout << "DEBUG: Suppression de " << total_processed << " bytes du buffer" << std::endl;
-        buffer = buffer.substr(total_processed);
-    }
-    
-    return OK;
-}
-
 int Client::processBuffer()
 {
     // Traitement des headers (une seule fois)
@@ -166,7 +66,6 @@ int Client::processBuffer()
             if (_request.parsingHeaders(headers) != OK)
                 return (ERROR);
             _buffer = _buffer.substr(pos + 4);
-            cout << BLUE "Buffer après headers : size=" << _buffer.size() << RESET << endl;
             state = READ_BODY;
         }
         else {
@@ -174,7 +73,6 @@ int Client::processBuffer()
             return (OK);
         }
     }
-    
     // Traitement du body (peut être appelé plusieurs fois)
     if (state == READ_BODY) {
         cout << GREEN "READ_BODY - Buffer size: " << _buffer.size() << RESET << endl;
@@ -182,12 +80,9 @@ int Client::processBuffer()
         if (_request.isChunked() == true) {
             // Pour les chunks, on traite autant qu'on peut à chaque fois
             if (!_buffer.empty()) {
-                cout << YELLOW "Calling parseChunked avec buffer size: " << _buffer.size() << RESET << endl;
                 if (parseChunked(_buffer) == static_cast<size_t>(ERROR)) {
                     return ERROR;
                 }
-                cout << CYAN "Après parseChunked - Buffer restant: " << _buffer.size() 
-                     << ", state=" << (state == READ_END ? "READ_END" : "READ_BODY") << RESET << endl;
             }
             // Si parseChunked a tout traité et mis state=READ_END, c'est fini
             // Sinon on attend plus de données dans le prochain readData()
@@ -204,8 +99,9 @@ int Client::processBuffer()
                 state = READ_END;
             }
         }
+		else
+			state = READ_END;
     }
-    
     return (OK);
 }
 
@@ -389,6 +285,106 @@ string Client::urlDecode(const string &str)
     }
 
     return result;
+}
+
+size_t Client::parseChunked(std::string &buffer)
+{
+    size_t total_processed = 0;
+    
+    std::cout << "=== DEBUG parseChunked (appel " << static_cast<void*>(this) << ") ===" << std::endl;
+    std::cout << "Buffer size: " << buffer.size() << std::endl;
+    std::cout << "Buffer content (first 100 chars): " << std::endl;
+    std::cout << buffer.substr(0, 100) << std::endl;
+    std::cout << "Buffer hex dump (first 30 bytes): ";
+    for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
+        printf("%02X ", (unsigned char)buffer[i]);
+    }
+    std::cout << std::endl;
+    
+    while (true)
+    {
+        size_t pos = total_processed;
+        
+        // 1. Chercher la fin de la ligne de taille (CRLF)
+        size_t endline = buffer.find("\r\n", pos);
+        if (endline == std::string::npos)
+        {
+            std::cout << "DEBUG: Pas de CRLF trouvé à partir de pos=" << pos << std::endl;
+            break;
+        }
+
+        // 2. Extraire et convertir la taille hexadécimale
+        std::string hexsize = buffer.substr(pos, endline - pos);
+        std::cout << "DEBUG: Ligne de taille extraite: '" << hexsize << "'" << std::endl;
+        
+        // Nettoyer la ligne de taille (supprimer espaces)
+        hexsize.erase(0, hexsize.find_first_not_of(" \t"));
+        hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
+        
+        std::cout << "DEBUG: Ligne nettoyée: '" << hexsize << "'" << std::endl;
+        
+        std::istringstream iss(hexsize);
+        size_t chunk_size = 0;
+        iss >> std::hex >> chunk_size;
+
+        if (iss.fail()) {
+            std::cout << "DEBUG: Échec de conversion hexadécimale pour: '" << hexsize << "'" << std::endl;
+            _request.code = 400;
+            return ERROR;
+        }
+        
+        std::cout << "DEBUG: Taille du chunk: " << chunk_size << std::endl;
+
+        pos = endline + 2; // Position après le CRLF de la taille
+
+        // 3. Vérifier si on a reçu tout le chunk + son CRLF final
+        size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
+        if (buffer.size() < needed_data)
+        {
+            std::cout << "DEBUG: Pas assez de données. Besoin de " << needed_data << ", disponible: " << buffer.size() << std::endl;
+            break;
+        }
+
+        // 4. Traiter le chunk
+        if (chunk_size > 0) {
+            std::cout << "DEBUG: Ajout de " << chunk_size << " bytes au body" << std::endl;
+            _request.appendBodyData(buffer.c_str() + pos, chunk_size);
+        }
+        
+        pos += chunk_size;
+
+        // 5. Vérifier et skip le CRLF après le chunk
+        if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
+            std::cout << "DEBUG: CRLF manquant après chunk. Trouvé: '";
+            if (pos + 2 <= buffer.size()) {
+                for (int i = 0; i < 2; i++) {
+                    printf("%02X ", (unsigned char)buffer[pos + i]);
+                }
+            }
+            std::cout << "'" << std::endl;
+            _request.code = 400;
+            return ERROR;
+        }
+        pos += 2;
+
+        total_processed = pos;
+
+        // 6. Fin du dernier chunk
+        if (chunk_size == 0)
+        {
+            std::cout << "DEBUG: Chunk final (taille 0) trouvé" << std::endl;
+            state = READ_END;
+            break;
+        }
+    }
+
+    // 7. Supprimer les données traitées
+    if (total_processed > 0) {
+        std::cout << "DEBUG: Suppression de " << total_processed << " bytes du buffer" << std::endl;
+        buffer = buffer.substr(total_processed);
+    }
+    
+    return OK;
 }
 
 void	Client::resetRequest()

@@ -3,3 +3,5 @@ obj
 webserv
 *.o
 .vscode
+www/upload/*
+big_file.txt

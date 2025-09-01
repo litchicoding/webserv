@@ -18,8 +18,15 @@ void	Client::handlePost()
 	/*** 1. Vérifications: ***/ 
 	// Content-Type= multipart/form-data
 	map<string, string>	headerMap = _request.getHeaders();
-	header = headerMap.find("Content-Type");
-	if (header == headerMap.end() || header->second.find("multipart/form-data") == string::npos) {
+	if (header == headerMap.end()) {
+		_request.code = 400;
+		return ;
+	}
+	if (header->second.find("multipart/form-data") != string::npos || handleMultipartForm(clean_path) != OK)
+		return ;
+	else if (header->second.find("application/x-www-form-urlencoded") != string::npos || handleEncodedForm(clean_path) != OK)
+		return ;
+	else {
 		_request.code = 415;
 		return ;
 	}
@@ -35,7 +42,6 @@ void	Client::handlePost()
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
-	// filename = urlDecode(findFileName());
 	if (filename.size() > 0)
 		uploadFile(clean_path + "/" + filename, boundary);
 	else {

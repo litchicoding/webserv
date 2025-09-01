@@ -63,7 +63,7 @@ void	Server::defaultConfiguration()
 t_directives*	Server::searchLocationMatch(const string &uri)
 {
 	map<string, t_directives>::iterator	location;
-	string								match;
+	string								match = "";
 	t_directives						*result = NULL;
 	size_t								prev_match_len = 0;
 
@@ -101,30 +101,39 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		location = _locations.begin();
 		while (location != _locations.end())
 		{
-			// cout << YELLOW << "path = " << location->first << RESET << endl;
-			if (path_only.find(location->first) != string::npos && location->first.length() > prev_match_len) {
+			cout << YELLOW << "path = " << location->first << endl;
+			if (path_only.rfind(location->first, 0) != string::npos && location->first.length() > prev_match_len) {
+				// cout << "Path_only == " << path_only << endl;
+				// cout << "location->first == " << location->first << endl;
 				match = location->first;
 				prev_match_len = match.length();
-				// cout << YELLOW << "match = " << match << RESET << endl;
+				cout << BLUE << "match = " << match << RESET << endl;
 			}
 			location++;
 		}
-		if (match.empty()) {
+		if (match.empty())
+		{
 			match = "/";
-			result = &(_locations.find("/")->second);
+			map<string, t_directives>::iterator it =_locations.find("/");
+			if (it != _locations.end())
+				result = &(it->second);
+			else
+				result = NULL;
 		}
 		else
-			result = &(_locations.find(match)->second);
+		{
+			map<string, t_directives>::iterator it =_locations.find(match);
+			if (it != _locations.end())
+				result = &(it->second);
+			else
+				result = NULL;
+		}
 	}
-	if (result->root.find(match.c_str()) == string::npos)
-	{
-		// cout << RED "Test : " << result->root << " , " << path_only << " , "  << path_only.substr() << RESET << endl;
-		// cout << path_only.length() << " " << match.length() << endl;
-		result->full_path = result->root + path_only.substr(path_only.length() - match.length() - 1);
-		// cout << BLUE << result->full_path << RESET << endl;
-	}
-	else
-		result->full_path = result->root + "/" + path_only.substr(match.length());
+	cout << GREEN << "path_only { " << path_only << " }" RESET << endl;
+	cout << GREEN << "root { " << result->root << " }" RESET << endl;
+
+	result->full_path = result->root + path_only;
+	cout << GREEN << "Full_path { " << result->full_path << " }" RESET << endl;
 	result->query_string = query_string;
 	return result;
 }

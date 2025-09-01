@@ -1,8 +1,0 @@
-Coucou 42 !
-Webserv !
-Paris
-Marseille
-Bordeaux
-Lyon
-Grenoble
-...

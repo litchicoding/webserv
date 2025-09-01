@@ -23,10 +23,10 @@ void	Client::handlePost()
 		_request.code = 400;
 		return ;
 	}
-	if (header->second.find("multipart/form-data") != string::npos)
-		handleMultipartForm(clean_path);
-	else if (header->second.find("application/x-www-form-urlencoded") != string::npos)
-		handleEncodedForm(clean_path);
+	if (header->second.find("multipart/form-data") != string::npos || handleMultipartForm(clean_path) != OK)
+		return ;
+	else if (header->second.find("application/x-www-form-urlencoded") != string::npos || handleEncodedForm(clean_path) != OK)
+		return ;
 	else {
 		_request.code = 415;
 		return ;
@@ -50,13 +50,13 @@ void	Client::handlePost()
 	_request.response = response.str();
 }
 
-void	Client::handleEncodedForm(const string &path)
+int	Client::handleEncodedForm(const string &path)
 {
 
 }
 
 
-void	Client::handleMultipartForm(const string &path)
+int	Client::handleMultipartForm(const string &path)
 {
 	map<string, string>::const_iterator header;
 	string boundary, filename;

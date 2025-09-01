@@ -3,3 +3,4 @@ obj
 webserv
 *.o
 .vscode
+test_webserv.sh

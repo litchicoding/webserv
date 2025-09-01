@@ -2,7 +2,7 @@
 
 void	Client::handlePost()
 {
-	string clean_path, filename, message, boundary, URI;
+	string clean_path, filename, message, URI;
 	map<string, string>::const_iterator header;
 	ostringstream response;
 
@@ -19,28 +19,17 @@ void	Client::handlePost()
 	// Content-Type= multipart/form-data
 	map<string, string>	headerMap = _request.getHeaders();
 	header = headerMap.find("Content-Type");
-	if (header == headerMap.end() || header->second.find("multipart/form-data") == string::npos) {
-		_request.code = 415;
-		return ;
-	}
-	// Boundary is here and correct
-	boundary = searchBoundary(header->second);
-	string	body(_request.getBody().begin(), _request.getBody().end());
-	if (boundary.size() <= 0 || body.find(boundary) == string::npos) {
+	if (header == headerMap.end()) {
 		_request.code = 400;
 		return ;
 	}
-	/*** 2. Parsing: ***/
-	// Lire boundary et découper le body.
-	// Cas 1 : header-body = filename -> upload de fichier
-	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
-	filename = urlDecode(findFileName());
-	// filename = urlDecode(findFileName());
-	if (filename.size() > 0)
-		uploadFile(clean_path + "/" + filename, boundary);
+	if (header->second.find("multipart/form-data") != string::npos)
+		handleMultipartForm(clean_path);
+	else if (header->second.find("application/x-www-form-urlencoded") != string::npos)
+		handleEncodedForm(clean_path);
 	else {
-		filename = extractName() + ".txt";
-		saveData(clean_path + "/" + filename, boundary);
+		_request.code = 415;
+		return ;
 	}
 	/*** 3.Response HTTP ***/
 	URI = _request.getURI();
@@ -59,6 +48,37 @@ void	Client::handlePost()
 	response << "\r\n";
 	response << message;
 	_request.response = response.str();
+}
+
+void	Client::handleEncodedForm(const string &path)
+{
+
+}
+
+
+void	Client::handleMultipartForm(const string &path)
+{
+	map<string, string>::const_iterator header;
+	string boundary, filename;
+
+	// Boundary is here and correct
+	boundary = searchBoundary(header->second);
+	string	body(_request.getBody().begin(), _request.getBody().end());
+	if (boundary.size() <= 0 || body.find(boundary) == string::npos) {
+		_request.code = 400;
+		return ;
+	}
+	/*** 2. Parsing: ***/
+	// Lire boundary et découper le body.
+	// Cas 1 : header-body = filename -> upload de fichier
+	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
+	filename = urlDecode(findFileName());
+	if (filename.size() > 0)
+		uploadFile(path + "/" + filename, boundary);
+	else {
+		filename = extractName() + ".txt";
+		saveData(path + "/" + filename, boundary);
+	}
 }
 
 void	Client::saveData(const string &root, const string &boundary)

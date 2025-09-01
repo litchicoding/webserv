@@ -85,7 +85,7 @@ int	Client::processBuffer()
 
 int	Client::processRequest()
 {
-	// cout << "[ DEBUG ] :\n" << _request;
+	cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
 	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 	cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";

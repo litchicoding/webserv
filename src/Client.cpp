@@ -178,6 +178,15 @@ int	Client::isRequestWellFormedOptimized() {
 
 	// HOST obligatoire en HTTP/1.1
 
+	map<string, string>::const_iterator HostIt;
+
+	// HostIt = _request.getHeaders().find("Host");
+	// if (HostIt == headers.end())
+	// {
+	// 	code = 400;
+	// 	return (ERROR);
+	// }
+
 	return (OK);
 }
 

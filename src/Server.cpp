@@ -116,8 +116,13 @@ t_directives*	Server::searchLocationMatch(const string &uri)
 		else
 			result = &(_locations.find(match)->second);
 	}
-	if (result->root.find(match.c_str(), 0, match.length() - 1) == string::npos)
-		result->full_path = result->root + path_only.substr();
+	if (result->root.find(match.c_str()) == string::npos)
+	{
+		// cout << RED "Test : " << result->root << " , " << path_only << " , "  << path_only.substr() << RESET << endl;
+		// cout << path_only.length() << " " << match.length() << endl;
+		result->full_path = result->root + path_only.substr(path_only.length() - match.length() - 1);
+		// cout << BLUE << result->full_path << RESET << endl;
+	}
 	else
 		result->full_path = result->root + "/" + path_only.substr(match.length());
 	result->query_string = query_string;

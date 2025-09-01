@@ -41,12 +41,7 @@ int	Client::readData(int epoll_fd)
 
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = recv(_client_fd, buffer, sizeof(buffer), 0);
-	// bytes_read = read(_client_fd, buffer, sizeof(buffer) - 1);
 	if (bytes_read < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return (OK);
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, _client_fd, NULL);
-		close(_client_fd);
 		cout << RED "Error: readData(): while reading request." RESET << endl;
 		return (ERROR);
 	}

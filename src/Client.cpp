@@ -454,17 +454,37 @@ void	Client::handleError(int code)
 
 	getErrorMessage(code, message);
 	map<int, string>::iterator it = _config->error_page.find(code);
-	if (it == _config->error_page.end())
+	// if (_config)
+	// {
+	// 	if (!_config->error_page.empty()) {
+	// 		for (map<int, string>::const_iterator it = _config->error_page.begin(); 
+    //     	it != _config->error_page.end(); ++it) {
+    //     	cout << GREEN << "Error Code: " << it->first 
+    //         	<< " -> Path: \"" << it->second << "\"" << RESET << endl;
+    // 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		cout << "VIDE VIDE VIDE" << endl;
+	// 	}
+	// }
+
+	if (it == _config->error_page.end() || it->second.empty())
+	{
+		// cout << YELLOW "Pas de errorpage, ou si mais vide" RESET << endl;
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
+	}
 	else {
-		if (!it->second.empty())
-			error_file.open(it->second.c_str());
+		string error_path = _config->root + "/" + it->second;
+		// cout << BLUE "Test = " << error_path << RESET << endl;
+		error_file.open(error_path.c_str());
 		if (!error_file.is_open()) {
 			_request.code = 500;
 			return ;
 		}
 		body << error_file.rdbuf();
 		error_file.close();
+		// cout << " Body = " << body << endl;
 	}
 	response << "HTTP/1.1 " << message << "\r\n";
 	response << "Content-Type: text/html\r\n";

@@ -9,6 +9,7 @@
 # define DEFAULT_BODY_SIZE 1048576
 # define DEFAULT_ROOT "html"
 # define DEFAULT_INDEX "index.html"
+# define INCOMPLETE 2
 
 # define AUTO_ON 1
 # define AUTO_OFF 0

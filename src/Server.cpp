@@ -60,82 +60,59 @@ void	Server::defaultConfiguration()
 		defaultConfiguration(_directives, it->second);
 }
 
-t_directives*	Server::searchLocationMatch(const string &uri)
+t_directives*	Server::searchLocationMatch(const string &request_uri)
 {
 	map<string, t_directives>::iterator	location;
-	string								match = "";
+	string								uri, longest_loc_match, query_string, loc_path;
 	t_directives						*result = NULL;
-	size_t								prev_match_len = 0;
 
-	if (uri.empty())
+	if (request_uri.empty())
 		return NULL;
-
+	uri = request_uri;
 	/*separe la query string si il y en a une*/ // <- Faire dans une fonction à part
-	string path_only;
-    string query_string;
-    size_t qpos = uri.find('?');
-    if (qpos != string::npos)
-	{
-        path_only = uri.substr(0, qpos);
-        query_string = uri.substr(qpos + 1);
+    size_t qpos = request_uri.find('?');
+    if (qpos != string::npos) {
+        uri = request_uri.substr(0, qpos);
+        query_string = request_uri.substr(qpos + 1);
     }
-	else
-	{
-        path_only = uri;
-        query_string = "";
-    }
-
-	/* Cherche correspondance exacte entre l'URI de la requete (sans la query string -> path_only) et les path des location blocks */
+	/* Cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
 	location = _locations.begin();
 	while (location != _locations.end())
 	{
-		if (location->first == path_only) {
-			match = location->first;
-			result = &(location->second);
-			break ;
+		loc_path = location->first;
+		// cout << GREEN << "path = " << loc_path << endl;
+		if (uri.length() >= loc_path.length() && uri.substr(0, loc_path.length()) == loc_path) {
+			if (loc_path.length() == uri.length() || loc_path[loc_path.length()] == '/' || uri[loc_path.length()] == '/') {
+				if (loc_path.length() > longest_loc_match.length())
+					longest_loc_match = loc_path;
+			}
 		}
 		location++;
 	}
-	if (result == NULL) {
-		/* Cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
-		location = _locations.begin();
-		while (location != _locations.end())
-		{
-			// cout << YELLOW << "path = " << location->first << endl;
-			if (path_only.rfind(location->first, 0) != string::npos && location->first.length() > prev_match_len) {
-				// cout << "Path_only == " << path_only << endl;
-				// cout << "location->first == " << location->first << endl;
-				match = location->first;
-				prev_match_len = match.length();
-				// cout << BLUE << "match = " << match << RESET << endl;
-			}
-			location++;
-		}
-		if (match.empty())
-		{
-			match = "/";
-			map<string, t_directives>::iterator it =_locations.find("/");
-			if (it != _locations.end())
-				result = &(it->second);
-			else
-				result = NULL;
-		}
+	if (longest_loc_match.empty())
+	{
+		longest_loc_match = "/";
+		location = _locations.find("/");
+		if (location != _locations.end())
+			result = &(location->second);
 		else
-		{
-			map<string, t_directives>::iterator it =_locations.find(match);
-			if (it != _locations.end())
-				result = &(it->second);
-			else
-				result = NULL;
-		}
+			return (NULL);
 	}
-	// cout << GREEN << "path_only { " << path_only << " }" RESET << endl;
-	// cout << GREEN << "root { " << result->root << " }" RESET << endl;
-
-	result->full_path = result->root + path_only;
-	// cout << GREEN << "Full_path { " << result->full_path << " }" RESET << endl;
+	else
+		result = &(_locations.find(longest_loc_match)->second);
+	// cout << YELLOW << "root = " << result->root << endl;
+	// cout << YELLOW << "longest_loc_match = " << longest_loc_match << endl;
+	// cout << YELLOW << "uri = " << uri << endl;
+	string remaining_path;
+	remaining_path = uri.substr(longest_loc_match.length());
+	if (!remaining_path.empty() && remaining_path[0] != '/')
+		remaining_path = "/" + remaining_path;
+	string root = result->root;
+	if (!root.empty() && root[root.length()] == '/')
+		root.erase(root.length());
+	result->full_path = root + remaining_path;
 	result->query_string = query_string;
-	return result;
+	return (result);
 }
 
 /*************************************************************************************************/

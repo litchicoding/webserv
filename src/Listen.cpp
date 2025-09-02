@@ -136,7 +136,7 @@ int	Listen::update_connexion()
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
-				if (handleClientRequest(events[i].data.fd, _epoll_fd, listen_fd) == ERROR)
+				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
 					closeClientConnection(events[i].data.fd);
 			}
 		}

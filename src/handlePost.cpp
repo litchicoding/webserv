@@ -7,26 +7,17 @@ void	Client::handlePost()
 	ostringstream response;
 	
 	clean_path = urlDecode(_config->full_path);
-	if (access(clean_path.c_str(), F_OK) != 0) {
-		_request.code = 404;
+	if (isValidPostRequest(clean_path) != OK)
 		return ;
-	}
-	if (access(clean_path.c_str(), W_OK) != 0) {
-		_request.code = 403;
-		return ;
-	}
-	/*** 1. Vérifications: ***/ 
+	/*** 1. Vérifications: ***/
 	// Content-Type= multipart/form-data
 	map<string, string>	headerMap = _request.getHeaders();
+	header = headerMap.find("Content-Type");
 	if (header == headerMap.end()) {
 		_request.code = 400;
 		return ;
 	}
-	if (header->second.find("multipart/form-data") != string::npos || handleMultipartForm(clean_path) != OK)
-		return ;
-	else if (header->second.find("application/x-www-form-urlencoded") != string::npos || handleEncodedForm(clean_path) != OK)
-		return ;
-	else {
+	else if (header->second.find("multipart/form-data") == string::npos) {
 		_request.code = 415;
 		return ;
 	}
@@ -214,7 +205,7 @@ int    Client::isDirectoryPost()
    	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
 		_request.setRedirectURI(URI + "/");
-		_request.setCode(301);
+		_request.code = 301;
 		return (OK);
 	}
 	std::string indexFile = findIndexFile();
@@ -223,8 +214,8 @@ int    Client::isDirectoryPost()
 	    _request.setURI(indexFile);
 		if (isCgi())
 			handleCGI();
-		else
-			_request.setCode(403);
+		// else
+		// 	_request.setCode(403); POURQUOI 403 ????????????????????????????
 	    return (OK);
 	}
 	else {
@@ -232,6 +223,7 @@ int    Client::isDirectoryPost()
 		return (ERROR);
 	}
 }
+
 int	Client::isValidPostRequest(const string &path)
 {
 	struct stat st;
@@ -250,19 +242,17 @@ int	Client::isValidPostRequest(const string &path)
 	}
 	if (S_ISREG(st.st_mode))
 	{
-		if (isCgi())
+		if (isCgi()) {
 			handleCGI();
-		else
-			_request.setCode(403);
-		return (ERROR);
+			return (OK);
+		}
+		// _request.code = 403;
+		// return (ERROR); // POURQUOI RENVOYER 403 ?????????? C'EST PAS UNE ERREUR DE PAS ETRE UN CGI SI ?????????
+		return (OK);
 	}
-	else if (S_ISDIR(st.st_mode)) {
-		if (isDirectoryPost() != OK)
-			return (ERROR);
-	}
-	else {
+	else if (S_ISDIR(st.st_mode))
+		return (isDirectoryPost());
+	else
 		_request.code = 403;
-		return (ERROR);
-	}
 	return (ERROR);
 }

@@ -67,7 +67,7 @@ private:
 	/* Post Method *******************************************************************************/
 	void				handlePost();
 	void				isFilePost();
-	// void				isDirectoryPost();
+	int					isDirectoryPost();
 	string				findFileName();
 	string				extractName();
 	void				uploadFile(const string &filename, const string &boundary);

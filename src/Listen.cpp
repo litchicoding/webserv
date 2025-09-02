@@ -155,8 +155,8 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	if (_clients[client_fd]->readData() != OK)
-		return (ERROR);
+    if (_clients[client_fd]->readData() != OK)
+        return (ERROR);
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));

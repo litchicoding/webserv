@@ -7,6 +7,7 @@
 # include <cstdio>
 # include <csignal>
 # include <string>
+# include <set>
 
 # include <fstream>
 # include <sstream>

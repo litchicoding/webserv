@@ -178,10 +178,16 @@ int	Client::isRequestWellChunked(const map<string, string> &headers)
 {
 	map<string, string>::const_iterator transfer;
 	map<string, string>::const_iterator content_len;
-	int									code = 0;
+	map<string, string>::const_iterator HostIt;
 
+	int	code = 0;
+
+	HostIt = headers.find("Host");
 	transfer = headers.find("Transfer-Encoding");
 	content_len = headers.find("Content-Length");
+
+	if (HostIt == headers.end())
+		code = 400;
 	if (transfer != headers.end() && transfer->second != "chunked") // can be gzip etc CHECK RFC
 		code = 501;
 	else if (transfer != headers.end() && content_len != headers.end()) // both present
@@ -388,14 +394,20 @@ void	Client::buildResponse(int code)
 	else if (code == 301)
 		_request.response.location = _request.getRedirectURI();
 
+	cout << "boubou\n";
+	
 	response << "HTTP/1.1 " << getCodeMessage(code) << "\r\n";
 	if (!_request.response.body.empty()) {
 		response << "Content-Type: " << _request.response.content_type << "\r\n";
 		response << "Content-Length: " << _request.response.body.size() << "\r\n";
 	}
+	cout << "boubou\n";
+
 	if (code == 301 || _request.getMethod() == "POST")
 		response << "Location: " << _request.response.location << "\r\n";
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
+	cout << "boubou\n";
+
 	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
 		response << "Connection: keep-alive\r\n";
 	else
@@ -412,11 +424,18 @@ void	Client::handleError(int code)
 	ostringstream	response, body;
 	ifstream		error_file;
 
+	cout << "1\n";
 	message = getCodeMessage(code);
+	cout << "2\n";
+	
 	map<int, string>::iterator it = _config->error_page.find(code);
+	cout << "4\n";
+
 	if (it == _config->error_page.end() || it->second.empty())
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 	else {
+		cout << "5\n";
+		
 		error_file.open(it->second.c_str());
 		if (!error_file.is_open())
 			body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
@@ -425,7 +444,11 @@ void	Client::handleError(int code)
 			error_file.close();
 		}
 	}
+	cout << "3\n";
+
 	_request.response.content_type = "text/html";
+	cout << "4\n";
+	
 	_request.response.body = body.str();
 }
 

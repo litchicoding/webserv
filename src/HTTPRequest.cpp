@@ -23,7 +23,14 @@ int	HTTPRequest::parsingHeaders(const string &data)
 	istringstream	stream(data);
 	string			line, key, value;
 	size_t			delimiter;
+	set<string>		headers_seen;
+	set<string>		critical_headers;
 
+	critical_headers.insert("Host");
+	critical_headers.insert("Content-Length");
+	critical_headers.insert("Transfer-Encoding");
+	critical_headers.insert("Authorization");
+	
 	if (getline(stream, line))
 		handleMethodLine(line);
 	while (getline(stream, line) && !line.empty() && line != "\r")
@@ -41,6 +48,21 @@ int	HTTPRequest::parsingHeaders(const string &data)
 				code = 400;
 				return (ERROR);
 			}
+			cout << BLUE << key << RESET << endl;
+			// Doublon detected
+			if (critical_headers.find(key) != critical_headers.end())
+			{
+				cout << RED << key << RESET << endl;
+				cout << "AAAAAAAAAAAAAAAAAA\n";
+				if (headers_seen.find(key) != headers_seen.end())
+				{
+					cout << "ABBBBBBBBBBBBBBBBBBBBBBB\n";
+					code = 400;
+					return (ERROR);
+				}
+				headers_seen.insert(key);
+			}
+
 			// Store data in headers map
 			_headers[key] = value;
 		}

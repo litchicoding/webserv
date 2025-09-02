@@ -59,10 +59,10 @@ void	Client::handleFileRequest()
 
 void	Client::handleDirectoryRequest()
 {
-	string	uri = _config->full_path;
-	if (uri.empty() || uri[uri.size() - 1] != '/')
+	string	URI = _config->full_path;
+	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
-		// _current_redirection = uri + "/";
+		_request.setRedirectURI(URI + "/");
 		_request.code = 301;
 		return ;
 	}

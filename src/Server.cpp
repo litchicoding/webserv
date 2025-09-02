@@ -31,6 +31,8 @@ void	Server::defaultConfiguration(t_directives serv, t_directives &location)
 	if (location.root.empty()) location.root = serv.root;
 	if (location.index.empty()) location.index = serv.index;
 	if (location.methods.empty()) location.methods = serv.methods;
+	if (location.redirection.empty()) location.redirection = serv.redirection;
+	if (location.error_page.empty()) location.error_page = serv.error_page;
 }
 
 void	Server::defaultConfiguration()
@@ -60,76 +62,55 @@ void	Server::defaultConfiguration()
 		defaultConfiguration(_directives, it->second);
 }
 
-t_directives*	Server::searchLocationMatch(const string &uri)
+t_directives*	Server::searchLocationMatch(const string &request_uri)
 {
 	map<string, t_directives>::iterator	location;
-	string								match;
+	string								uri, longest_loc_match, query_string, loc_path;
 	t_directives						*result = NULL;
-	size_t								prev_match_len = 0;
 
-	if (uri.empty())
+	if (request_uri.empty())
 		return NULL;
-
+	uri = request_uri;
 	/*separe la query string si il y en a une*/ // <- Faire dans une fonction à part
-	string path_only;
-    string query_string;
-    size_t qpos = uri.find('?');
-    if (qpos != string::npos)
-	{
-        path_only = uri.substr(0, qpos);
-        query_string = uri.substr(qpos + 1);
+    size_t qpos = request_uri.find('?');
+    if (qpos != string::npos) {
+        uri = request_uri.substr(0, qpos);
+        query_string = request_uri.substr(qpos + 1);
     }
-	else
-	{
-        path_only = uri;
-        query_string = "";
-    }
-
-	/* Cherche correspondance exacte entre l'URI de la requete (sans la query string -> path_only) et les path des location blocks */
+	/* Cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
 	location = _locations.begin();
 	while (location != _locations.end())
 	{
-		if (location->first == path_only) {
-			match = location->first;
-			result = &(location->second);
-			break ;
+		loc_path = location->first;
+		// cout << GREEN << "path = " << loc_path << RESET << endl;
+		if (uri.length() >= loc_path.length() && uri.substr(0, loc_path.length()) == loc_path) {
+			// if (loc_path[loc_path.length() - 1] == '/' || uri[loc_path.length() - 1] == '/') {
+				if (loc_path.length() > longest_loc_match.length())
+					longest_loc_match = loc_path;
+			// }
 		}
 		location++;
 	}
-	if (result == NULL) {
-		/* Cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
-		location = _locations.begin();
-		while (location != _locations.end())
-		{
-			// cout << YELLOW << "path = " << location->first << RESET << endl;
-			if (path_only.find(location->first) != string::npos && location->first.length() > prev_match_len) {
-				match = location->first;
-				prev_match_len = match.length();
-				// cout << YELLOW << "match = " << match << RESET << endl;
-			}
-			location++;
-		}
-		if (match.empty()) {
-			match = "/";
-			result = &(_locations.find("/")->second);
-		}
+	if (longest_loc_match.empty())
+	{
+		longest_loc_match = "/";
+		location = _locations.find("/");
+		if (location != _locations.end())
+			result = &(location->second);
 		else
-			result = &(_locations.find(match)->second);
+			return (NULL);
 	}
-	// if (path_only.find(result->root) == string::npos)
-	// 	result->full_path = result->root + "/" + path_only;
-	// else {
-	// 	if (result->root.find(".", 0, 1) != string::npos)
-	// 		result->full_path = "." + path_only;
-	// 	else
-	// 		result->full_path = path_only;
-	// }
-	if (result->root.find(match.c_str(), 0, match.length() - 1) == string::npos)
-		result->full_path = "." + path_only.substr();
 	else
-		result->full_path = result->root + "/" + path_only.substr(match.length());
+		result = &(_locations.find(longest_loc_match)->second);
+	// cout << "root = " << result->root << endl;
+	// cout << "longest loc match = " << longest_loc_match << endl;
+	// cout << "uri = " << uri << endl;
+	string root = result->root;
+	if (!root.empty() && root[root.length() - 1] == '/')
+		root.erase(root.length() - 1);
+	result->full_path = root + uri;
 	result->query_string = query_string;
-	return result;
+	return (result);
 }
 
 /*************************************************************************************************/

@@ -120,7 +120,7 @@ int	Client::processRequest()
 			_request.code = 501;
 	}
 	buildResponse(_request.code);
-	return (ERROR);
+	return (OK);
 }
 
 int	Client::isRequestWellFormedOptimized() {
@@ -386,13 +386,11 @@ void	Client::buildResponse(int code)
 	else if (code >= 400 && code <= 600)
 		handleError(code);
 	else if (code == 301) {
-		string redirectUrl = _config->redirection.begin()->second;
-		cout << "REDIRECTION EFFECTUEE\n";
-		// sendRedirect(redirectUrl);
+		string redirectUrl = _request.getRedirectURI();
+		sendRedirect(redirectUrl);
 	}
-	// else {
-
-	// }
+	else
+		return ;
 }
 
 
@@ -456,17 +454,16 @@ void	Client::handleError(int code)
 
 	getErrorMessage(code, message);
 	map<int, string>::iterator it = _config->error_page.find(code);
-	if (it == _config->error_page.end())
+	if (it == _config->error_page.end() || it->second.empty())
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 	else {
-		if (!it->second.empty())
-			error_file.open(it->second.c_str());
-		if (!error_file.is_open()) {
-			_request.code = 500;
-			return ;
+		error_file.open(it->second.c_str());
+		if (!error_file.is_open())
+			body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
+		else {
+			body << error_file.rdbuf();
+			error_file.close();
 		}
-		body << error_file.rdbuf();
-		error_file.close();
 	}
 	response << "HTTP/1.1 " << message << "\r\n";
 	response << "Content-Type: text/html\r\n";

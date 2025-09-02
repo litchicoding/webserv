@@ -67,8 +67,6 @@ private:
 	/* Post Method *******************************************************************************/
 	void				handlePost();
 	void				isFilePost();
-	int					handleMultipartForm(const string &path);
-	int					handleEncodedForm(const string &path);
 	int					isDirectoryPost();
 	string				findFileName();
 	string				extractName();

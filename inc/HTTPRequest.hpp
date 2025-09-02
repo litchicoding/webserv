@@ -10,6 +10,7 @@ class HTTPRequest
 private:
 	string						_method;
 	string						_URI;
+	string						_RedirectURI;
 	string						_version;
 	size_t						_expected_body_len;
 	bool						_headers_ended;
@@ -17,6 +18,7 @@ private:
 	bool						_chunked;
 	vector<char>				_body;
 	map<string, string>			_headers;
+
 
 public:
 	HTTPRequest();
@@ -37,11 +39,15 @@ public:
 	bool						areHeadersEnded() const { return _headers_ended; }
 	size_t						getExpectedBodyLen() const { return _expected_body_len; }
 	size_t						getBodyLen() const { return _body.size(); }
-	const string&				getMethod() const { return _method; }
+	string&						getMethod() { return _method; }
+	string&						getRedirectURI() { return _RedirectURI; }
 	string&						getURI() { return _URI; }
 	const string&				getVersion() const { return _version; }
 	const map<string, string>&	getHeaders() const { return _headers; }
 	const vector<char>&			getBody() const { return _body; }
+	void						setURI(const string& URI);
+	void						setRedirectURI(const string& URI);
+	void						setCode(int num);
 };
 
 /* Operator Overload *****************************************************************************/

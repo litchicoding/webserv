@@ -119,7 +119,7 @@ int	Client::processRequest()
 		else
 			_request.code = 501;
 	}
-	buildResponse(_request.code);
+	// buildResponse(_request.code);
 	return (OK);
 }
 
@@ -178,10 +178,16 @@ int	Client::isRequestWellChunked(const map<string, string> &headers)
 {
 	map<string, string>::const_iterator transfer;
 	map<string, string>::const_iterator content_len;
+	map<string, string>::const_iterator HostIt;
+
 	int									code = 0;
 
+	HostIt = headers.find("Host");
 	transfer = headers.find("Transfer-Encoding");
 	content_len = headers.find("Content-Length");
+
+	if (HostIt == headers.end())
+		code = 400;
 	if (transfer != headers.end() && transfer->second != "chunked") // can be gzip etc CHECK RFC
 		code = 501;
 	else if (transfer != headers.end() && content_len != headers.end()) // both present
@@ -236,13 +242,13 @@ string Client::getMIME(string &URI)
 
 bool	Client::URI_Not_Printable(string& URI)
 {
-    for (size_t i = 0; i < URI.length(); i++)
-    {
-        char c = URI[i];
-        if (!(c == 95 ||
-            (c >= 45 && c <= 57) ||
-            (c >= 64 && c <= 90) ||
-            (c >= 97 && c <= 122)))
+	for (size_t i = 0; i < URI.length(); i++)
+	{
+		char c = URI[i];
+		if (!(c == 95 ||
+			(c >= 45 && c <= 57) ||
+			(c >= 64 && c <= 90) ||
+			(c >= 97 && c <= 122)))
 		{
 			if (c == '%')
 			{
@@ -251,10 +257,10 @@ bool	Client::URI_Not_Printable(string& URI)
 				i += 2;
 				continue;
 			}
-            return true;
+			return true;
 		}
-    }
-    return false;
+	}
+	return false;
 }
 
 string Client::urlDecode(const string &str)
@@ -279,14 +285,14 @@ string Client::urlDecode(const string &str)
     return result;
 }
 
-size_t Client::parseChunked(std::string &buffer)
+size_t Client::parseChunked(string &buffer)
 {
     size_t total_processed = 0;
     
-    for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
+    for (size_t i = 0; i < min(buffer.size(), size_t(30)); ++i) {
         printf("%02X ", (unsigned char)buffer[i]);
     }
-    std::cout << std::endl;
+    cout << endl;
     
     while (true)
     {
@@ -294,22 +300,22 @@ size_t Client::parseChunked(std::string &buffer)
         
         // 1. Chercher la fin de la ligne de taille (CRLF)
         size_t endline = buffer.find("\r\n", pos);
-        if (endline == std::string::npos)
+        if (endline == string::npos)
         {
             break;
         }
 
         // 2. Extraire et convertir la taille hexadécimale
-        std::string hexsize = buffer.substr(pos, endline - pos);
+        string hexsize = buffer.substr(pos, endline - pos);
         
         // Nettoyer la ligne de taille (supprimer espaces)
         hexsize.erase(0, hexsize.find_first_not_of(" \t"));
         hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
         
         
-        std::istringstream iss(hexsize);
+        istringstream iss(hexsize);
         size_t chunk_size = 0;
-        iss >> std::hex >> chunk_size;
+        iss >> hex >> chunk_size;
 
         if (iss.fail()) {
             _request.code = 400;

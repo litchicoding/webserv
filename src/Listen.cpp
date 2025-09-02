@@ -155,16 +155,20 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	if (_clients[client_fd]->readData() != OK)
-		return (ERROR);
-	if (_clients[client_fd]->state != READ_END)
-		return (OK);
-	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
-	if (_clients[client_fd]->getServerConfig() == NULL) {
-		stop("no match for server configuration");
-		return (ERROR);
+	if (_clients[client_fd]->readData() == OK)
+	{
+		if (_clients[client_fd]->state != READ_END)
+			return (OK);
+		_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
+		if (_clients[client_fd]->getServerConfig() == NULL) {
+			stop("no match for server configuration");
+			
+			return (ERROR);
+			// probleme ici on doit renvoyer un code d'erreur 
+		}
 	}
 	_clients[client_fd]->processRequest();
+	_clients[client_fd]->buildResponse(_clients[client_fd]->getCode);
 	_clients[client_fd]->sendResponse();
 	_clients[client_fd]->resetRequest();
 	if (_clients[client_fd]->isKeepAliveConnection() == false)

@@ -5,6 +5,14 @@
 
 using namespace std;
 
+typedef struct	s_response
+{
+	string	body;
+	string	location;
+	string	content_type;
+	string	res;
+}				t_response;
+
 class HTTPRequest
 {
 private:
@@ -19,13 +27,12 @@ private:
 	vector<char>				_body;
 	map<string, string>			_headers;
 
-
 public:
 	HTTPRequest();
 	~HTTPRequest();
 
 	size_t						code;
-	string						response;
+	t_response					response;
 
 	/* Parsing ***********************************************************************************/
 	int							parsingHeaders(const string &data);

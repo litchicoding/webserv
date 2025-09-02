@@ -1,70 +1,47 @@
 #include "../inc/Client.hpp"
 
-void	Client::handleGet() {
+int	Client::handleGet() {
 	struct stat st;
 	string clean_path = urlDecode(_config->full_path);
-	if (access(clean_path.c_str(), F_OK) != 0) {
-		_request.code = 404;
-		return ;
-	}
+	if (access(clean_path.c_str(), F_OK) != 0)
+		return (404);
 	if (stat(clean_path.c_str(), &st) != 0)
-		return (handleError(500));
+		return (500);
 	if (S_ISREG(st.st_mode))
-		handleFileRequest();
+		return (handleFileRequest());
 	else if (S_ISDIR(st.st_mode))
-		handleDirectoryRequest();
+		return (handleDirectoryRequest());
 	else
-	{
-		return (handleError(403));
-	}
+		return (403);
 }
 
-void	Client::handleFileRequest()
+int	Client::handleFileRequest()
 {
 	string clean_path = urlDecode(_config->full_path);
 	if (access(clean_path.c_str(), R_OK) != 0)
-	{
-		_request.code = 403;
-		return ;
-	}
+		return (403);
 	if (isCgi())
-	{
-		handleCGI();
-		return;
-	}
+		return (handleCGI());
 
 	std::ifstream	file(clean_path.c_str());
 	if (!file.is_open())
-	{
-		return (handleError(500));
-	}
+		return (500);
 
 	std::ostringstream	body;
 	body << file.rdbuf();
 	file.close();
-
-	ostringstream	response;
-	response << "HTTP/1.1 200 OK\r\n";
-	response << "Content-Type: " << getMIME(_config->full_path) << "\r\n";
-	response << "Content-Length: " << body.str().size() << "\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	response << body.str();
-	_request.response = response.str();
+	_request.response.body = body.str();
+	_request.response.content_type = getMIME(_config->full_path);
+	return (200);
 }
 
-void	Client::handleDirectoryRequest()
+int	Client::handleDirectoryRequest()
 {
 	string	URI = _config->full_path;
 	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
 		_request.setRedirectURI(URI + "/");
-		_request.code = 301;
-		return ;
+		return (301);
 	}
 	// Chercher un fichier index
 	std::string indexFile = findIndexFile();
@@ -72,17 +49,14 @@ void	Client::handleDirectoryRequest()
 		_config->full_path = indexFile;
 		return (handleFileRequest());
 	}
-		
 	// Si pas de fichier index, vérifier l'autoindex
-	if (_config->autoindex == 1)
-	{
-		return generateDirectoryListing();
-	}
+	if (_config->autoindex == AUTO_ON)
+		return (generateDirectoryListing());
 	else
-		return (handleError(403));
+		return (403);
 }
 
-std::string Client::findIndexFile()
+string Client::findIndexFile()
 {
 	struct stat st;
 	for (std::vector<std::string>::const_iterator it = _config->index.begin(); it != _config->index.end(); ++it)
@@ -99,7 +73,7 @@ std::string Client::findIndexFile()
 
 #include<dirent.h>
 
-void	Client::generateDirectoryListing()
+int	Client::generateDirectoryListing()
 {
 	ostringstream body;
 	string path = _config->full_path;
@@ -111,8 +85,7 @@ void	Client::generateDirectoryListing()
 
 	DIR *dir = opendir(path.c_str());
 	if (!dir)
-		return (handleError(500));
-	
+		return (500);
 	struct dirent *entry;
 	while ((entry = readdir(dir)) != NULL)
 	{
@@ -120,10 +93,8 @@ void	Client::generateDirectoryListing()
 		string name = entry->d_name;
 		if (name == ".")
 			continue ;
-
 		string fullPath = path + name;
 		string link = _request.getURI();
-
 		if (!link.empty() && link[link.size() - 1] != '/')
 			link += '/';
 		link += name;
@@ -135,20 +106,9 @@ void	Client::generateDirectoryListing()
 		body << "<li><a href=\"" << link << "\">" << name << "</a></li>\n";
 	}
 	if (closedir(dir) != OK)
-		return (handleError(500));
-
+		return (500);
 	body << "</ul>\n<hr>\n</body>\n</html>\n";
-
-	std::ostringstream response;
-	response << "HTTP/1.1 200 OK\r\n";
-	response << "Content-Type: text/html\r\n";
-	response << "Content-Length: " << body.str().size() << "\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	response << body.str();
-	_request.response = response.str();
+	_request.response.content_type = "text/html";
+	_request.response.body = body.str();
+	return (200);
 }

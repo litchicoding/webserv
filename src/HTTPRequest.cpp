@@ -80,7 +80,10 @@ bool	HTTPRequest::isBodyEnded()
 void	HTTPRequest::resetRequest()
 {
 	code = 0;
-	response.clear();
+	response.body.clear();
+	response.location.clear();
+	response.content_type.clear();
+	response.res.clear();
 	_method.clear();
 	_URI.clear();
 	_RedirectURI.clear();

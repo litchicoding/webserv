@@ -28,10 +28,10 @@ Client::~Client()
 
 void	Client::sendResponse()
 {
-	write(_client_fd, _request.response.c_str(), _request.response.size());
+	write(_client_fd, _request.response.res.c_str(), _request.response.res.size());
 	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << _client_fd << "] : " << RESET;
-	size_t pos = _request.response.find("\n");
-	cout << _request.response.substr(0, pos) << endl << endl;
+	size_t pos = _request.response.res.find("\n");
+	cout << _request.response.res.substr(0, pos) << endl << endl;
 }
 
 int	Client::readData()
@@ -111,11 +111,11 @@ int	Client::processRequest()
 		else
 			cout << "\e[34m]\e[0m" << endl;
 		if (method == "GET")
-			handleGet();
+			_request.code = handleGet();
 		else if (method == "POST")
-			handlePost();
+			_request.code = handlePost();
 		else if (method == "DELETE")
-			handleDelete();
+			_request.code = handleDelete();
 		else
 			_request.code = 501;
 	}
@@ -286,53 +286,34 @@ size_t Client::parseChunked(std::string &buffer)
     for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
         printf("%02X ", (unsigned char)buffer[i]);
     }
-    std::cout << std::endl;
-    
     while (true)
     {
         size_t pos = total_processed;
-        
         // 1. Chercher la fin de la ligne de taille (CRLF)
         size_t endline = buffer.find("\r\n", pos);
         if (endline == std::string::npos)
-        {
             break;
-        }
-
         // 2. Extraire et convertir la taille hexadécimale
         std::string hexsize = buffer.substr(pos, endline - pos);
-        
         // Nettoyer la ligne de taille (supprimer espaces)
         hexsize.erase(0, hexsize.find_first_not_of(" \t"));
         hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
-        
-        
         std::istringstream iss(hexsize);
         size_t chunk_size = 0;
         iss >> std::hex >> chunk_size;
-
         if (iss.fail()) {
             _request.code = 400;
             return ERROR;
         }
-        
-
         pos = endline + 2; // Position après le CRLF de la taille
-
         // 3. Vérifier si on a reçu tout le chunk + son CRLF final
         size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
         if (buffer.size() < needed_data)
-        {
             break;
-        }
-
         // 4. Traiter le chunk
-        if (chunk_size > 0) {
+        if (chunk_size > 0)
             _request.appendBodyData(buffer.c_str() + pos, chunk_size);
-        }
-        
         pos += chunk_size;
-
         // 5. Vérifier et skip le CRLF après le chunk
         if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
             if (pos + 2 <= buffer.size()) {
@@ -344,9 +325,7 @@ size_t Client::parseChunked(std::string &buffer)
             return ERROR;
         }
         pos += 2;
-
         total_processed = pos;
-
         // 6. Fin du dernier chunk
         if (chunk_size == 0)
         {
@@ -354,12 +333,10 @@ size_t Client::parseChunked(std::string &buffer)
             break;
         }
     }
-
     // 7. Supprimer les données traitées
     if (total_processed > 0) {
         buffer = buffer.substr(total_processed);
     }
-    
     return OK;
 }
 
@@ -379,71 +356,54 @@ void	Client::resetRequest()
 /*************************************************************************************************/
 /* Response Function *****************************************************************************/
 
+string	Client::getCodeMessage(int code)
+{
+	switch (code) {
+		case 200: return ("200 OK");
+		case 201: return ("201 Created");
+		case 204: return ("204 No Content");
+		case 301: return ("301 Moved Permanently");
+		case 400: return ("400 Bad Request");
+		case 403: return ("403 Forbidden");
+		case 404: return ("404 Not Found");
+		case 405: return ("405 Method Not Allowed");
+		case 409: return ("409 Conflict");
+		case 413: return ("413 Playload Too Large");
+		case 415: return ("415 Unsupported Media Type");
+		case 500: return ("500 Internal Server Error");
+		case 501: return ("501 Not Implemented");
+		case 505: return ("505 HTTP Version Not Supported");
+	}
+	return ("");
+}
+
 void	Client::buildResponse(int code)
 {
+	ostringstream	response;
+
 	if (code == 0)
 		return ;
 	else if (code >= 400 && code <= 600)
 		handleError(code);
-	else if (code == 301) {
-		string redirectUrl = _request.getRedirectURI();
-		sendRedirect(redirectUrl);
+	else if (code == 301)
+		_request.response.location = _request.getRedirectURI();
+
+	response << "HTTP/1.1 " << getCodeMessage(code) << "\r\n";
+	if (!_request.response.body.empty()) {
+		response << "Content-Type: " << _request.response.content_type << "\r\n";
+		response << "Content-Length: " << _request.response.body.size() << "\r\n";
 	}
-	else
-		return ;
-}
-
-
-void	Client::sendRedirect(const string &URI)
-{
-	ostringstream	response;
-
-	response << "HTTP/1.1 301 Moved Permanently" << "\r\n";
-	response << "Location: " << URI << "\r\n";
+	if (code == 301 || _request.getMethod() == "POST")
+		response << "Location: " << _request.response.location << "\r\n";
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
 	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
 		response << "Connection: keep-alive\r\n";
 	else
 		response << "Connection: close\r\n";
-	response << "Content-Length: 0\r\n";
 	response << "\r\n";
-	_request.response = response.str();
-}
-
-static void	getErrorMessage(int code, string &message)
-{
-	switch (code) {
-		case 400:
-			message = "400 Bad Request";
-			break;
-		case 403:
-  			message = "403 Forbidden";
-			break;
-		case 404:
-			message = "404 Not Found";
-			break;
-		case 405:
-			message = "405 Method Not Allowed";
-			break;
-		case 409:
-			message = "409 Conflict";
-			break;		
-		case 413:
-			message = "413 Playload Too Large";
-			break;
-		case 415:
-			message = "415 Unsupported Media Type";
-			break;
-		case 500:
-			message = "500 Internal Server Error";
-			break;
-		case 501:
-			message = "501 Not Implemented";
-			break;
-		case 505:
-			message = "505 HTTP Version Not Supported";
-			break;
-	}
+	if (!_request.response.body.empty())
+		response << _request.response.body;
+	_request.response.res = response.str();
 }
 
 void	Client::handleError(int code)
@@ -452,7 +412,7 @@ void	Client::handleError(int code)
 	ostringstream	response, body;
 	ifstream		error_file;
 
-	getErrorMessage(code, message);
+	message = getCodeMessage(code);
 	map<int, string>::iterator it = _config->error_page.find(code);
 	if (it == _config->error_page.end() || it->second.empty())
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
@@ -465,17 +425,8 @@ void	Client::handleError(int code)
 			error_file.close();
 		}
 	}
-	response << "HTTP/1.1 " << message << "\r\n";
-	response << "Content-Type: text/html\r\n";
-	response << "Content-Length: " << body.str().size() << "\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	response << body.str();
-	_request.response = response.str();
+	_request.response.content_type = "text/html";
+	_request.response.body = body.str();
 }
 
 /*************************************************************************************************/

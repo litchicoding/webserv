@@ -48,30 +48,33 @@ private:
 
 	/* Response Function *************************************************************************/
 	void				buildResponse(int code);
+	string				getCodeMessage(int code);
 	void				handleError(int code);
-	void				sendRedirect(const string &URI);
 	
 	/* Delete Method *****************************************************************************/
-	void				handleDelete();
-	void				isFileDelete();
-	void				isDirectoryDelete();
+	int					handleDelete();
+	int					isFileDelete();
+	int					isDirectoryDelete();
 	int					delete_all_folder_content(string URI);
 	
 	/* Get Method ********************************************************************************/
-	void				handleGet();
-	void				handleFileRequest();
-	void				handleDirectoryRequest();
+	int					handleGet();
+	int					handleFileRequest();
+	int					handleDirectoryRequest();
 	string				findIndexFile();
-	void				generateDirectoryListing();
+	int					generateDirectoryListing();
 
 	/* Post Method *******************************************************************************/
-	void				handlePost();
+	int					handlePost();
 	void				isFilePost();
 	int					isDirectoryPost();
+	int					handleMultipartForm(const map<string, string>::const_iterator &header,
+											const string &path);
+	int					handleText(const string &path);
 	string				findFileName();
 	string				extractName();
-	void				uploadFile(const string &filename, const string &boundary);
-	void				saveData(const string &root,  const string &boundary);
+	int					uploadFile(const string &filename, const string &boundary);
+	int					saveData(const string &root,  const string &boundary);
 	string				searchBoundary(const string &arg);
 	int					isValidPostRequest(const string &path);
 
@@ -80,8 +83,8 @@ private:
 	bool				isQueryStringValid();
 	bool				isValid();
 	char**				buildCgiEnv();
-	void				handleCGI();
-	void				buildHttpResponseFromCgiOutput(const string& cgiOutput);
+	int					handleCGI();
+	int					buildHttpResponseFromCgiOutput(const string& cgiOutput);
 
 public:
 	/* Setters ************************************************************************************/

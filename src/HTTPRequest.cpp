@@ -46,19 +46,18 @@ int	HTTPRequest::parsingHeaders(const string &data)
 			value.erase(value.find_last_not_of(" \t\r\n") + 1);
 			if (key.empty() || value.empty()) {
 				code = 400;
-				return (ERROR);
+				return (OK);
 			}
 			cout << BLUE << key << RESET << endl;
 			// Doublon detected
 			if (critical_headers.find(key) != critical_headers.end())
 			{
 				cout << RED << key << RESET << endl;
-				cout << "AAAAAAAAAAAAAAAAAA\n";
 				if (headers_seen.find(key) != headers_seen.end())
 				{
 					cout << "ABBBBBBBBBBBBBBBBBBBBBBB\n";
 					code = 400;
-					return (ERROR);
+					return (OK);
 				}
 				headers_seen.insert(key);
 			}

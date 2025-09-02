@@ -23,7 +23,6 @@ public:
 	int					state;
 	int					readData();
 	int					processRequest();
-	void				buildResponse(int code);
 	void				sendResponse();
 	void				resetRequest();
 	
@@ -48,6 +47,7 @@ private:
 	string				urlDecode(const string &str);
 
 	/* Response Function *************************************************************************/
+	void				buildResponse(int code);
 	string				getCodeMessage(int code);
 	void				handleError(int code);
 	

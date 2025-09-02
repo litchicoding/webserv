@@ -26,7 +26,6 @@ int	HTTPRequest::parsingHeaders(const string &data)
 	set<string>		headers_seen;
 	set<string>		critical_headers;
 
-	critical_headers.insert("Host");
 	critical_headers.insert("Content-Length");
 	critical_headers.insert("Transfer-Encoding");
 	critical_headers.insert("Authorization");
@@ -48,14 +47,11 @@ int	HTTPRequest::parsingHeaders(const string &data)
 				code = 400;
 				return (OK);
 			}
-			cout << BLUE << key << RESET << endl;
 			// Doublon detected
 			if (critical_headers.find(key) != critical_headers.end())
 			{
-				cout << RED << key << RESET << endl;
 				if (headers_seen.find(key) != headers_seen.end())
 				{
-					cout << "ABBBBBBBBBBBBBBBBBBBBBBB\n";
 					code = 400;
 					return (OK);
 				}

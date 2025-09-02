@@ -1,65 +1,82 @@
 #include "../inc/Client.hpp"
 
-void	Client::handlePost()
+int	Client::handlePost()
 {
-	string clean_path, filename, message, boundary, URI;
+	string clean_path, message, URI;
 	map<string, string>::const_iterator header;
 	ostringstream response;
 	
 	clean_path = urlDecode(_config->full_path);
 	if (isValidPostRequest(clean_path) != OK)
-		return ;
+		return (_request.code);
+	if (isCgi())
+		return (handleCGI());
 	/*** 1. Vérifications: ***/
 	// Content-Type= multipart/form-data
 	map<string, string>	headerMap = _request.getHeaders();
 	header = headerMap.find("Content-Type");
-	if (header == headerMap.end()) {
-		_request.code = 400;
-		return ;
-	}
-	else if (header->second.find("multipart/form-data") == string::npos) {
-		_request.code = 415;
-		return ;
-	}
+	if (header == headerMap.end() || header->second.empty())
+		return (400);
+	else if (header->second.find("multipart/form-data") != string::npos)
+		return (handleMultipartForm(header, clean_path));
+	else if (header->second.find("text/plain") != string::npos)
+		return (handleText(clean_path));
+	else
+		return (415);
+}
 
-	// Boundary is here and correct
+int	Client::handleMultipartForm(const map<string, string>::const_iterator &header, const string &path)
+{
+	string filename, boundary;
+	
 	boundary = searchBoundary(header->second);
 	string	body(_request.getBody().begin(), _request.getBody().end());
-	if (boundary.size() <= 0 || body.find(boundary) == string::npos) {
-		_request.code = 400;
-		return ;
-	}
-	/*** 2. Parsing: ***/
-	// Lire boundary et découper le body.
+	if (boundary.size() <= 0 || body.find(boundary) == string::npos)
+		return (400);
 	// Cas 1 : header-body = filename -> upload de fichier
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
-	if (filename.size() > 0)
-		uploadFile(clean_path + "/" + filename, boundary);
+	if (filename.size() > 0) {
+		if (uploadFile(path + "/" + filename, boundary) != OK)
+			return (500);
+	}
 	else {
 		filename = extractName() + ".txt";
-		saveData(clean_path + "/" + filename, boundary);
+		if (saveData(path + "/" + filename, boundary) != OK)
+			return (500);
 	}
-	/*** 3.Response HTTP ***/
-	URI = _request.getURI();
-	message = "File creation succeeded\n";
-	response << "HTTP/1.1 201 Created\r\n";
-	response << "Location: " << URI;
-	if (!filename.empty())
-		response << ( (URI[URI.size() - 1] == '/') ? "" : "/" ) << filename + "\r\n";
-	response << "Content-Type: text/plain\r\n";
-	response << "Content-Length: " << message.size() << "\r\n";
-	header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	response << message;
-	_request.response = response.str();
+	filename = path + "/" + filename;
+	_request.response.body = "File creation succeeded. Location : " + filename + "\n";
+	_request.response.content_type = "text/plain";
+	_request.response.location = _request.getURI() + "/" + filename;
+	return (201);
 }
 
-void	Client::saveData(const string &root, const string &boundary)
+int	Client::handleText(const string &path)
+{
+	ostringstream oss;
+	string filename;
+	static int count = 0;
+
+	oss << ++count;
+	filename = path + "/upload_" + oss.str() + ".txt";
+	ofstream file(filename.c_str(), ofstream::out | ofstream::binary);
+	if (!file.is_open())
+		return (500);
+	const vector<char> &body = _request.getBody();
+	for (size_t i = 0; i < _request.getBodyLen(); i++)
+	{
+		file.write(&body[i], 1);
+	}
+	file.close();
+	_request.response.body = "File creation succeeded. Location : " + filename + "\n";
+	_request.response.body = "File creation succeeded\n";
+	_request.response.content_type = "text/plain";
+	_request.response.location = filename;
+	return (201);
+}
+
+int	Client::saveData(const string &path, const string &boundary)
 {
 	size_t	pos, start, end;
 	string	key, value, target;
@@ -67,11 +84,9 @@ void	Client::saveData(const string &root, const string &boundary)
 	pos = 0;
 	target = "name=\"";
 	string	body(_request.getBody().begin(), _request.getBody().end());
-	ofstream file(root.c_str(), ofstream::out);
-	if (!file.is_open()) {
-		_request.code = 500;
-		return ;
-	}
+	ofstream file(path.c_str(), ofstream::out | ofstream::binary);
+	if (!file.is_open())
+		return (ERROR);
 	while (true)
 	{
 		// header = key
@@ -99,9 +114,10 @@ void	Client::saveData(const string &root, const string &boundary)
 		file << key + " = " + value;
 	}
 	file.close();
+	return (OK);
 }
 
-void	Client::uploadFile(const string &filename, const string &boundary)
+int	Client::uploadFile(const string &filename, const string &boundary)
 {
 	const vector<char>&	body_original = _request.getBody();
 	string		body(body_original.begin(), body_original.end());
@@ -110,10 +126,8 @@ void	Client::uploadFile(const string &filename, const string &boundary)
 	size_t		pos, start, end;
 
 	file.open(filename.c_str(), ofstream::out | ofstream::binary);
-	if (!file.is_open()) {
-		_request.code = 500;
-		return ;
-	}
+	if (!file.is_open())
+		return (ERROR);
 	start_boundary = "--" + boundary;
 	end_boundary = "--" + boundary + "--";
 	pos = 0;
@@ -142,6 +156,7 @@ void	Client::uploadFile(const string &filename, const string &boundary)
 		pos = end + 2 + boundary.length();
 	}
 	file.close();
+	return (OK);
 }
 
 string	Client::searchBoundary(const string &arg)
@@ -195,7 +210,6 @@ string	Client::extractName()
 	if (end == string::npos)
 		return ("");
 	end -= 2;
-	cout << YELLOW << body[end] << endl;
 	filename = body.substr(start, end - start);
 	return (filename);
 }
@@ -213,8 +227,8 @@ int    Client::isDirectoryPost()
 	if (!indexFile.empty())
 	{
 	    _request.setURI(indexFile);
-		if (isCgi())
-			handleCGI();
+		// if (isCgi())
+		// 	handleCGI();
 		// else
 		// 	_request.setCode(403); POURQUOI 403 ????????????????????????????
 	    return (OK);
@@ -243,10 +257,10 @@ int	Client::isValidPostRequest(const string &path)
 	}
 	if (S_ISREG(st.st_mode))
 	{
-		if (isCgi()) {
-			handleCGI();
-			return (OK);
-		}
+		// if (isCgi()) {
+		// 	handleCGI();
+		// 	return (OK);
+		// }
 		// _request.code = 403;
 		// return (ERROR); // POURQUOI RENVOYER 403 ?????????? C'EST PAS UNE ERREUR DE PAS ETRE UN CGI SI ?????????
 		return (OK);

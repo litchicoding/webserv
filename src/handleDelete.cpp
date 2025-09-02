@@ -1,103 +1,45 @@
 #include "../inc/Client.hpp"
 
-
-void	Client::handleDelete()\
+int	Client::handleDelete()
 {
 	struct stat st;
 	string clean_path = urlDecode(_config->full_path);
-	if (access(clean_path.c_str(), F_OK) != 0) {
-		_request.code = 404;
-		return ;
-	}
+	if (access(clean_path.c_str(), F_OK) != 0)
+		return (404);
 	if (stat(clean_path.c_str(), &st) != 0)
-	{
-		_request.code = 500;
-		return ;
-	}
+		return (500);
 	if (access(clean_path.c_str(), W_OK) != 0)
-		_request.code = 403;
+		return (403);
 	if (S_ISREG(st.st_mode))
 		return (isFileDelete());
 	else if (S_ISDIR(st.st_mode))
 		return (isDirectoryDelete());
 	else
-	{
-		std::cout << RED "Error handleDelete() : Not a regular file or directory: " << _request.getURI() << RESET << std::endl;
-		_request.code = 403;
-		return ;
-	}
+		return (403);
 }
 
-void	Client::isFileDelete()
+int	Client::isFileDelete()
 {
-	// if(isCgiScript(_URI) == OK)
-	//	;
 	string clean_path = urlDecode(_config->full_path);
 	if (std::remove(clean_path.c_str()) != OK)
-	{
-		_request.setCode(500);
-		return ;
-	}
-	
-	ostringstream	response;
-	response << "HTTP/1.1 204 No Content\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	_request.response = response.str();
+		return (500);
+	return (204);
 }
 
-void	Client::isDirectoryDelete()
+int	Client::isDirectoryDelete()
 {
 	string URI = _request.getURI();
 	if (URI.empty() || URI[URI.size() - 1] != '/')
-	{
-		_request.setCode(409);
-		return ;
-	}
-
-	// if(isCgiScript(_URI) == OK)
-	// {
-	// 	std::string indexFile = findIndexFile();
-	// 	if (!indexFile.empty()) {
-	// 		std::cout << GREEN "Index file found: " << indexFile << RESET << std::endl;
-	// 		_config->full_path = indexFile;
-	// 		// CGI à faire ici
-	// 	}
-	// 	else
-	// 		return (handleError(403));
-	// }
-
+		return (409);
 	string clean_path = urlDecode(_config->full_path);
-	if (delete_all_folder_content(clean_path) != OK)
-	{
+	if (delete_all_folder_content(clean_path) != OK) {
 		if (access(clean_path.c_str(), W_OK) != OK)
-		{
-			_request.setCode(403);
-			return ;
-		}
-		_request.setCode(500);
-		return ;
+			return (403);
+		return (500);
 	}
-
-	if (std::remove(clean_path.c_str()) != OK)
-	{
-		_request.setCode(500);
-		return ;
-	}
-
-	ostringstream	response;
-	response << "HTTP/1.1 204 No Content\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << "\r\n";
-	_request.response = response.str();
+	if (remove(clean_path.c_str()) != OK)
+		return (500);
+	return (204);
 }
 
 int Client::delete_all_folder_content(std::string dirPath)

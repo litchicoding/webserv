@@ -72,7 +72,6 @@ bool Client::isQueryStringValid()
 
         prev = c;
     }
-
     // La dernière paire doit contenir un '=' et ne pas finir par & ou =
     if (!hasEqual || prev == '&' || prev == '=')
         return false;
@@ -86,21 +85,20 @@ bool Client::isValid()
 	string path =_config->full_path;
 	if (access(path.c_str(), F_OK) != 0)
 	{
-		handleError(404);
+		_request.code = 404;
 		return false;
 	}
 	
 	if (access(path.c_str(), R_OK) != 0)
 	{
-		handleError(403);
+		_request.code = 403;
 		return false;
 	}
 	if (!isQueryStringValid())
 	{
-		handleError(400);
+		_request.code = 400;
 		return false;
 	}
-
 	return true;
 }
 
@@ -135,7 +133,7 @@ char** Client::buildCgiEnv()
 	return envp;
 }
 
-void Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
+int Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 {
 	size_t pos = cgiOutput.find("\r\n\r\n");
 	string headers, body;
@@ -163,26 +161,17 @@ void Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 	}
 	else
 		body = cgiOutput;
-
-	ostringstream response;
-	response << "HTTP/1.1 " << statusCode << " OK\r\n";
-	response << "Content-Type: " << contentType << "\r\n";
-	response << "Content-Length: " << body.size() << "\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
-		response << "Connection: close\r\n";
-	response << body;
-	_request.response = response.str();
+	_request.response.content_type = contentType;
+	_request.response.body = body;
+	return (statusCode);
 }
 
 
-void Client::handleCGI()
+int Client::handleCGI()
 {
 
 	if (!isValid())
-		return;
+		return (_request.code);
 	
 	char **envp = buildCgiEnv();
 
@@ -213,17 +202,11 @@ void Client::handleCGI()
 	int responsePipe[2]; // ce que le script renvoie au serveur
 
 	if (pipe(requestPipe) == -1 || pipe(responsePipe) == -1)
-	{
-		handleError(500);
-		return;
-	}
+		return (500);
 
 	pid_t pid = fork();
 	if (pid < 0)
-	{
-		handleError(500);
-		return;
-	}
+		return (500);
 	
 	if (pid == 0)
 	{
@@ -241,11 +224,13 @@ void Client::handleCGI()
 			cerr << interpreter.c_str() << endl;
 			if (execve(interpreter.c_str(), argv, envp) == -1)
 				perror("execve");
+			return (500);
 		}
 		else
 		{
 			if (execve(path.c_str(), argv, envp) == -1)
 				perror("execve");
+			return (500);
 		}
 	}
 	
@@ -268,13 +253,11 @@ void Client::handleCGI()
 	int status;
 	waitpid(pid, &status, 0);
 
-	buildHttpResponseFromCgiOutput(cgiOutput);
-
 	for (size_t i = 0; argv[i]; ++i)
 		free(argv[i]);
 
 	for (size_t i = 0; envp[i]; ++i)
         free(envp[i]);
     delete[] envp;
+	return (buildHttpResponseFromCgiOutput(cgiOutput));
 }
-

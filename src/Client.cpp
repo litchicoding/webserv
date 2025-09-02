@@ -34,7 +34,7 @@ void	Client::sendResponse()
 	cout << _request.response.substr(0, pos) << endl << endl;
 }
 
-int	Client::readData(int epoll_fd)
+int	Client::readData()
 {
 	char	buffer[8192];
 	ssize_t	bytes_read;
@@ -51,45 +51,65 @@ int	Client::readData(int epoll_fd)
 	return (processBuffer());
 }
 
-int	Client::processBuffer()
+int Client::processBuffer()
 {
-	if (state == READ_HEADERS) {
-		size_t	pos = _buffer.find("\r\n\r\n");
-		if (pos != string::npos) {
-			string	headers = _buffer.substr(0, pos);
-			_request.parsingHeaders(headers);
-			_buffer = _buffer.substr(pos + 4);
-			state = READ_BODY;
-		}
+    // Traitement des headers (une seule fois)
+    if (state == READ_HEADERS) {
+        size_t pos = _buffer.find("\r\n\r\n");
+        if (pos != string::npos) {
+            string headers = _buffer.substr(0, pos);
+            if (_request.parsingHeaders(headers) != OK)
+                return (ERROR);
+            _buffer = _buffer.substr(pos + 4);
+            state = READ_BODY;
+        }
+        else {
+            // Pas encore tous les headers, on attend plus de données
+            return (OK);
+        }
+    }
+    // Traitement du body (peut être appelé plusieurs fois)
+    if (state == READ_BODY) {
+        if (_request.isChunked() == true) {
+            // Pour les chunks, on traite autant qu'on peut à chaque fois
+            if (!_buffer.empty()) {
+                if (parseChunked(_buffer) == static_cast<size_t>(ERROR)) {
+                    return ERROR;
+                }
+            }
+            // Si parseChunked a tout traité et mis state=READ_END, c'est fini
+            // Sinon on attend plus de données dans le prochain readData()
+        }
+        else if (!_buffer.empty()) {
+            // Body classique avec Content-Length
+            size_t remaining_len = _request.getExpectedBodyLen() - _request.getBodyLen();
+            size_t to_copy = min(_buffer.length(), remaining_len);
+            _request.appendBodyData(_buffer.c_str(), to_copy);
+            _buffer = _buffer.substr(to_copy);
+            
+            // Vérifier si on a tout reçu
+            if (_request.getBodyLen() >= _request.getExpectedBodyLen()) {
+                state = READ_END;
+            }
+        }
 		else
-			return (ERROR); // error 400 ?
-	}
-	if (state == READ_BODY) {
-		// IMPLEMENT CHUNKED BODY
-		if (!_buffer.empty()) {
-			size_t	remaining_len = _request.getExpectedBodyLen() - _request.getBodyLen();
-			size_t	to_copy = min(_buffer.length(), remaining_len);
-			_request.appendBodyData(_buffer.c_str(), to_copy);
-			_buffer = _buffer.substr(to_copy);
-		}
-		if (_request.isBodyEnded() == true)
 			state = READ_END;
-	}
-	return (OK);
+    }
+    return (OK);
 }
 
 int	Client::processRequest()
 {
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
-	cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
-	cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
-	cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
-	if (_config)
-		cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
-	else
-		cout << "\e[34m]\e[0m" << endl;
 	if (isRequestWellFormedOptimized() == OK) {
+		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
+		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
+		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
+		if (_config)
+			cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
+		else
+			cout << "\e[34m]\e[0m" << endl;
 		if (method == "GET")
 			handleGet();
 		else if (method == "POST")
@@ -100,7 +120,7 @@ int	Client::processRequest()
 			_request.code = 501;
 	}
 	buildResponse(_request.code);
-	return (ERROR);
+	return (OK);
 }
 
 int	Client::isRequestWellFormedOptimized() {
@@ -109,6 +129,7 @@ int	Client::isRequestWellFormedOptimized() {
 	
 	URI = _request.getURI();
 	clean_URI = stripQueryString(URI);
+
 	// VALIDATION DE L'URI
 	if (URI.empty() || URI[0] != '/' || URI_Not_Printable(clean_URI)) {
 		_request.code = 400;
@@ -147,7 +168,9 @@ int	Client::isRequestWellFormedOptimized() {
 	}
 	if (isRequestWellChunked(_request.getHeaders()) != OK)
 		return (ERROR);
+
 	// HOST obligatoire en HTTP/1.1
+
 	return (OK);
 }
 
@@ -253,8 +276,91 @@ string Client::urlDecode(const string &str)
             result += str[i++];
         }
     }
-
     return result;
+}
+
+size_t Client::parseChunked(std::string &buffer)
+{
+    size_t total_processed = 0;
+    
+    for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
+        printf("%02X ", (unsigned char)buffer[i]);
+    }
+    std::cout << std::endl;
+    
+    while (true)
+    {
+        size_t pos = total_processed;
+        
+        // 1. Chercher la fin de la ligne de taille (CRLF)
+        size_t endline = buffer.find("\r\n", pos);
+        if (endline == std::string::npos)
+        {
+            break;
+        }
+
+        // 2. Extraire et convertir la taille hexadécimale
+        std::string hexsize = buffer.substr(pos, endline - pos);
+        
+        // Nettoyer la ligne de taille (supprimer espaces)
+        hexsize.erase(0, hexsize.find_first_not_of(" \t"));
+        hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
+        
+        
+        std::istringstream iss(hexsize);
+        size_t chunk_size = 0;
+        iss >> std::hex >> chunk_size;
+
+        if (iss.fail()) {
+            _request.code = 400;
+            return ERROR;
+        }
+        
+
+        pos = endline + 2; // Position après le CRLF de la taille
+
+        // 3. Vérifier si on a reçu tout le chunk + son CRLF final
+        size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
+        if (buffer.size() < needed_data)
+        {
+            break;
+        }
+
+        // 4. Traiter le chunk
+        if (chunk_size > 0) {
+            _request.appendBodyData(buffer.c_str() + pos, chunk_size);
+        }
+        
+        pos += chunk_size;
+
+        // 5. Vérifier et skip le CRLF après le chunk
+        if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
+            if (pos + 2 <= buffer.size()) {
+                for (int i = 0; i < 2; i++) {
+                    printf("%02X ", (unsigned char)buffer[pos + i]);
+                }
+            }
+            _request.code = 400;
+            return ERROR;
+        }
+        pos += 2;
+
+        total_processed = pos;
+
+        // 6. Fin du dernier chunk
+        if (chunk_size == 0)
+        {
+            state = READ_END;
+            break;
+        }
+    }
+
+    // 7. Supprimer les données traitées
+    if (total_processed > 0) {
+        buffer = buffer.substr(total_processed);
+    }
+    
+    return OK;
 }
 
 void	Client::resetRequest()
@@ -280,12 +386,11 @@ void	Client::buildResponse(int code)
 	else if (code >= 400 && code <= 600)
 		handleError(code);
 	else if (code == 301) {
-		string redirectUrl = _config->redirection.begin()->second;
+		string redirectUrl = _request.getRedirectURI();
 		sendRedirect(redirectUrl);
 	}
-	// else {
-
-	// }
+	else
+		return ;
 }
 
 
@@ -305,65 +410,82 @@ void	Client::sendRedirect(const string &URI)
 	_request.response = response.str();
 }
 
-static void	getErrorData(int code, string &message, string &error_path)
+static void	getErrorMessage(int code, string &message)
 {
 	switch (code) {
 		case 400:
 			message = "400 Bad Request";
-			error_path = "www/error_pages/400.html";
 			break;
 		case 403:
   			message = "403 Forbidden";
-			error_path = "www/error_pages/403.html";
 			break;
 		case 404:
 			message = "404 Not Found";
-			error_path = "www/error_pages/404.html";			
 			break;
 		case 405:
 			message = "405 Method Not Allowed";
-			error_path = "www/error_pages/405.html";			
 			break;
 		case 409:
 			message = "409 Conflict";
-			error_path = "www/error_pages/409.html";			
 			break;		
 		case 413:
 			message = "413 Playload Too Large";
-			error_path = "www/error_pages/413.html";			
 			break;
 		case 415:
 			message = "415 Unsupported Media Type";
-			error_path = "www/error_pages/415.html";			
 			break;
 		case 500:
 			message = "500 Internal Server Error";
-			error_path = "www/error_pages/500.html";			
 			break;
 		case 501:
 			message = "501 Not Implemented";
-			error_path = "www/error_pages/501.html";			
 			break;
 		case 505:
 			message = "505 HTTP Version Not Supported";
-			error_path = "www/error_pages/505.html";			
 			break;
 	}
 }
 
 void	Client::handleError(int code)
 {
-	string			message, error_path;
+	string			message;
 	ostringstream	response, body;
 	ifstream		error_file;
 
-	getErrorData(code, message, error_path);
-	error_file.open(error_path.c_str());
-	if (!error_file.is_open())
+	getErrorMessage(code, message);
+	map<int, string>::iterator it = _config->error_page.find(code);
+	// if (_config)
+	// {
+	// 	if (!_config->error_page.empty()) {
+	// 		for (map<int, string>::const_iterator it = _config->error_page.begin(); 
+    //     	it != _config->error_page.end(); ++it) {
+    //     	cout << GREEN << "Error Code: " << it->first 
+    //         	<< " -> Path: \"" << it->second << "\"" << RESET << endl;
+    // 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		cout << "VIDE VIDE VIDE" << endl;
+	// 	}
+	// }
+
+	if (it == _config->error_page.end() || it->second.empty())
+	{
+		// cout << YELLOW "Pas de errorpage, ou si mais vide" RESET << endl;
 		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
+	}
 	else {
-		body << error_file.rdbuf();
-		error_file.close();
+		string error_path = _config->root + "/" + it->second;
+		error_file.open(error_path.c_str());
+		if (!error_file.is_open()) {
+			body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
+		}
+		else
+		{
+			body << error_file.rdbuf();
+			error_file.close();
+		}
+		// cout << " Body = " << body << endl;
 	}
 	response << "HTTP/1.1 " << message << "\r\n";
 	response << "Content-Type: text/html\r\n";

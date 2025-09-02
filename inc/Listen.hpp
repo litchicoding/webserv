@@ -36,7 +36,7 @@ public:
 	bool					isListeningSocket(int fd);
 	void					stop(const std::string &msg);
 	struct sockaddr_in		createSockaddr(const char *ip, int port);
-	int						handleClientRequest(int client_fd, int epoll_fd, int listen_fd);
+	int						handleClientRequest(int client_fd, int listen_fd);
 	Server*					findServerConfig(const int &listen_fd);
 
 	/* Getters ************************************************************************************/

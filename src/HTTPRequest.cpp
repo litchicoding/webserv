@@ -83,6 +83,7 @@ void	HTTPRequest::resetRequest()
 	response.clear();
 	_method.clear();
 	_URI.clear();
+	_RedirectURI.clear();
 	_version.clear();
 	_expected_body_len = 0;
 	_headers_ended = false;
@@ -114,4 +115,21 @@ std::ostream&	operator<<(std::ostream &os, HTTPRequest &src)
 	}
 	os << endl;
 	return (os);
+}
+
+/* Setter *****************************************************************************/
+
+void	HTTPRequest::setURI(const string& URI)
+{
+	this->_URI = URI;
+}
+
+void	HTTPRequest::setCode(int num)
+{
+	this->code = num;
+}
+
+void	HTTPRequest::setRedirectURI(const string& URI)
+{
+	this->_RedirectURI = URI;
 }

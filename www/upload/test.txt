@@ -1,3 +1,8 @@
-Ceci est un fichier texte de test pour le serveur HTTP.
-Il permet de tester le Content-Type: text/plain
-Fin du fichier texte
+Coucou 42 !
+Webserv !
+Paris
+Marseille
+Bordeaux
+Lyon
+Grenoble
+...

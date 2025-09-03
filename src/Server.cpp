@@ -41,7 +41,7 @@ void	Server::defaultConfiguration()
 		t_listen	listen;
 		listen.port = DEFAULT_PORT;
 		listen.ip = "0.0.0.0";
-		listen.address_port = "0.0.0.0:80";
+		listen.address_port = "0.0.0.0:8080";
 		_listen.push_back(listen);
 	}
 	if (_directives.autoindex == INVALID) _directives.autoindex = AUTO_OFF;

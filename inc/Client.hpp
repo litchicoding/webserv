@@ -39,6 +39,7 @@ private:
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
+	void				isRedirectionNeeded();
 	int	    			isRequestWellFormedOptimized();
 	int					isRequestWellChunked(const map<string, string> &headers);
 	size_t				parseChunked(string &data);

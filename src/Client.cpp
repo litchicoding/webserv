@@ -102,6 +102,7 @@ int	Client::processRequest()
 {
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
+	isRedirectionNeeded();
 	if (isRequestWellFormedOptimized() == OK && _request.code <= 0) {
 		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
@@ -204,6 +205,14 @@ int	Client::isRequestWellChunked(const map<string, string> &headers)
 		return (ERROR);
 	}
 	return (OK);
+}
+
+void	Client::isRedirectionNeeded()
+{
+	if (!_config || _config->redirection.empty())
+		return ;
+	// map<int, string>::iterator redir = _config->redirection.begin();
+	// if ()
 }
 
 string Client::getMIME(string &URI)

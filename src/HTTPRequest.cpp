@@ -39,7 +39,15 @@ int	HTTPRequest::parsingHeaders(const string &data)
 			value.erase(value.find_last_not_of(" \t\r\n") + 1);
 			if (key.empty() || value.empty()) {
 				code = 400;
-				return (ERROR);
+				return (OK);
+			}
+			if (key == "Content-Length" || key == "Transfer-Encodigin" || key == "Authorization")
+			{
+				if (_headers.find(key) != _headers.end())
+				{
+					code = 400;
+					return (OK);
+				}
 			}
 			// Store data in headers map
 			_headers[key] = value;

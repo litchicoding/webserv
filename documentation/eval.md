@@ -8,6 +8,7 @@
 
 ### Test avec configuration invalide
 #### Attendu : Erreur de parsing
+#### ERREUR : Ouvre le .conf par default au lieu de celui indiquer que le fichier soit valide ou non.
 ```bash
 echo "invalid.conf > invalid.conf
 ./webserv invalid.conf

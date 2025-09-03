@@ -28,7 +28,7 @@ int	Client::handlePost()
 int	Client::handleMultipartForm(const map<string, string>::const_iterator &header, const string &path)
 {
 	string filename, boundary;
-	
+
 	boundary = searchBoundary(header->second);
 	string	body(_request.getBody().begin(), _request.getBody().end());
 	if (boundary.size() <= 0 || body.find(boundary) == string::npos)
@@ -56,10 +56,16 @@ int	Client::handleText(const string &path)
 {
 	ostringstream oss;
 	string filename;
-	static int count = 0;
+	bool 	file_existed = false;
 
-	oss << ++count;
-	filename = path + "/upload_" + oss.str() + ".txt";
+	struct stat st;
+	if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+		filename = path + "/nonamefile.txt";
+	}
+	else
+		filename = path;
+	if (access(filename.c_str(), F_OK) == 0)
+		file_existed = true;
 	ofstream file(filename.c_str(), ofstream::out | ofstream::binary);
 	if (!file.is_open())
 		return (500);
@@ -69,11 +75,15 @@ int	Client::handleText(const string &path)
 		file.write(&body[i], 1);
 	}
 	file.close();
-	_request.response.body = "File creation succeeded. Location : " + filename + "\n";
-	_request.response.body = "File creation succeeded\n";
-	_request.response.content_type = "text/plain";
+	if (!file_existed)
+	{
+		_request.response.body = "File creation succeeded\n";
+		_request.response.content_type = "text/plain";
+		_request.response.location = filename;
+		return (201);
+	}
 	_request.response.location = filename;
-	return (201);
+	return (204);
 }
 
 int	Client::saveData(const string &path, const string &boundary)
@@ -167,11 +177,13 @@ string	Client::searchBoundary(const string &arg)
 	start = arg.find("boundary=");
 	if (start == string::npos)
 		return ("");
-	start = arg.find("=", start);
-	if (start == string::npos)
+	start += 9;
+	if (start >= arg.size())
 		return ("");
-	start++;
-	boundary = arg.substr(start, (arg.length() - 1) - start);
+
+	boundary = arg.substr(start);
+    boundary.erase(0, boundary.find_first_not_of(" \t\""));
+    boundary.erase(boundary.find_last_not_of(" \t\"") + 1);
 	return (boundary);
 }
 
@@ -221,24 +233,10 @@ int    Client::isDirectoryPost()
 	{
 		_request.setRedirectURI(URI + "/");
 		_request.code = 301;
-		return (OK);
-	}
-	std::string indexFile = findIndexFile();
-	if (!indexFile.empty())
-	{
-	    _request.setURI(indexFile);
-		// if (isCgi())
-		// 	handleCGI();
-		// else
-		// 	_request.setCode(403); POURQUOI 403 ????????????????????????????
-	    return (OK);
-	}
-	else {
-		cout << "BBBBBB\n";
-
-		_request.code = 403;
 		return (ERROR);
 	}
+	else 
+		return (OK);
 }
 
 int	Client::isValidPostRequest(const string &path)
@@ -258,15 +256,7 @@ int	Client::isValidPostRequest(const string &path)
 		return (ERROR);
 	}
 	if (S_ISREG(st.st_mode))
-	{
-		// if (isCgi()) {
-		// 	handleCGI();
-		// 	return (OK);
-		// }
-		// _request.code = 403;
-		// return (ERROR); // POURQUOI RENVOYER 403 ?????????? C'EST PAS UNE ERREUR DE PAS ETRE UN CGI SI ?????????
 		return (OK);
-	}
 	else if (S_ISDIR(st.st_mode))
 		return (isDirectoryPost());
 	else

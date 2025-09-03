@@ -168,9 +168,6 @@ int	Client::isRequestWellFormedOptimized() {
 	}
 	if (isRequestWellChunked(_request.getHeaders()) != OK)
 		return (ERROR);
-
-	// HOST obligatoire en HTTP/1.1
-
 	return (OK);
 }
 

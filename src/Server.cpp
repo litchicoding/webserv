@@ -167,7 +167,7 @@ int	Server::setOneDirective(const string &type, const vector<string> &arg, t_dir
 		setIndex(arg, *container);
 	else if (type == "allow_methods")
 		setMethods(arg, *container);
-	else if (type == "return")
+	else if (type == "return" && container->redirection.empty())
 		container->redirection.insert(make_pair(atoi(arg[0].c_str()), arg[1]));
 	else if (type == "error_page") {
 		vector<string>::const_iterator it = arg.begin();

@@ -219,7 +219,7 @@ int    Client::isDirectoryPost()
 	string URI = _request.getURI();
    	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
-		_request.setRedirectURI(URI + "/");
+		_request.setRedirectURI(_request.getURI() + "/");
 		_request.code = 301;
 		return (OK);
 	}

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luvallee <luvallee@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sdeutsch <sdeutsch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 13:41:57 by sdeutsch          #+#    #+#             */
-/*   Updated: 2025/09/01 19:40:51 by luvallee         ###   ########.fr       */
+/*   Updated: 2025/09/03 17:55:54 by sdeutsch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ bool Client::isCgi()
 bool Client::isQueryStringValid()
 {
     const std::string &qs = _config->query_string;
-    cout << qs << endl;
     if (qs.empty())
         return true;
 
@@ -221,7 +220,6 @@ int Client::handleCGI()
 		
 		if (!interpreter.empty())
 		{
-			cerr << interpreter.c_str() << endl;
 			if (execve(interpreter.c_str(), argv, envp) == -1)
 				perror("execve");
 			return (500);

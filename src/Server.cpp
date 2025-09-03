@@ -91,7 +91,15 @@ t_directives*	Server::searchLocationMatch(const string &request_uri)
             string root = result->root;
             if (!root.empty() && root[root.length() - 1] == '/')
                 root.erase(root.length() - 1);
-            result->full_path = root + uri;
+			
+			if (uri.find("/cgi-bin/") == 0)
+			{
+				string relative = uri.substr(string("/cgi-bin").length());
+				result->full_path = root + relative;
+			}
+			else
+            	result->full_path = root + uri;
+
             result->query_string = query_string;
             return result;
         }

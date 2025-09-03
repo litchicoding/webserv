@@ -234,8 +234,6 @@ int    Client::isDirectoryPost()
 	    return (OK);
 	}
 	else {
-		cout << "BBBBBB\n";
-
 		_request.code = 403;
 		return (ERROR);
 	}

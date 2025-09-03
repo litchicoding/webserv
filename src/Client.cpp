@@ -211,8 +211,7 @@ void	Client::isRedirectionNeeded()
 {
 	if (!_config || _config->redirection.empty())
 		return ;
-	// map<int, string>::iterator redir = _config->redirection.begin();
-	// if ()
+	if ()
 }
 
 string Client::getMIME(string &URI)

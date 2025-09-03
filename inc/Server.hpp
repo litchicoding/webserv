@@ -30,9 +30,9 @@ typedef struct	s_directives
 	string				root;
 	string				full_path;
 	string				query_string;
+	string				redirection; // <error_code, text ou url>
 	vector<string>		index;
 	vector<string>		methods;
-	map<int, string>	redirection; // <error_code, text ou url>
 	map<int, string>	error_page; // <error_code, error_uri_path>
 }				t_directives;
 

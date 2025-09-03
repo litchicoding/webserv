@@ -42,7 +42,7 @@ int	Client::readData()
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = recv(_client_fd, buffer, sizeof(buffer), 0);
 	if (bytes_read < 0) {
-		cout << RED "Error: readData(): while reading request." RESET << endl;
+		// cout << RED "Error: readData(): while reading request." RESET << endl;
 		return (ERROR);
 	}
 	if (bytes_read == 0)

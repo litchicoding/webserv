@@ -182,18 +182,21 @@ curl -v -X POST \
 
 ### Supprimer un fichier
 ```bash
-curl -v -X DELETE http://localhost:8080/file.txt
-curl -v -X DELETE http://localhost:8080/upload/file.txt
+curl -v -X DELETE http://localhost:8080/file.txt -> 405 method not allowed
+curl -v -X DELETE http://localhost:8080/upload/file.txt -> 204 no content
 ```
 
 ### Supprimer un fichier inexistant
 ```bash
-curl -v -X DELETE http://localhost:8080/upload/nonexistent.txt
+curl -v -X DELETE http://localhost:8080/upload/nonexistent.txt -> 404 not found
 ```
 
 ### Supprimer ressource protégée
 enlever des droits sur un fichier ou dossier, pas DELETE autorisée dans tel dossier etc
 
+```bash
+chmod 000 file.txt puis curl -v -X DELETE http://localhost:8080/upload/file.txt --> 403 forbidden
+```
 
 ## REDIRECTIONS
 
@@ -212,12 +215,16 @@ curl -v -L http://localhost:8080/redirect
 ### Client qui essayent de supprimer le meme fichier en meme temps
 #### Attendu : 404 si fichier déjà supprimé
 
+```bash
+curl -v -X DELETE http://localhost:8080/upload/file.txt & curl -v -X DELETE http://localhost:8080/upload/file.txt -> 404 not found pour le deuxieme 
+```
+
 ## ERROR PAGES
 
 ### Page 404, 500, 403, 413 custom
 ```bash
-curl -v http://localhost:8080/nonexistent-page
-curl -v http://localhost:8080/not-allowed-page
+curl -v http://localhost:8080/nonexistent-page -> 404 not found
+curl -v http://localhost:8080/not-allowed-page -> 403 forbidden
 ```
 
 ## LISTING 
@@ -225,13 +232,13 @@ curl -v http://localhost:8080/not-allowed-page
 ### Autoindex on
 #### Attendu : Liste des fichiers presents
 ```bash
-curl -v http://localhost:8080/pages/
+curl -v http://localhost:8080/pages/ -> OK
 ```
 
 ### Autoindex off
 #### Attendu : 403 Forbidden
 ```bash
-curl -v http://localhost:8080/pages/
+curl -v http://localhost:8080/pages/ -> 403 access forbidden
 ```
 
 ## CGI

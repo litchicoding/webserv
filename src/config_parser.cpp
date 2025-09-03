@@ -63,12 +63,25 @@ static int	parse_server_block(vector<t_tokenConfig>::iterator &token, vector<Ser
 	return OK;
 }
 
+static bool isNameExtensionValid(const string &config_file, size_t len)
+{
+	size_t	delimiter;
+	
+	delimiter = config_file.find_last_of(".");
+	if (delimiter != string::npos) {
+		if (!config_file.compare(delimiter, len, ".conf") && config_file[len - 1] == 'f')
+			return (true);
+	}
+	cout << RED "Error: wrong name extension for the configuration file" RESET << endl;
+	return (false);
+}
+
 int	parse_config_file(string config_file, Listen &listenPorts)
 {
-	// TO DO -> check error in file name (extension etc) !!!
 	if (config_file.empty())
 		config_file = DEFAULT_CONFIG_FILE;
-
+	if (!isNameExtensionValid(config_file, config_file.length()))
+		return ERROR;
 	// open file
 	ifstream	file;
 

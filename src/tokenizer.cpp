@@ -63,10 +63,10 @@ static int	tokenize_location_line(string &line, size_t start, vector<t_tokenConf
 
 static bool	is_directive_line(const string &line, size_t start)
 {
-	string	directive[] = { "listen", "error_page", "client_max_body_size", "root", "autoindex", "index", "allow_methods", "return" };
+	string	directive[8] = { "listen", "error_page", "client_max_body_size", "root", "autoindex", "index", "allow_methods", "return" };
 	size_t	end = get_end_word_index(line, start) + 1;
 
-	for (size_t i = 0; i < directive->size() + 1; ++i)
+	for (size_t i = 0; i < directive->size() + 2; i++)
 	{
 		if (!line.compare(start, end - start, directive[i]))
 			return true;
@@ -104,7 +104,7 @@ static int	tokenize_directive_line(string &line, size_t start, vector<t_tokenCon
 	if (line[end] && line[end] == ';')
 		tokenList->push_back(create_token(";", SEMICOLON));
 	else
-		return parsing_error("tokenize_directive_line ", MISSING_ARG);
+		return parsing_error("configuration file ", MISSING_ARG);
 	return OK;
 }
 

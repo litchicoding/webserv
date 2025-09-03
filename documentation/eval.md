@@ -213,7 +213,7 @@ curl -v -L http://localhost:8080/redirect
 ### Client qui essayent de supprimer le meme fichier en meme temps
 #### Attendu : 404 si fichier déjà supprimé
 
-## ERROR PAGES
+## ERROR DIRECTIVES
 
 ### Page 404, 500, 403, 413 custom
 ```bash

@@ -17,6 +17,8 @@ int	Client::handlePost()
 	header = headerMap.find("Content-Type");
 	if (header == headerMap.end() || header->second.empty())
 		return (400);
+	else if (header->second.find("application/x-www-form-urlencoded") != string::npos)
+		return (handleCGI());
 	else if (header->second.find("multipart/form-data") != string::npos)
 		return (handleMultipartForm(header, clean_path));
 	else if (header->second.find("text/plain") != string::npos)
@@ -45,10 +47,10 @@ int	Client::handleMultipartForm(const map<string, string>::const_iterator &heade
 		if (saveData(path + "/" + filename, boundary) != OK)
 			return (500);
 	}
-	filename = path + "/" + filename;
+	filename = _request.getURI() + "/" + filename;
 	_request.response.body = "File creation succeeded. Location : " + filename + "\n";
 	_request.response.content_type = "text/plain";
-	_request.response.location = _request.getURI() + "/" + filename;
+	_request.response.location = filename;
 	return (201);
 }
 
@@ -231,7 +233,7 @@ int    Client::isDirectoryPost()
 	string URI = _request.getURI();
    	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
-		_request.setRedirectURI(URI + "/");
+		_request.setRedirectURI(_request.getURI() + "/");
 		_request.code = 301;
 		return (ERROR);
 	}

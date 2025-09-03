@@ -40,7 +40,7 @@ int	Client::handleDirectoryRequest()
 	string	URI = _config->full_path;
 	if (URI.empty() || URI[URI.size() - 1] != '/')
 	{
-		_request.setRedirectURI(URI + "/");
+		_request.setRedirectURI(_request.getURI() + "/");
 		return (301);
 	}
 	// Chercher un fichier index

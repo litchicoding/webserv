@@ -35,10 +35,10 @@ private:
 	HTTPRequest			_request;
 	string				_buffer;
 	bool				_keep_alive;
-	// string				_current_redirection;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
+	void				isRedirectionNeeded();
 	int	    			isRequestWellFormedOptimized();
 	int					isRequestWellChunked(const map<string, string> &headers);
 	size_t				parseChunked(string &data);

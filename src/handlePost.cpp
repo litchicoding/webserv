@@ -182,7 +182,6 @@ string	Client::searchBoundary(const string &arg)
 	start += 9;
 	if (start >= arg.size())
 		return ("");
-
 	boundary = arg.substr(start);
     boundary.erase(0, boundary.find_first_not_of(" \t\""));
     boundary.erase(boundary.find_last_not_of(" \t\"") + 1);

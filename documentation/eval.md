@@ -247,8 +247,8 @@ curl -v http://localhost:8080/pages/ -> 403 access forbidden
 ### Executer le script
 #### Attendu : HTML généré par le script
 ```bash
-curl -v http://localhost:8080/cgi-bin/form.php
-curl -v http://localhost:8080/cgi-bin/hello.py
+curl -v http://localhost:8080/cgi-bin/form.php -> 200 OK
+curl -v http://localhost:8080/cgi-bin/hello.py -> 200 OK
 ```
 
 ### CGI avec paramètres GET

@@ -122,8 +122,6 @@ int	Listen::update_connexion()
 		if (nfds < 0) {
 			// if (errno != EINTR)
 			// 	return (perror("epoll_wait"), ERROR);
-			// if (errno != EINTR)
-			// 	return (perror("epoll_wait"), ERROR);
 			continue ;
 		}
 		for (int i = 0; i < nfds; ++i)

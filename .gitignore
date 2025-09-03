@@ -6,3 +6,4 @@ webserv
 www/upload/*
 www/data/*
 big_file.txt
+test_webserv.sh

@@ -80,29 +80,29 @@ int Client::processBuffer()
             // Si parseChunked a tout traité et mis state=READ_END, c'est fini
             // Sinon on attend plus de données dans le prochain readData()
         }
-        else if (!_buffer.empty()) {
-            // Body classique avec Content-Length
-            size_t remaining_len = _request.getExpectedBodyLen() - _request.getBodyLen();
-            size_t to_copy = min(_buffer.length(), remaining_len);
-            _request.appendBodyData(_buffer.c_str(), to_copy);
-            _buffer = _buffer.substr(to_copy);
-            
-            // Vérifier si on a tout reçu
-            if (_request.getBodyLen() >= _request.getExpectedBodyLen()) {
-                state = READ_END;
-            }
-        }
+		else if (!_buffer.empty()) {
+			// Body classique avec Content-Length
+			size_t remaining_len = _request.getExpectedBodyLen() - _request.getBodyLen();
+			size_t to_copy = min(_buffer.length(), remaining_len);
+			_request.appendBodyData(_buffer.c_str(), to_copy);
+			_buffer = _buffer.substr(to_copy);
+			
+			// Vérifier si on a tout reçu
+			if (_request.getBodyLen() >= _request.getExpectedBodyLen()) {
+				state = READ_END;
+			}
+		}
 		else
 			state = READ_END;
-    }
-    return (OK);
+	}
+	return (OK);
 }
 
 int	Client::processRequest()
 {
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
-	if (isRequestWellFormedOptimized() == OK) {
+	if (isRequestWellFormedOptimized() == OK && _request.code <= 0) {
 		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
 		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
@@ -413,18 +413,23 @@ void	Client::handleError(int code)
 	ifstream		error_file;
 
 	message = getCodeMessage(code);
-	map<int, string>::iterator it = _config->error_page.find(code);
-	if (it == _config->error_page.end() || it->second.empty())
-		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
-	else {
-		error_file.open(it->second.c_str());
-		if (!error_file.is_open())
+	if (_config && !_config->error_page.empty())
+	{
+		map<int, string>::iterator it = _config->error_page.find(code);
+		if (it == _config->error_page.end() || it->second.empty())
 			body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 		else {
-			body << error_file.rdbuf();
-			error_file.close();
+			error_file.open(it->second.c_str());
+			if (!error_file.is_open())
+				body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
+			else {
+				body << error_file.rdbuf();
+				error_file.close();
+			}
 		}
 	}
+	else
+		body << "<html><body><h1>" << message << "</h1></body></html>" << endl;
 	_request.response.content_type = "text/html";
 	_request.response.body = body.str();
 }

@@ -313,11 +313,9 @@ void	Listen::checkClientTimeouts()
 
             send(client_fd, timeout_res.c_str(), timeout_res.size(), 0);
 
-			std::map<int, Client*>::iterator tmp = it;
 			++it;
 
             closeClientConnection(client_fd);
-           _clients.erase(tmp);
 
         }
         else

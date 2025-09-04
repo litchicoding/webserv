@@ -163,10 +163,6 @@ int	Listen::update_connexion()
 			{
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
-				if (isClientTimeOut(events[i].data.fd) == true) {
-					closeClientConnection(events[i].data.fd);
-					continue ;
-				}
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
 				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
 					closeClientConnection(events[i].data.fd);

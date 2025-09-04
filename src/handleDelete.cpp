@@ -69,7 +69,7 @@ int Client::delete_all_folder_content(std::string dirPath)
 				return ERROR;
 			}
 		}
-		cout << "exemple : " << fullpath.c_str() << endl;
+		// cout << "exemple : " << fullpath.c_str() << endl;
 		if (remove(fullpath.c_str()) != OK)
 		{
 			closedir(dir);

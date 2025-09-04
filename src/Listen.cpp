@@ -118,7 +118,7 @@ int	Listen::update_connexion()
 	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
-		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
+		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT_EPOLL));
 		if (nfds < 0) {
 			// if (errno != EINTR)
 			// 	return (perror("epoll_wait"), ERROR);
@@ -136,9 +136,13 @@ int	Listen::update_connexion()
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
 				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
 					closeClientConnection(events[i].data.fd);
+				if (_clients.find(events[i].data.fd) != _clients.end())
+					_clients[events[i].data.fd]->updateActivity();
 			}
 		}
+		checkClientTimeouts();
 	}
+
 	return OK;
 }
 
@@ -283,4 +287,42 @@ ostream&	operator<<(ostream &os, Listen &src)
 	}
 
 	return os;
+}
+
+void	Listen::checkClientTimeouts()
+{
+	time_t now = time(NULL);
+
+	std::map<int, Client*>::iterator it = _clients.begin();
+   	while (it != _clients.end())
+    {
+        Client *client = it->second;
+        int client_fd = it->first;
+
+        if (now - client->getLastActivity() > TIMEOUT)
+        {
+            std::cout << YELLOW << "Client " << client_fd
+                      << " déconnecté (timeout " << TIMEOUT << "s)" << RESET << std::endl;
+
+            std::string timeout_res =
+                "HTTP/1.1 408 Request Timeout\r\n"
+                "Content-Type: text/html\r\n"
+                "Content-Length: 54\r\n"
+                "Connection: close\r\n\r\n"
+                "<html><body><h1>408 Request Timeout</h1></body></html>";
+
+            send(client_fd, timeout_res.c_str(), timeout_res.size(), 0);
+
+			std::map<int, Client*>::iterator tmp = it;
+			++it;
+
+            closeClientConnection(client_fd);
+           _clients.erase(tmp);
+
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }

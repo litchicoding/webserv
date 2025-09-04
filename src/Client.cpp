@@ -14,6 +14,7 @@ Client::Client(int listen_fd, int epoll_fd)
 		return ;
 	}
 	add_fd_to_epoll(epoll_fd, _client_fd);
+	_last_activity = time(NULL);
 }
 
 Client::~Client()
@@ -48,6 +49,7 @@ int	Client::readData()
 	if (bytes_read == 0)
 		return (OK);
 	_buffer.append(buffer, bytes_read);
+	updateActivity();
 	return (processBuffer());
 }
 
@@ -447,4 +449,18 @@ void	Client::setConfig(const string &URI)
 		cout << ")" << RESET << endl;
 		return ;
 	}
+}
+
+/*************************************************************************************************/
+/* TIMEOUT ***************************************************************************************/
+
+void Client::updateActivity()
+{
+	_last_activity = time(NULL);
+	std::cout << "Client " << _client_fd << " activity updated at " << _last_activity << std::endl;
+}
+
+time_t	Client::getLastActivity() const
+{
+	return _last_activity;
 }

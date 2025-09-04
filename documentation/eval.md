@@ -247,8 +247,8 @@ curl -v http://localhost:8080/pages/ -> 403 access forbidden
 ### Executer le script
 #### Attendu : HTML généré par le script
 ```bash
-curl -v http://localhost:8080/cgi-bin/form.php
-curl -v http://localhost:8080/cgi-bin/hello.py
+curl -v http://localhost:8080/cgi-bin/form.php -> 200 OK
+curl -v http://localhost:8080/cgi-bin/hello.py -> 200 OK
 ```
 
 ### CGI avec recherche par extension 
@@ -259,12 +259,19 @@ curl -v http://localhost:8080/hello.py -> 200 OK
 
 ### CGI avec paramètres GET
 ```bash
-curl -v "http://localhost:8080/test.cgi?param1=value1&param2=value2"
+curl -v "http://localhost:8080/test.php?data=Bonjour%20a%20tous"  -> 200 OK 
+```
+
+### CGI avec paramètres GET en trop ou pas celui necessaire (renvoie une erreur que si le script check ca)
+```bash
+curl -v "http://localhost:8080/test_strict.php?data=Bonjour%20a%20tous&foo=bar" -> 400 bad request
+
+curl -v "http://localhost:8080/test_strict.php?data=Bonjour%20a%20tous" -> 200 OK
 ```
 
 ### CGI avec POST
 ```bash
-curl -v -X POST -d "input=test" http://localhost:8080/test.cgi
+curl -v -X POST -d "name=Jean" -d "email=jean@example.com" http://localhost:8080/process.php -> 200 OK
 ```
 
 ## PERFORMANCES ET NON-BLOQUANT

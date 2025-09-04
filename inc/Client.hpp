@@ -36,6 +36,7 @@ private:
 	string				_buffer;
 	bool				_keep_alive;
 	// string				_current_redirection;
+	time_t				_last_activity;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
@@ -97,6 +98,10 @@ public:
 	int					getListenFd() const { return _listen_fd; }
 	bool				isKeepAliveConnection() const { return _keep_alive; }
 	HTTPRequest&		getRequest() { return _request; }
+
+	/* TIMEOUT ************************************************************************************/
+	void 				updateActivity();
+	time_t				getLastActivity() const;
 };
 
 #endif

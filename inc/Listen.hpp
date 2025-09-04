@@ -47,6 +47,9 @@ public:
 	/* Setters ************************************************************************************/
 	void					setServerBlocks(const std::vector<Server> &serv_blocks);
 	void					addNewClient(int listen_fd, int epoll_fd);
+
+	/* TIMEOUT ************************************************************************************/
+	void					checkClientTimeouts();
 };
 
 /* Operator Overload ******************************************************************************/

@@ -4,10 +4,14 @@ int	Client::handleDelete()
 {
 	struct stat st;
 	string clean_path = urlDecode(_config->full_path);
+	cout << clean_path << endl;
 	if (access(clean_path.c_str(), F_OK) != 0)
 		return (404);
 	if (stat(clean_path.c_str(), &st) != 0)
+	{
+		cout << "aaaa\n";
 		return (500);
+	}
 	if (access(clean_path.c_str(), W_OK) != 0)
 		return (403);
 	if (S_ISREG(st.st_mode))
@@ -22,7 +26,11 @@ int	Client::isFileDelete()
 {
 	string clean_path = urlDecode(_config->full_path);
 	if (std::remove(clean_path.c_str()) != OK)
+	{
+		cout << "bbbbb\n";
+		cout << "Cleanpath = " << clean_path << endl;
 		return (500);
+	}
 	return (204);
 }
 

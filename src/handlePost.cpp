@@ -17,8 +17,8 @@ int	Client::handlePost()
 	header = headerMap.find("Content-Type");
 	if (header == headerMap.end() || header->second.empty())
 		return (400);
-	else if (header->second.find("application/x-www-form-urlencoded") != string::npos)
-		return (handleCGI());
+	// else if (header->second.find("application/x-www-form-urlencoded") != string::npos)
+	// 	return (handleCGI());
 	else if (header->second.find("multipart/form-data") != string::npos)
 		return (handleMultipartForm(header, clean_path));
 	else if (header->second.find("text/plain") != string::npos)
@@ -245,8 +245,23 @@ int	Client::isValidPostRequest(const string &path)
 	struct stat st;
 
 	if (access(path.c_str(), F_OK) != 0) {
-		_request.code = 404;
-		return (ERROR);
+		string parent = path.substr(0, path.find_last_of('/'));
+		if (parent.empty())
+		{
+			_request.code = 403;
+			return (ERROR);	
+		}
+		if (access(parent.c_str(), F_OK) != OK)
+		{
+			_request.code = 404;
+			return (ERROR);
+		}
+		if (access(parent.c_str(), W_OK) != OK)
+		{
+			_request.code = 403;
+			return (ERROR);
+		}
+		return (OK);
 	}
 	if (access(path.c_str(), W_OK) != 0) {
 		_request.code = 403;

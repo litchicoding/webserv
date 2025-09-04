@@ -118,12 +118,12 @@ curl -v -H "Range: bytes=999999999-" http://localhost:8080/test.txt
 ## UPLOAD
 
 ### POST simple
-#### Attendu : 201 Created + Location
+#### Attendu : 201 Created + Location = 415 BON
 ```bash
 curl -v -X POST -d "test data" http://localhost:8080/upload
 ```
 
-### POST avec Content-Type
+### POST avec Content-Type = 201/204 BON
 ```bash
 curl -v -X POST -H "Content-Type: text/plain" -d "test content" http://localhost:8080/upload
 ```
@@ -131,14 +131,14 @@ curl -v -X POST -H "Content-Type: text/plain" -d "test content" http://localhost
 -	Sans Boundary
 -	Pas de Content-Length = maybe 411
 
-### POST fichier
+### POST fichier 201/204 BON
 ```bash
 curl -v -X POST -F "file=@test.txt" http://localhost:8080/upload
 curl -v -X POST -F "file=@/images/image_1.jpg" http://localhost:8080/upload
 ```
 
 ### Chunked Trasnfer Encoding
-#### Attendu : 201 Created ou 200
+#### Attendu : 201 Created ou 200 = 415 Car urlencoded Sinon -> 204-201
 ```bash
 curl -v -X POST http://localhost:8888/upload \
      -H "Transfer-Encoding: chunked" \
@@ -160,7 +160,7 @@ EOF
 cat chunked_request.txt | nc localhost 8080
 ```
 
-### Test application/x-www-form-urlencoded
+### Test application/x-www-form-urlencoded = 200 OK
 ```bash
 curl -v -X POST \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -168,7 +168,7 @@ curl -v -X POST \
   http://localhost:8080/form-handler
 ```
 
-### Test multipart/form-data
+### Test multipart/form-data == 201/204
 ```bash
 curl -v -X POST \
   -F "name=John" \
@@ -181,18 +181,18 @@ curl -v -X POST \
 
 ## DELETE
 
-### Supprimer un fichier
+### Supprimer un fichier = 204 BON
 ```bash
 curl -v -X DELETE http://localhost:8080/file.txt
 curl -v -X DELETE http://localhost:8080/upload/file.txt
 ```
 
-### Supprimer un fichier inexistant
+### Supprimer un fichier inexistant = 404 BON
 ```bash
 curl -v -X DELETE http://localhost:8080/upload/nonexistent.txt
 ```
 
-### Supprimer ressource protégée
+### Supprimer ressource protégée = 403 BON
 enlever des droits sur un fichier ou dossier, pas DELETE autorisée dans tel dossier etc
 
 

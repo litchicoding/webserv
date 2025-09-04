@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luvallee <luvallee@student.42.fr>          +#+  +:+       +#+        */
+/*   By: knavarre <knavarre@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 13:41:57 by sdeutsch          #+#    #+#             */
-/*   Updated: 2025/09/01 19:40:51 by luvallee         ###   ########.fr       */
+/*   Updated: 2025/09/04 12:00:34 by knavarre         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,6 @@ int Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 
 int Client::handleCGI()
 {
-
 	if (!isValid())
 		return (_request.code);
 	

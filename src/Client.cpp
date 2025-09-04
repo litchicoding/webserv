@@ -4,7 +4,7 @@
 /* Constructor and Deconstructor *****************************************************************/
 
 Client::Client(int listen_fd, int epoll_fd)
-: state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(false)
+: last_activity(0), state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(true)
 {
 	cout << GREEN << "***   Client Connection   ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
@@ -49,7 +49,6 @@ int	Client::readData()
 	if (bytes_read == 0)
 		return (OK);
 	_buffer.append(buffer, bytes_read);
-	updateActivity();
 	return (processBuffer());
 }
 
@@ -104,7 +103,11 @@ int	Client::processRequest()
 {
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
-	if (isRequestWellFormedOptimized() == OK && _request.code <= 0) {
+	setConfig(_request.getURI());
+	if (_config == NULL)
+		_request.code = 500;
+	isRedirectionNeeded();
+	if (_request.code <= 0 && isRequestWellFormedOptimized() == OK) {
 		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
 		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
@@ -151,11 +154,6 @@ int	Client::isRequestWellFormedOptimized() {
 		return (ERROR);
 	}
 	// VALIDATION ROOT LOCATION AND DIRECTIVES
-	setConfig(URI);
-	if (_config == NULL)  {
-		_request.code = 500;
-		return (ERROR);
-	}
 	if (!_config->redirection.empty()) {
 		_request.code = 301;
 		return (ERROR);
@@ -206,6 +204,20 @@ int	Client::isRequestWellChunked(const map<string, string> &headers)
 		return (ERROR);
 	}
 	return (OK);
+}
+
+void	Client::isRedirectionNeeded()
+{
+	if (!_config || _config->redirection.empty())
+		return ;
+	map<int, string>::iterator redir = _config->redirection.begin();
+	int		code = redir->first;
+	string	data = redir->second;
+	_request.code = code;
+	if (code >= 300 && code <= 308)
+		_request.setRedirectURI(data);
+	else
+		_request.response.body = data;
 }
 
 string Client::getMIME(string &URI)
@@ -385,17 +397,15 @@ void	Client::buildResponse(int code)
 
 	if (code == 0)
 		return ;
-	else if (code >= 400 && code <= 600)
+	else if (code >= 400 && code < 600)
 		handleError(code);
-	else if (code == 301)
+	else if (code >= 301 && code <= 308)
 		_request.response.location = _request.getRedirectURI();
-
 	response << "HTTP/1.1 " << getCodeMessage(code) << "\r\n";
-	if (!_request.response.body.empty()) {
+	if (!_request.response.body.empty())
 		response << "Content-Type: " << _request.response.content_type << "\r\n";
-		response << "Content-Length: " << _request.response.body.size() << "\r\n";
-	}
-	if (code == 301 || _request.getMethod() == "POST")
+	response << "Content-Length: " << _request.response.body.size() << "\r\n";
+	if ((code >= 301 && code <= 308) || _request.getMethod() == "POST")
 		response << "Location: " << _request.response.location << "\r\n";
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
 	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
@@ -449,18 +459,4 @@ void	Client::setConfig(const string &URI)
 		cout << ")" << RESET << endl;
 		return ;
 	}
-}
-
-/*************************************************************************************************/
-/* TIMEOUT ***************************************************************************************/
-
-void Client::updateActivity()
-{
-	_last_activity = time(NULL);
-	std::cout << "Client " << _client_fd << " activity updated at " << _last_activity << std::endl;
-}
-
-time_t	Client::getLastActivity() const
-{
-	return _last_activity;
 }

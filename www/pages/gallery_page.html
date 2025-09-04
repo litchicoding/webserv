@@ -18,7 +18,7 @@
 	<img src="/images/image_2.png" alt="Image test 2">
 	<img src="/images/image_3.png" alt="Image test 3">
 	<img src="/images/image_4.png" alt="Image test 4">
-	<a href="/images/image_1.jpg">🖼️ Tap to see another Image</a>
-	<a href="/pages/index.html">⬅️ Back To Home Page</a>
+	<a data-href="/images/image_1.jpg" onclick="window.location=this.dataset.href; return false;">🖼️ Tap to see another Image</a>
+	<a data-href="/pages/index.html" onclick="window.location=this.dataset.href; return false;">⬅️ Back To Home Page</a>
 </body>
 </html>

@@ -20,6 +20,7 @@ public:
 	Client(int listen_fd, int epoll_fd);
 	~Client();
 	
+	time_t				last_activity;
 	int					state;
 	int					readData();
 	int					processRequest();
@@ -35,11 +36,11 @@ private:
 	HTTPRequest			_request;
 	string				_buffer;
 	bool				_keep_alive;
-	// string				_current_redirection;
 	time_t				_last_activity;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
+	void				isRedirectionNeeded();
 	int	    			isRequestWellFormedOptimized();
 	int					isRequestWellChunked(const map<string, string> &headers);
 	size_t				parseChunked(string &data);
@@ -98,10 +99,6 @@ public:
 	int					getListenFd() const { return _listen_fd; }
 	bool				isKeepAliveConnection() const { return _keep_alive; }
 	HTTPRequest&		getRequest() { return _request; }
-
-	/* TIMEOUT ************************************************************************************/
-	void 				updateActivity();
-	time_t				getLastActivity() const;
 };
 
 #endif

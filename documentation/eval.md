@@ -1,4 +1,3 @@
-
 ## PARSING FICHIER DE CONFIG
 ### Test avec configuration valide
 ```bash
@@ -220,7 +219,7 @@ curl -v -L http://localhost:8080/redirect
 curl -v -X DELETE http://localhost:8080/upload/file.txt & curl -v -X DELETE http://localhost:8080/upload/file.txt -> 404 not found pour le deuxieme 
 ```
 
-## ERROR PAGES
+## ERROR DIRECTIVES
 
 ### Page 404, 500, 403, 413 custom
 ```bash

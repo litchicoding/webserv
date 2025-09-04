@@ -99,11 +99,11 @@
             <h2>📥 Test GET - Static Files</h2>
             <p>Get different types of files :</p>
             <div class="links">
-				<a href="/pages/links_page.html">Links Page</a>
-                <a href="/pages/mix_page.html">Mix Page</a>
-                <a href="/pages/index.html">Home Page</a>
-                <a href="/pages/gallery_page.html">Gallery Page</a>
-                <a href="/nonexistent.html">Error 404 Page</a>
+				<a data-href="/pages/links_page.html" onclick="window.location=this.dataset.href; return false;">Links Page</a>
+                <a data-href="/pages/mix_page.html" onclick="window.location=this.dataset.href; return false;">Mix Page</a>
+                <a data-href="/pages/index.html" onclick="window.location=this.dataset.href; return false;">Home Page</a>
+                <a data-href="/pages/gallery_page.html" onclick="window.location=this.dataset.href; return false;">Gallery Page</a>
+                <a data-href="/nonexistent.html" onclick="window.location=this.dataset.href; return false;">Error 404 Page</a>
             </div>
         </div>
 
@@ -140,23 +140,18 @@
         <div class="test-section">
             <h2>⚙️ Test CGI - Dynamic Script</h2>
             <div class="links">
-                <a href="/cgi-bin/hello.py">Python Script</a>
-                <a href="/cgi-bin/form.php">PHP Form</a>
+                <a data-href="/cgi-bin/hello.py" onclick="window.location=this.dataset.href; return false;">Python Script</a>
+                <a data-href="/cgi-bin/form.php" onclick="window.location=this.dataset.href; return false;">PHP Form</a>
             </div>
-            <form id="cgiForm">
-                <input type="text" id="cgiInput" name="data" placeholder="Data for CGI" required>
-                <button type="submit">Send</button>
-            </form>
-            <div id="cgiResult"></div>
         </div>
 
         <!-- Test Directory Listing -->
         <div class="test-section">
             <h2>📁 Test Directory Listing</h2>
             <div class="links">
-                <a href="/upload/">"upload" folder</a>
-                <a href="/data/">"data" folder</a>
-                <a href="/cgi-bin/">"cgi-bin" folder</a>
+                <a data-href="/upload/" onclick="window.location=this.dataset.href; return false;">"upload" folder</a>
+                <a data-href="/data/" onclick="window.location=this.dataset.href; return false;">"data" folder</a>
+                <a data-href="/cgi-bin/" onclick="window.location=this.dataset.href; return false;">"cgi-bin" folder</a>
             </div>
         </div>
 
@@ -164,9 +159,9 @@
         <div class="test-section">
             <h2>❌ Test Error Pages</h2>
             <div class="links">
-                <a href="/nonexistent">404 - Page Not Found</a>
-                <a href="/pages/forbidden.html">403 - Access Forbidden</a>
-                <a href="/data/large_file.txt">413 - File Too Large</a>
+                <a data-href="/nonexistent" onclick="window.location=this.dataset.href; return false;">404 - Page Not Found</a>
+                <a data-href="/pages/forbidden.html" onclick="window.location=this.dataset.href; return false;">403 - Access Forbidden</a>
+                <a data-href="/data/large_file.txt" onclick="window.location=this.dataset.href; return false;">413 - File Too Large</a>
             </div>
         </div>
 

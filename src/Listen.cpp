@@ -13,7 +13,8 @@ Listen::~Listen()
 	// cout << GREEN << "***  Listening ports Deconstruction  ***" << RESET << endl;
 	for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		close(it->first);
+		if (it->first >= 0)
+			close(it->first);
 		delete it->second;
 	}
 	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
@@ -108,6 +109,31 @@ int	Listen::start_connexion()
 	return OK;
 }
 
+bool	Listen::isClientTimeOut(int client_fd)
+{
+	map<int, Client*>::iterator client = _clients.find(client_fd);
+	if (client == _clients.end())
+		return false;
+	else if (client->second == NULL)
+		return false;
+	else if (client->second->last_activity == 0)
+		return false;
+	double timeout = 1.0;
+	time_t start = _clients[client_fd]->last_activity;
+	time_t end;
+	time(&end);
+	double diff = difftime(end, start);
+	// cout << "TimeOut Limit (seconds): " << timeout << endl;
+	// cout << "start: " << start << endl;
+	// cout << "end: " << end << endl;
+	// cout << "Elapsed seconds: " << diff << " / Limit: " << timeout << endl;
+	if (diff > timeout) {
+		cout << GREEN << "--- timeout for client [socket:" << client_fd << "]" RESET << endl;
+		return true;
+	}
+	return false;
+}
+
 int	Listen::update_connexion()
 {
 	map<int, t_port>::iterator	current_port;
@@ -118,11 +144,15 @@ int	Listen::update_connexion()
 	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
-		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT_EPOLL));
-		if (nfds < 0) {
-			// if (errno != EINTR)
-			// 	return (perror("epoll_wait"), ERROR);
+		nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
+		if (nfds < 0)
 			continue ;
+		for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			if (isClientTimeOut(it->first) == true) {
+				closeClientConnection(it->first);
+				break ;
+			}
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
@@ -133,14 +163,15 @@ int	Listen::update_connexion()
 			{
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
+				if (isClientTimeOut(events[i].data.fd) == true) {
+					closeClientConnection(events[i].data.fd);
+					continue ;
+				}
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
 				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
 					closeClientConnection(events[i].data.fd);
-				if (_clients.find(events[i].data.fd) != _clients.end())
-					_clients[events[i].data.fd]->updateActivity();
 			}
 		}
-		checkClientTimeouts();
 	}
 
 	return OK;
@@ -157,8 +188,11 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	if (_clients[client_fd]->readData() != OK)
+	time(&(_clients[client_fd]->last_activity));
+	if (_clients[client_fd]->readData() != OK) {
+		closeClientConnection(client_fd);
 		return (ERROR);
+	}
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
@@ -181,6 +215,7 @@ void	Listen::closeClientConnection(int client_fd)
 	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 	map<int, Client*>::iterator it = _clients.find(client_fd);
 	if (it != _clients.end()) {
+		close(client_fd);
 		delete it->second;
 		_clients.erase(it);
 	}
@@ -249,6 +284,7 @@ void	Listen::setServerBlocks(const vector<Server> &serv_blocks)
 void	Listen::addNewClient(int listen_fd, int epoll_fd)
 {
 	Client	*newClient = new Client(listen_fd, epoll_fd);
+	time(&newClient->last_activity);
 	_clients.insert(make_pair(newClient->getClientFd(), newClient));
 }
 
@@ -287,40 +323,4 @@ ostream&	operator<<(ostream &os, Listen &src)
 	}
 
 	return os;
-}
-
-void	Listen::checkClientTimeouts()
-{
-	time_t now = time(NULL);
-
-	std::map<int, Client*>::iterator it = _clients.begin();
-   	while (it != _clients.end())
-    {
-        Client *client = it->second;
-        int client_fd = it->first;
-
-        if (now - client->getLastActivity() > TIMEOUT)
-        {
-            std::cout << YELLOW << "Client " << client_fd
-                      << " déconnecté (timeout " << TIMEOUT << "s)" << RESET << std::endl;
-
-            std::string timeout_res =
-                "HTTP/1.1 408 Request Timeout\r\n"
-                "Content-Type: text/html\r\n"
-                "Content-Length: 54\r\n"
-                "Connection: close\r\n\r\n"
-                "<html><body><h1>408 Request Timeout</h1></body></html>";
-
-            send(client_fd, timeout_res.c_str(), timeout_res.size(), 0);
-
-			++it;
-
-            closeClientConnection(client_fd);
-
-        }
-        else
-        {
-            ++it;
-        }
-    }
 }

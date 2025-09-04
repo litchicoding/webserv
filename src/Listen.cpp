@@ -118,7 +118,7 @@ bool	Listen::isClientTimeOut(int client_fd)
 		return false;
 	else if (client->second->last_activity == 0)
 		return false;
-	double timeout = 5.0;
+	double timeout = 1.0;
 	time_t start = _clients[client_fd]->last_activity;
 	time_t end;
 	time(&end);
@@ -144,15 +144,19 @@ int	Listen::update_connexion()
 	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
-		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
-		if (nfds < 0) {
+		nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
+		if (nfds < 0)
 			continue ;
+		for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			if (isClientTimeOut(it->first) == true) {
+				closeClientConnection(it->first);
+				break ;
+			}
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
 			signal(SIGINT, &signal_handler);
-			if (isClientTimeOut(events[i].data.fd) == true)
-				closeClientConnection(events[i].data.fd);
 			if (isListeningSocket(events[i].data.fd)) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
 				addNewClient(events[i].data.fd, _epoll_fd);
 			else //cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
@@ -165,8 +169,6 @@ int	Listen::update_connexion()
 				}
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
 				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
-					closeClientConnection(events[i].data.fd);
-				if (isClientTimeOut(events[i].data.fd) == true)
 					closeClientConnection(events[i].data.fd);
 			}
 		}
@@ -199,7 +201,6 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	}
 	_clients[client_fd]->processRequest();
 	_clients[client_fd]->sendResponse();
-	time(&(_clients[client_fd]->last_activity));
 	_clients[client_fd]->resetRequest();
 	if (_clients[client_fd]->isKeepAliveConnection() == false)
 		closeClientConnection(client_fd);
@@ -282,6 +283,7 @@ void	Listen::setServerBlocks(const vector<Server> &serv_blocks)
 void	Listen::addNewClient(int listen_fd, int epoll_fd)
 {
 	Client	*newClient = new Client(listen_fd, epoll_fd);
+	time(&newClient->last_activity);
 	_clients.insert(make_pair(newClient->getClientFd(), newClient));
 }
 

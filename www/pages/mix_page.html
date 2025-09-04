@@ -16,10 +16,10 @@
 	<h1>Mix of files</h1>
 	<p>This page combine different types of files to test GET.</p>
 	<img src="/images/image_1.jpg" alt="Image JPG">
-	<a href="/data/test.txt">📄 See text file</a>
-	<a href="/data/clean_code.pdf">📑 See PDF file</a>
-	<a href="/pages/style.css">📄 See CSS file</a>
-	<a href="/pages/script.js">📄 See JavaScript file</a>
-	<a href="/pages/index.html">⬅️ Back To Home Page</a>
+	<a data-href="/data/test.txt" onclick="window.location=this.dataset.href; return false;">📄 See text file</a>
+	<a data-href="/data/clean_code.pdf" onclick="window.location=this.dataset.href; return false;">📑 See PDF file</a>
+	<a data-href="/pages/style.css" onclick="window.location=this.dataset.href; return false;">📄 See CSS file</a>
+	<a data-href="/pages/script.js" onclick="window.location=this.dataset.href; return false;">📄 See JavaScript file</a>
+	<a data-href="/pages/index.html" onclick="window.location=this.dataset.href; return false;">⬅️ Back To Home Page</a>
 </body>
 </html>

@@ -62,6 +62,8 @@ void	Server::defaultConfiguration()
 		defaultConfiguration(_directives, it->second);
 }
 
+
+
 t_directives*	Server::searchLocationMatch(const string &request_uri)
 {
 	map<string, t_directives>::iterator	location;
@@ -77,7 +79,33 @@ t_directives*	Server::searchLocationMatch(const string &request_uri)
         uri = request_uri.substr(0, qpos);
         query_string = request_uri.substr(qpos + 1);
     }
-	/* Cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
+
+	/*Vérifie d'abord si une extension correspond exactement à un bloc*/
+	 size_t dot_pos = uri.rfind('.');
+    if (dot_pos != string::npos) {
+        string extension = uri.substr(dot_pos);
+        location = _locations.find(extension);
+        if (location != _locations.end()) {
+            result = &(location->second);
+
+            string root = result->root;
+            if (!root.empty() && root[root.length() - 1] == '/')
+                root.erase(root.length() - 1);
+			
+			if (uri.find("/cgi-bin/") == 0)
+			{
+				string relative = uri.substr(string("/cgi-bin").length());
+				result->full_path = root + relative;
+			}
+			else
+            	result->full_path = root + uri;
+
+            result->query_string = query_string;
+            return result;
+        }
+    }
+
+	/* Sinon, cherche la plus longue correspondance de préfixe (ex: uri=/kapouet/admin path_1=/kapouet/admin path_2=/kapouet path_1 is selected) */
 	location = _locations.begin();
 	while (location != _locations.end())
 	{

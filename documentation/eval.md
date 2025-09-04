@@ -182,18 +182,21 @@ curl -v -X POST \
 
 ### Supprimer un fichier
 ```bash
-curl -v -X DELETE http://localhost:8080/file.txt
-curl -v -X DELETE http://localhost:8080/upload/file.txt
+curl -v -X DELETE http://localhost:8080/file.txt -> 405 method not allowed
+curl -v -X DELETE http://localhost:8080/upload/file.txt -> 204 no content
 ```
 
 ### Supprimer un fichier inexistant
 ```bash
-curl -v -X DELETE http://localhost:8080/upload/nonexistent.txt
+curl -v -X DELETE http://localhost:8080/upload/nonexistent.txt -> 404 not found
 ```
 
 ### Supprimer ressource protégée
 enlever des droits sur un fichier ou dossier, pas DELETE autorisée dans tel dossier etc
 
+```bash
+chmod 000 file.txt puis curl -v -X DELETE http://localhost:8080/upload/file.txt --> 403 forbidden
+```
 
 ## REDIRECTIONS
 
@@ -212,12 +215,16 @@ curl -v -L http://localhost:8080/redirect
 ### Client qui essayent de supprimer le meme fichier en meme temps
 #### Attendu : 404 si fichier déjà supprimé
 
+```bash
+curl -v -X DELETE http://localhost:8080/upload/file.txt & curl -v -X DELETE http://localhost:8080/upload/file.txt -> 404 not found pour le deuxieme 
+```
+
 ## ERROR DIRECTIVES
 
 ### Page 404, 500, 403, 413 custom
 ```bash
-curl -v http://localhost:8080/nonexistent-page
-curl -v http://localhost:8080/not-allowed-page
+curl -v http://localhost:8080/nonexistent-page -> 404 not found
+curl -v http://localhost:8080/not-allowed-page -> 403 forbidden
 ```
 
 ## LISTING 
@@ -225,13 +232,13 @@ curl -v http://localhost:8080/not-allowed-page
 ### Autoindex on
 #### Attendu : Liste des fichiers presents
 ```bash
-curl -v http://localhost:8080/pages/
+curl -v http://localhost:8080/pages/ -> OK
 ```
 
 ### Autoindex off
 #### Attendu : 403 Forbidden
 ```bash
-curl -v http://localhost:8080/pages/
+curl -v http://localhost:8080/pages/ -> 403 access forbidden
 ```
 
 ## CGI
@@ -239,18 +246,31 @@ curl -v http://localhost:8080/pages/
 ### Executer le script
 #### Attendu : HTML généré par le script
 ```bash
-curl -v http://localhost:8080/cgi-bin/form.php
-curl -v http://localhost:8080/cgi-bin/hello.py
+curl -v http://localhost:8080/cgi-bin/form.php -> 200 OK
+curl -v http://localhost:8080/cgi-bin/hello.py -> 200 OK
+```
+
+### CGI avec recherche par extension 
+```bash
+curl -v http://localhost:8080/form.php -> 200 OK
+curl -v http://localhost:8080/hello.py -> 200 OK
 ```
 
 ### CGI avec paramètres GET
 ```bash
-curl -v "http://localhost:8080/test.cgi?param1=value1&param2=value2"
+curl -v "http://localhost:8080/test.php?data=Bonjour%20a%20tous"  -> 200 OK 
+```
+
+### CGI avec paramètres GET en trop ou pas celui necessaire (renvoie une erreur que si le script check ca)
+```bash
+curl -v "http://localhost:8080/test_strict.php?data=Bonjour%20a%20tous&foo=bar" -> 400 bad request
+
+curl -v "http://localhost:8080/test_strict.php?data=Bonjour%20a%20tous" -> 200 OK
 ```
 
 ### CGI avec POST
 ```bash
-curl -v -X POST -d "input=test" http://localhost:8080/test.cgi
+curl -v -X POST -d "name=Jean" -d "email=jean@example.com" http://localhost:8080/process.php -> 200 OK
 ```
 
 ## PERFORMANCES ET NON-BLOQUANT

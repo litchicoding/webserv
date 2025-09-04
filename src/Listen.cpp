@@ -110,6 +110,7 @@ int	Listen::start_connexion()
 
 int	Listen::update_connexion()
 {
+	map<int, Client*>::iterator it;
 	map<int, t_port>::iterator	current_port;
 	epoll_event					events[MAX_EVENTS];
 	int							nfds;
@@ -118,11 +119,15 @@ int	Listen::update_connexion()
 	while (g_global_instance)
 	{
 		signal(SIGINT, &signal_handler);
-		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
-		if (nfds < 0) {
-			// if (errno != EINTR)
-			// 	return (perror("epoll_wait"), ERROR);
-			continue ;
+		nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
+		if (nfds < 0)
+			continue;
+		it = _clients.begin();
+		while(it != _clients.end())
+		{
+			if (isClientTimeOut(it->first) == true)
+				closeClientConnection(it->first);
+			it++;
 		}
 		for (int i = 0; i < nfds; ++i)
 		{

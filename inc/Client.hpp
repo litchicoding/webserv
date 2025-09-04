@@ -20,6 +20,7 @@ public:
 	Client(int listen_fd, int epoll_fd);
 	~Client();
 	
+	time_t				last_activity;
 	int					state;
 	int					readData();
 	int					processRequest();

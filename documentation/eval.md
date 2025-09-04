@@ -1,4 +1,3 @@
-
 ## PARSING FICHIER DE CONFIG
 ### Test avec configuration valide
 ```bash

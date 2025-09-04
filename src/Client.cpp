@@ -4,7 +4,7 @@
 /* Constructor and Deconstructor *****************************************************************/
 
 Client::Client(int listen_fd, int epoll_fd)
-: state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(false)
+: last_activity(0), state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(true)
 {
 	cout << GREEN << "***   Client Connection   ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);

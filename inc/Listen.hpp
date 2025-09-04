@@ -32,6 +32,7 @@ public:
 	void					configuration();
 	int						start_connexion();
 	int						update_connexion();
+	bool					isClientTimeOut(int client_fd);
 	void					closeClientConnection(int client_fd);
 	bool					isListeningSocket(int fd);
 	void					stop(const std::string &msg);

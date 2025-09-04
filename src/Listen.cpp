@@ -13,7 +13,8 @@ Listen::~Listen()
 	// cout << GREEN << "***  Listening ports Deconstruction  ***" << RESET << endl;
 	for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		close(it->first);
+		if (it->first >= 0)
+			close(it->first);
 		delete it->second;
 	}
 	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
@@ -108,6 +109,31 @@ int	Listen::start_connexion()
 	return OK;
 }
 
+bool	Listen::isClientTimeOut(int client_fd)
+{
+	map<int, Client*>::iterator client = _clients.find(client_fd);
+	if (client == _clients.end())
+		return false;
+	else if (client->second == NULL)
+		return false;
+	else if (client->second->last_activity == 0)
+		return false;
+	double timeout = 5.0;
+	time_t start = _clients[client_fd]->last_activity;
+	time_t end;
+	time(&end);
+	double diff = difftime(end, start);
+	// cout << "TimeOut Limit (seconds): " << timeout << endl;
+	// cout << "start: " << start << endl;
+	// cout << "end: " << end << endl;
+	// cout << "Elapsed seconds: " << diff << " / Limit: " << timeout << endl;
+	if (diff > timeout) {
+		cout << GREEN << "--- timeout for client [socket:" << client_fd << "]" RESET << endl;
+		return true;
+	}
+	return false;
+}
+
 int	Listen::update_connexion()
 {
 	map<int, t_port>::iterator	current_port;
@@ -120,21 +146,27 @@ int	Listen::update_connexion()
 		signal(SIGINT, &signal_handler);
 		(nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT));
 		if (nfds < 0) {
-			// if (errno != EINTR)
-			// 	return (perror("epoll_wait"), ERROR);
 			continue ;
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
 			signal(SIGINT, &signal_handler);
+			if (isClientTimeOut(events[i].data.fd) == true)
+				closeClientConnection(events[i].data.fd);
 			if (isListeningSocket(events[i].data.fd)) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
 				addNewClient(events[i].data.fd, _epoll_fd);
 			else //cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
 			{
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
+				if (isClientTimeOut(events[i].data.fd) == true) {
+					closeClientConnection(events[i].data.fd);
+					continue ;
+				}
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
 				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
+					closeClientConnection(events[i].data.fd);
+				if (isClientTimeOut(events[i].data.fd) == true)
 					closeClientConnection(events[i].data.fd);
 			}
 		}
@@ -153,6 +185,7 @@ bool	Listen::isListeningSocket(int fd)
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
+	time(&(_clients[client_fd]->last_activity));
 	if (_clients[client_fd]->readData() != OK) {
 		closeClientConnection(client_fd);
 		return (ERROR);
@@ -166,6 +199,7 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	}
 	_clients[client_fd]->processRequest();
 	_clients[client_fd]->sendResponse();
+	time(&(_clients[client_fd]->last_activity));
 	_clients[client_fd]->resetRequest();
 	if (_clients[client_fd]->isKeepAliveConnection() == false)
 		closeClientConnection(client_fd);
@@ -179,6 +213,7 @@ void	Listen::closeClientConnection(int client_fd)
 	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 	map<int, Client*>::iterator it = _clients.find(client_fd);
 	if (it != _clients.end()) {
+		close(client_fd);
 		delete it->second;
 		_clients.erase(it);
 	}

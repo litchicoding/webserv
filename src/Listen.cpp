@@ -122,13 +122,6 @@ int	Listen::update_connexion()
 		nfds = epoll_wait(_epoll_fd, events, MAX_EVENTS, TIMEOUT);
 		if (nfds < 0)
 			continue;
-		it = _clients.begin();
-		while(it != _clients.end())
-		{
-			if (isClientTimeOut(it->first) == true)
-				closeClientConnection(it->first);
-			it++;
-		}
 		for (int i = 0; i < nfds; ++i)
 		{
 			signal(SIGINT, &signal_handler);

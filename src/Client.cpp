@@ -292,20 +292,16 @@ string Client::urlDecode(const string &str)
 size_t Client::parseChunked(std::string &buffer)
 {
     size_t total_processed = 0;
-    
-    for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
-        printf("%02X ", (unsigned char)buffer[i]);
-    }
+
     while (true)
     {
         size_t pos = total_processed;
-        // 1. Chercher la fin de la ligne de taille (CRLF)
+        // Chercher la fin du chunk
         size_t endline = buffer.find("\r\n", pos);
         if (endline == std::string::npos)
             break;
-        // 2. Extraire et convertir la taille hexadécimale
+        // Converti la taille hexadécimale
         std::string hexsize = buffer.substr(pos, endline - pos);
-        // Nettoyer la ligne de taille (supprimer espaces)
         hexsize.erase(0, hexsize.find_first_not_of(" \t"));
         hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
         std::istringstream iss(hexsize);
@@ -315,7 +311,7 @@ size_t Client::parseChunked(std::string &buffer)
             _request.code = 400;
             return ERROR;
         }
-        pos = endline + 2; // Position après le CRLF de la taille
+        pos = endline + 2;
         // 3. Vérifier si on a reçu tout le chunk + son CRLF final
         size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
         if (buffer.size() < needed_data)
@@ -326,11 +322,6 @@ size_t Client::parseChunked(std::string &buffer)
         pos += chunk_size;
         // 5. Vérifier et skip le CRLF après le chunk
         if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
-            if (pos + 2 <= buffer.size()) {
-                for (int i = 0; i < 2; i++) {
-                    printf("%02X ", (unsigned char)buffer[pos + i]);
-                }
-            }
             _request.code = 400;
             return ERROR;
         }

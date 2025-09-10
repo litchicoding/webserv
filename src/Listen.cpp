@@ -136,6 +136,7 @@ bool	Listen::isClientTimeOut(int client_fd)
 
 int	Listen::update_connexion()
 {
+	map<int, Client*>::iterator it;
 	map<int, t_port>::iterator	current_port;
 	epoll_event					events[MAX_EVENTS];
 	int							nfds;

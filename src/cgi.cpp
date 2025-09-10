@@ -1,4 +1,3 @@
-
 #include "Client.hpp"
 
 bool Client::isCgi()
@@ -152,7 +151,6 @@ int Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 
 int Client::handleCGI()
 {
-
 	if (!isValid())
 		return (_request.code);
 	

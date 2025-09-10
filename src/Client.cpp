@@ -101,7 +101,7 @@ int Client::processBuffer()
 
 int	Client::processRequest()
 {
-	// cout << "[ DEBUG ] :\n" << _request;
+	cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
 	setConfig(_request.getURI());
 	if (_config == NULL)
@@ -168,9 +168,6 @@ int	Client::isRequestWellFormedOptimized() {
 	}
 	if (isRequestWellChunked(_request.getHeaders()) != OK)
 		return (ERROR);
-
-	// HOST obligatoire en HTTP/1.1
-
 	return (OK);
 }
 
@@ -295,63 +292,54 @@ string Client::urlDecode(const string &str)
 
 size_t Client::parseChunked(std::string &buffer)
 {
-	size_t total_processed = 0;
+    size_t total_processed = 0;
 
-	for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
-		printf("%02X ", (unsigned char)buffer[i]);
-	}
-	while (true)
-	{
-		size_t pos = total_processed;
-		// 1. Chercher la fin de la ligne de taille (CRLF)
-		size_t endline = buffer.find("\r\n", pos);
-		if (endline == std::string::npos)
-			break;
-		// 2. Extraire et convertir la taille hexadécimale
-		std::string hexsize = buffer.substr(pos, endline - pos);
-		// Nettoyer la ligne de taille (supprimer espaces)
-		hexsize.erase(0, hexsize.find_first_not_of(" \t"));
-		hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
-		std::istringstream iss(hexsize);
-		size_t chunk_size = 0;
-		iss >> std::hex >> chunk_size;
-		if (iss.fail()) {
-			_request.code = 400;
-			return ERROR;
-		}
-		pos = endline + 2; // Position après le CRLF de la taille
-		// 3. Vérifier si on a reçu tout le chunk + son CRLF final
-		size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
-		if (buffer.size() < needed_data)
-			break;
-		// 4. Traiter le chunk
-		if (chunk_size > 0)
-			_request.appendBodyData(buffer.c_str() + pos, chunk_size);
-		pos += chunk_size;
-		// 5. Vérifier et skip le CRLF après le chunk
-		if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
-			if (pos + 2 <= buffer.size()) {
-				for (int i = 0; i < 2; i++) {
-					printf("%02X ", (unsigned char)buffer[pos + i]);
-				}
-			}
-			_request.code = 400;
-			return ERROR;
-		}
-		pos += 2;
-		total_processed = pos;
-		// 6. Fin du dernier chunk
-		if (chunk_size == 0)
-		{
-			state = READ_END;
-			break;
-		}
-	}
-	// 7. Supprimer les données traitées
-	if (total_processed > 0) {
-		buffer = buffer.substr(total_processed);
-	}
-	return OK;
+    while (true)
+    {
+        size_t pos = total_processed;
+        // Chercher la fin du chunk
+        size_t endline = buffer.find("\r\n", pos);
+        if (endline == std::string::npos)
+            break;
+        // Converti la taille hexadécimale
+        std::string hexsize = buffer.substr(pos, endline - pos);
+        hexsize.erase(0, hexsize.find_first_not_of(" \t"));
+        hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
+        std::istringstream iss(hexsize);
+        size_t chunk_size = 0;
+        iss >> std::hex >> chunk_size;
+        if (iss.fail()) {
+            _request.code = 400;
+            return ERROR;
+        }
+        pos = endline + 2;
+        // 3. Vérifier si on a reçu tout le chunk + son CRLF final
+        size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
+        if (buffer.size() < needed_data)
+            break;
+        // 4. Traiter le chunk
+        if (chunk_size > 0)
+            _request.appendBodyData(buffer.c_str() + pos, chunk_size);
+        pos += chunk_size;
+        // 5. Vérifier et skip le CRLF après le chunk
+        if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
+            _request.code = 400;
+            return ERROR;
+        }
+        pos += 2;
+        total_processed = pos;
+        // 6. Fin du dernier chunk
+        if (chunk_size == 0)
+        {
+            state = READ_END;
+            break;
+        }
+    }
+    // 7. Supprimer les données traitées
+    if (total_processed > 0) {
+        buffer = buffer.substr(total_processed);
+    }
+    return OK;
 }
 
 void	Client::resetRequest()

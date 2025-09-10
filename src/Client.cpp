@@ -101,7 +101,7 @@ int Client::processBuffer()
 
 int	Client::processRequest()
 {
-	cout << "[ DEBUG ] :\n" << _request;
+	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
 	setConfig(_request.getURI());
 	if (_config == NULL)

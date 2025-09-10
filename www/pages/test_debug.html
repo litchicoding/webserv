@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8">
+		<!-- Empêche la requête automatique de favicon -->
+		<link rel="icon" href="data:,">
+		<title>Test Section</title>
+		<style>
+			body {
+				font-family: Arial;
+				max-width: 800px;
+				margin: 0 auto;
+				padding: 20px;
+				background-color: #f5f5f5;
+			}
+			.container { 
+				background: white;
+				padding: 30px;
+				border-radius: 10px;
+				box-shadow: 0 2px 10px rgba(2, 2, 2, 0.1);
+			}
+			h1 {
+				color: #333;
+				text-align: center;
+				border-bottom: 3px solid #4CAF50;
+				padding-bottom: 10px;
+			}
+			h3 {
+				color: #100daf;
+				/* text-align: center; */
+				padding-bottom: 10px;
+			}
+			.test-section {
+				margin: 30px 0;
+				padding: 20px;
+				border: 1px solid #ddd;
+				border-radius: 5px;
+				background-color: #d4d4d4;
+			}
+			.test-section h2 {
+				color: #4CAF50;
+				margin-top: 0;
+			}
+			.test-section h3 {
+				padding: 0px;
+				background-color: #d4d4d4;
+				color: #2b632d;
+				margin-top: 10;
+			}
+			table {
+				padding: 20px;
+				border-collapse: collapse;
+			}
+			th, td {
+				border: 2px solid black;
+				padding: 10px;
+				vertical-align: middle;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Test Section</h1>
+		<p>This page presents various commands or configurations to test on the Web Server.</p>
+
+		<div class="test-section">
+			<h2>FILE CONFIG PARSING</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Valid ?</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>./webserv ./config.conf</td>
+					<!-- Valid ? -->
+					<td> If exists : YES</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>./webserv </td>
+					<!-- Valid ? -->
+					<td> YES, default configuration</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>./webserv ./config.confe</td>
+					<!-- Valid ? -->
+					<td> NO, wrong extension</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>./webserv ./nonexistent.conf</td>
+					<!-- Valid ? -->
+					<td> NO, can't open file</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>MULTIPORTS AND SERVER CONFIG</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl http://localhost:8080/</td>
+					<!-- Config -->
+					<td>listen 8080; </td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl http://127.0.0.2:8081/</td>
+					<!-- Config -->
+					<td>listen 8081; listen 127.0.0.2;</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET http://localhost:8080/ & curl -X GET http://localhost:8081/ & curl -X POST -F "name=yannick" -F "message=hello" http://localhost:8080/data & wait</td>
+					<!-- Config -->
+					<td>listen 8081; listen 8080;</td>
+					<!-- Nginx -->
+					<td>200 OK | 201 Created | 204 No Content</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl http://127.0.0.2:8080/</td>
+					<!-- Config -->
+					<td>listen 8080; index /pages/mix_page.html;</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl http://127.0.0.2:8080/data/</td>
+					<!-- Config -->
+					<td>listen 8080; autoindex off; index inexistent.html;</td>
+					<!-- Nginx -->
+					<td>404 Not Found</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl http://127.0.0.2:8080/data/</td>
+					<!-- Config -->
+					<td>listen 8080; autoindex on; index inexistent.html;</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>HTTP/1.1 REQUEST</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "GET / HTTP/1.1\r\nContent-Length 100\r\n" | nc localhost 3000</td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td>400 Bad Request</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "GET / HTTP/1.1\r\Host: \r\n" | nc localhost 3000</td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td>400 Bad Request</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl "http://localhost:8080/path%00with%00nulls"</td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td>400 Bad Request</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl "http://localhost:8080/path%00with%00nulls"</td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td>400 Bad Request</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>GET</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td> </td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>POST - DOWNLOAD</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td> </td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>POST - UPLOAD</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td> </td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>DELETE</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td> </td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>CGI</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td> </td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="test-section">
+			<h2>CLIENT CONNECTION</h2>
+			<table>
+				<tr>
+					<td><h3>Command</h3></td>
+					<td><h3>Config</h3></td>
+					<td><h3>Nginx</h3></td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td> </td>
+					<!-- Config -->
+					<td> </td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+			</table>
+		</div>
+
+	</body>
+</html>

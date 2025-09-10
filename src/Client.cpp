@@ -19,7 +19,7 @@ Client::Client(int listen_fd, int epoll_fd)
 
 Client::~Client()
 {
-	cout << GREEN << "***   Client Deconstruction   ***" << RESET << endl;
+	cout << GREEN << "***   Client Deconstruction   ***" << RESET << endl << endl;
 	if (_client_fd >= 0)
 		close(_client_fd);
 }

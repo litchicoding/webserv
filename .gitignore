@@ -5,6 +5,5 @@ webserv
 .vscode
 www/upload/*
 www/data/*
-www/*
 big_file.txt
 test_webserv.sh

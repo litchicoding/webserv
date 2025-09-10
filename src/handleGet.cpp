@@ -53,7 +53,7 @@ int	Client::handleDirectoryRequest()
 	if (_config->autoindex == AUTO_ON)
 		return (generateDirectoryListing());
 	else
-		return (403);
+		return (404);
 }
 
 string Client::findIndexFile()

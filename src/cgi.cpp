@@ -11,60 +11,55 @@ bool Client::isCgi()
 		return true;
 
 	if (path.find("/cgi-bin/") != std::string::npos)
-        return true;
+ 		return true;
 	return false;
 }
 
 bool Client::isQueryStringValid()
 {
-    const std::string &qs = _config->query_string;
-    if (qs.empty())
-        return true;
+	const std::string &qs = _config->query_string;
+	if (qs.empty())
+		return true;
 
-    bool inKey = true;     // on commence dans une clé
-    bool hasEqual = false; // une clé doit avoir exactement un '='
-    char prev = 0;
+	bool inKey = true;
+	bool hasEqual = false;
+	char prev = 0;
 
-    for (size_t i = 0; i < qs.size(); ++i) {
-        char c = qs[i];
+	for (size_t i = 0; i < qs.size(); ++i)
+	{
+		char c = qs[i];
 
-        if (isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~' || c == '+') {
-            // caractère valide, rien à faire
-        }
+		if (isalnum(c) || c == '-' || c == '.' || c == '_' || c == '~' || c == '+') {
+		}
 		else if (c == '%')
 		{
 			if (i + 2 >= qs.size() || !isxdigit(qs[i+1]) || !isxdigit(qs[i+2]))
 				return false;
-			i += 2; // sauter les deux hexadécimaux
+			i += 2;
 		} 
-        else if (c == '=') {
-            if (!inKey || hasEqual) {
-                // déjà dans la valeur OU déjà vu un '=' => invalide
-                return false;
-            }
-            hasEqual = true;
-            inKey = false;
-        }
-        else if (c == '&') {
-            if (prev == '&' || !hasEqual) {
-                // && interdit ou clé sans '='
-                return false;
-            }
-            // reset pour prochaine paire
-            inKey = true;
-            hasEqual = false;
-        }
-        else {
-            return false; // caractère non autorisé
-        }
+		else if (c == '=')
+		{
+			if (!inKey || hasEqual)
+				return false;
+			hasEqual = true;
+			inKey = false;
+		}
+		else if (c == '&')
+		{
+			if (prev == '&' || !hasEqual)
+				return false;
+			inKey = true;
+			hasEqual = false;
+		}
+		else
+			return false;
 
-        prev = c;
-    }
-    // La dernière paire doit contenir un '=' et ne pas finir par & ou =
-    if (!hasEqual || prev == '&' || prev == '=')
-        return false;
+		prev = c;
+	}
+	if (!hasEqual || prev == '&' || prev == '=')
+		return false;
 
-    return true;
+	return true;
 }
 
 
@@ -224,7 +219,8 @@ int Client::handleCGI()
 	close(requestPipe[0]);
 	close(responsePipe[1]);
 
-	if (_request.getMethod() == "POST") {
+	if (_request.getMethod() == "POST")
+	{
 		for (vector<char>::const_iterator it = _request.getBody().begin(); it != _request.getBody().end(); it++)
 			write(requestPipe[1], &(*it), 1);
 	}
@@ -244,7 +240,7 @@ int Client::handleCGI()
 		free(argv[i]);
 
 	for (size_t i = 0; envp[i]; ++i)
-        free(envp[i]);
-    delete[] envp;
+		free(envp[i]);
+	delete[] envp;
 	return (buildHttpResponseFromCgiOutput(cgiOutput));
 }

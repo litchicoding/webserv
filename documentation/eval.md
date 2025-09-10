@@ -1,7 +1,7 @@
 ## PARSING FICHIER DE CONFIG
 ### Test avec configuration valide
 ```bash
-./webserv ./config/webserv.conf
+./webserv ./config/webserv.conf -> OK
 ./webserv
 ```
 
@@ -9,7 +9,7 @@
 #### Attendu : Erreur de parsing
 #### ERREUR : Ouvre le .conf par default au lieu de celui indiquer que le fichier soit valide ou non.
 ```bash
-echo "invalid.conf > invalid.conf
+echo "invalid.conf" > invalid.conf -> programme en attende d'une connexion (pas ce qu on veut)
 ./webserv invalid.conf
 ./webserv invalid.confe
 ./webserv invalid
@@ -18,7 +18,7 @@ echo "invalid.conf > invalid.conf
 ### Test avec fichier inexistant
 #### Attendu : Erreur fichier non trouvé
 ```bash
-./webserv nonexistent.conf
+./webserv nonexistent.conf -> Error can't open file (est ce qu il faut pas un autre type d erreur ?)
 ```
 
 ### Test parsing
@@ -29,17 +29,24 @@ echo "invalid.conf > invalid.conf
 ## MULTIPORTS ET SERVEURS CONFIG
 ### Test multiports
 ```bash
-curl -I http://localhost:8080/
-curl -I http://localhost:8081/
-curl -I http://localhost:8082/
+curl -I http://localhost:8080/ -> 405 method not allowed car I c'est pour HEAD
+curl -I http://localhost:8081/ -> failed to connect
+curl -I http://localhost:8082/ -> failed to connect
 ```
+
+```bash
+curl http://localhost:8080/ -> 200 OK
+curl http://localhost:8081/ -> failed to connect
+curl http://localhost:8082/ -> failed to connect
+```
+
 ### Test plusieurs connexions en meme temps
 ```bash
 # Plusieurs culr en background avec &
-curl -X GET http://localhost:8080/ & 
+curl -X GET http://localhost:8080/ & -
 curl -X GET http://localhost:8080/ & 
 curl -X POST -F "name=yannick" -F "message=hello" http://localhost:8080/data &
-wait
+wait > le simultane marche (rq : le dernier curl donne 400 bad request)
 
 # Envoyer N request en parallèle
 seq 20 | xargs -n1 -P10 curl -s http://localhost:8080/

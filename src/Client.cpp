@@ -49,39 +49,38 @@ int	Client::readData()
 	if (bytes_read == 0)
 		return (OK);
 	_buffer.append(buffer, bytes_read);
-	updateActivity();
 	return (processBuffer());
 }
 
 int Client::processBuffer()
 {
-    // Traitement des headers (une seule fois)
-    if (state == READ_HEADERS) {
-        size_t pos = _buffer.find("\r\n\r\n");
-        if (pos != string::npos) {
-            string headers = _buffer.substr(0, pos);
-            if (_request.parsingHeaders(headers) != OK)
-                return (ERROR);
-            _buffer = _buffer.substr(pos + 4);
-            state = READ_BODY;
-        }
-        else {
-            // Pas encore tous les headers, on attend plus de données
-            return (OK);
-        }
-    }
-    // Traitement du body (peut être appelé plusieurs fois)
-    if (state == READ_BODY) {
-        if (_request.isChunked() == true) {
-            // Pour les chunks, on traite autant qu'on peut à chaque fois
-            if (!_buffer.empty()) {
-                if (parseChunked(_buffer) == static_cast<size_t>(ERROR)) {
-                    return ERROR;
-                }
-            }
-            // Si parseChunked a tout traité et mis state=READ_END, c'est fini
-            // Sinon on attend plus de données dans le prochain readData()
-        }
+	// Traitement des headers (une seule fois)
+	if (state == READ_HEADERS) {
+		size_t pos = _buffer.find("\r\n\r\n");
+		if (pos != string::npos) {
+			string headers = _buffer.substr(0, pos);
+			if (_request.parsingHeaders(headers) != OK)
+				return (ERROR);
+			_buffer = _buffer.substr(pos + 4);
+			state = READ_BODY;
+		}
+		else {
+			// Pas encore tous les headers, on attend plus de données
+			return (OK);
+		}
+	}
+	// Traitement du body (peut être appelé plusieurs fois)
+	if (state == READ_BODY) {
+		if (_request.isChunked() == true) {
+			// Pour les chunks, on traite autant qu'on peut à chaque fois
+			if (!_buffer.empty()) {
+				if (parseChunked(_buffer) == static_cast<size_t>(ERROR)) {
+					return ERROR;
+				}
+			}
+			// Si parseChunked a tout traité et mis state=READ_END, c'est fini
+			// Sinon on attend plus de données dans le prochain readData()
+		}
 		else if (!_buffer.empty()) {
 			// Body classique avec Content-Length
 			size_t remaining_len = _request.getExpectedBodyLen() - _request.getBodyLen();
@@ -251,13 +250,13 @@ string Client::getMIME(string &URI)
 
 bool	Client::URI_Not_Printable(string& URI)
 {
-    for (size_t i = 0; i < URI.length(); i++)
-    {
-        char c = URI[i];
-        if (!(c == 95 ||
-            (c >= 45 && c <= 57) ||
-            (c >= 64 && c <= 90) ||
-            (c >= 97 && c <= 122)))
+	for (size_t i = 0; i < URI.length(); i++)
+	{
+		char c = URI[i];
+		if (!(c == 95 ||
+			(c >= 45 && c <= 57) ||
+			(c >= 64 && c <= 90) ||
+			(c >= 97 && c <= 122)))
 		{
 			if (c == '%')
 			{
@@ -266,93 +265,93 @@ bool	Client::URI_Not_Printable(string& URI)
 				i += 2;
 				continue;
 			}
-            return true;
+			return true;
 		}
-    }
-    return false;
+	}
+	return false;
 }
 
 string Client::urlDecode(const string &str)
 {
-    string result;
-    size_t i = 0;
+	string result;
+	size_t i = 0;
 
-    while (i < str.length()) {
-        if (str[i] == '%' && i + 2 < str.length() &&
-            isxdigit(str[i+1]) && isxdigit(str[i+2])) {
-            string hex = str.substr(i + 1, 2);
-            char decodedChar = static_cast<char>(strtol(hex.c_str(), 0, 16));
-            result += decodedChar;
-            i += 3;
-        } else if (str[i] == '+') {
-            result += ' ';
-            i++;
-        } else {
-            result += str[i++];
-        }
-    }
-    return result;
+	while (i < str.length()) {
+		if (str[i] == '%' && i + 2 < str.length() &&
+			isxdigit(str[i+1]) && isxdigit(str[i+2])) {
+			string hex = str.substr(i + 1, 2);
+			char decodedChar = static_cast<char>(strtol(hex.c_str(), 0, 16));
+			result += decodedChar;
+			i += 3;
+		} else if (str[i] == '+') {
+			result += ' ';
+			i++;
+		} else {
+			result += str[i++];
+		}
+	}
+	return result;
 }
 
 size_t Client::parseChunked(std::string &buffer)
 {
-    size_t total_processed = 0;
-    
-    for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
-        printf("%02X ", (unsigned char)buffer[i]);
-    }
-    while (true)
-    {
-        size_t pos = total_processed;
-        // 1. Chercher la fin de la ligne de taille (CRLF)
-        size_t endline = buffer.find("\r\n", pos);
-        if (endline == std::string::npos)
-            break;
-        // 2. Extraire et convertir la taille hexadécimale
-        std::string hexsize = buffer.substr(pos, endline - pos);
-        // Nettoyer la ligne de taille (supprimer espaces)
-        hexsize.erase(0, hexsize.find_first_not_of(" \t"));
-        hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
-        std::istringstream iss(hexsize);
-        size_t chunk_size = 0;
-        iss >> std::hex >> chunk_size;
-        if (iss.fail()) {
-            _request.code = 400;
-            return ERROR;
-        }
-        pos = endline + 2; // Position après le CRLF de la taille
-        // 3. Vérifier si on a reçu tout le chunk + son CRLF final
-        size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
-        if (buffer.size() < needed_data)
-            break;
-        // 4. Traiter le chunk
-        if (chunk_size > 0)
-            _request.appendBodyData(buffer.c_str() + pos, chunk_size);
-        pos += chunk_size;
-        // 5. Vérifier et skip le CRLF après le chunk
-        if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
-            if (pos + 2 <= buffer.size()) {
-                for (int i = 0; i < 2; i++) {
-                    printf("%02X ", (unsigned char)buffer[pos + i]);
-                }
-            }
-            _request.code = 400;
-            return ERROR;
-        }
-        pos += 2;
-        total_processed = pos;
-        // 6. Fin du dernier chunk
-        if (chunk_size == 0)
-        {
-            state = READ_END;
-            break;
-        }
-    }
-    // 7. Supprimer les données traitées
-    if (total_processed > 0) {
-        buffer = buffer.substr(total_processed);
-    }
-    return OK;
+	size_t total_processed = 0;
+
+	for (size_t i = 0; i < std::min(buffer.size(), size_t(30)); ++i) {
+		printf("%02X ", (unsigned char)buffer[i]);
+	}
+	while (true)
+	{
+		size_t pos = total_processed;
+		// 1. Chercher la fin de la ligne de taille (CRLF)
+		size_t endline = buffer.find("\r\n", pos);
+		if (endline == std::string::npos)
+			break;
+		// 2. Extraire et convertir la taille hexadécimale
+		std::string hexsize = buffer.substr(pos, endline - pos);
+		// Nettoyer la ligne de taille (supprimer espaces)
+		hexsize.erase(0, hexsize.find_first_not_of(" \t"));
+		hexsize.erase(hexsize.find_last_not_of(" \t") + 1);
+		std::istringstream iss(hexsize);
+		size_t chunk_size = 0;
+		iss >> std::hex >> chunk_size;
+		if (iss.fail()) {
+			_request.code = 400;
+			return ERROR;
+		}
+		pos = endline + 2; // Position après le CRLF de la taille
+		// 3. Vérifier si on a reçu tout le chunk + son CRLF final
+		size_t needed_data = pos + chunk_size + 2; // chunk + CRLF final
+		if (buffer.size() < needed_data)
+			break;
+		// 4. Traiter le chunk
+		if (chunk_size > 0)
+			_request.appendBodyData(buffer.c_str() + pos, chunk_size);
+		pos += chunk_size;
+		// 5. Vérifier et skip le CRLF après le chunk
+		if (pos + 2 <= buffer.size() && buffer.substr(pos, 2) != "\r\n") {
+			if (pos + 2 <= buffer.size()) {
+				for (int i = 0; i < 2; i++) {
+					printf("%02X ", (unsigned char)buffer[pos + i]);
+				}
+			}
+			_request.code = 400;
+			return ERROR;
+		}
+		pos += 2;
+		total_processed = pos;
+		// 6. Fin du dernier chunk
+		if (chunk_size == 0)
+		{
+			state = READ_END;
+			break;
+		}
+	}
+	// 7. Supprimer les données traitées
+	if (total_processed > 0) {
+		buffer = buffer.substr(total_processed);
+	}
+	return OK;
 }
 
 void	Client::resetRequest()
@@ -460,18 +459,4 @@ void	Client::setConfig(const string &URI)
 		cout << ")" << RESET << endl;
 		return ;
 	}
-}
-
-/*************************************************************************************************/
-/* TIMEOUT ***************************************************************************************/
-
-void Client::updateActivity()
-{
-	_last_activity = time(NULL);
-	std::cout << "Client " << _client_fd << " activity updated at " << _last_activity << std::endl;
-}
-
-time_t	Client::getLastActivity() const
-{
-	return _last_activity;
 }

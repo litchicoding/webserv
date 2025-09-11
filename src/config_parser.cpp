@@ -115,6 +115,12 @@ int	parse_config_file(string config_file, Listen &listenPorts)
 		}
 		it++;
 	}
+	// for (vector<Server>::iterator it = serv_blocks.begin(); it != serv_blocks.end(); it++)
+	// {
+	// 	it->defaultConfiguration();
+	// 	cout << *it;
+	// }
+	// cout << "------------------------------" << endl << endl;
 	listenPorts.setServerBlocks(serv_blocks);
 	return OK;
 }

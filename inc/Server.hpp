@@ -49,7 +49,7 @@ public :
 	~Server();
 
 	/* Member Functions ****************************************************************************/
-	void						defaultConfiguration(t_directives server, t_directives &location);
+	void						defaultLocConfiguration(t_directives &server, t_directives &location);
 	void						defaultConfiguration();
 	t_directives*				searchLocationMatch(const string &request_uri);
 
@@ -57,6 +57,7 @@ public :
 	int							setListen(const string &arg);
 	int							setOneDirective(const string &type, const vector<string> &arg, t_directives *container);
 	int							setLocation(const string &loc_path, const string &type, const vector<string> &arg);
+	int							setRedirection(const vector<string> &arg, t_directives &dir);
 	void						setClientMaxBodySize(const string &value, t_directives &dir);
 	void						setRoot(const string &root, t_directives &dir);
 	void						setIndex(const vector<string> &index, t_directives &dir);

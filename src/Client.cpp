@@ -363,12 +363,19 @@ string	Client::getCodeMessage(int code)
 	switch (code) {
 		case 200: return ("200 OK");
 		case 201: return ("201 Created");
+		case 202: return ("202 Accepted");
 		case 204: return ("204 No Content");
+		case 205: return ("205 Reset Content");
+		case 206: return ("206 Partial Content");
+		case 300: return ("300 Multiple Choices");
 		case 301: return ("301 Moved Permanently");
+		case 302: return ("302 Found");
+		case 303: return ("303 See Other");
+		case 308: return ("308 Permanent Redirect");
 		case 400: return ("400 Bad Request");
 		case 403: return ("403 Forbidden");
 		case 404: return ("404 Not Found");
-		case 405: return ("405 Method Not Allowed");
+		case 406: return ("405 Method Not Allowed");
 		case 409: return ("409 Conflict");
 		case 413: return ("413 Playload Too Large");
 		case 415: return ("415 Unsupported Media Type");
@@ -376,7 +383,9 @@ string	Client::getCodeMessage(int code)
 		case 501: return ("501 Not Implemented");
 		case 505: return ("505 HTTP Version Not Supported");
 	}
-	return ("");
+	ostringstream	tmp;
+	tmp << code;
+	return (tmp.str());
 }
 
 void	Client::buildResponse(int code)

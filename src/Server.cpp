@@ -23,7 +23,7 @@ Server::~Server()
 /*************************************************************************************************/
 /* Member Functions ******************************************************************************/
 
-void	Server::defaultConfiguration(t_directives serv, t_directives &location)
+void	Server::defaultLocConfiguration(t_directives &serv, t_directives &location)
 {
 	if (location.autoindex == INVALID) location.autoindex = serv.autoindex;
 	if (location.client_max_body_size == 0)
@@ -31,7 +31,8 @@ void	Server::defaultConfiguration(t_directives serv, t_directives &location)
 	if (location.root.empty()) location.root = serv.root;
 	if (location.index.empty()) location.index = serv.index;
 	if (location.methods.empty()) location.methods = serv.methods;
-	if (location.redirection.empty()) location.redirection = serv.redirection;
+	if (location.redirection.empty())
+		location.redirection = serv.redirection;
 	if (location.error_page.empty()) location.error_page = serv.error_page;
 }
 
@@ -44,9 +45,12 @@ void	Server::defaultConfiguration()
 		listen.address_port = "0.0.0.0:8080";
 		_listen.push_back(listen);
 	}
-	if (_directives.autoindex == INVALID) _directives.autoindex = AUTO_OFF;
-	if (_directives.root.empty()) _directives.root = DEFAULT_ROOT;
-	if (_directives.index.empty()) _directives.index.push_back("index.html");
+	if (_directives.autoindex == INVALID)
+		_directives.autoindex = AUTO_OFF;
+	if (_directives.root.empty())
+		_directives.root = DEFAULT_ROOT;
+	if (_directives.index.empty())
+		_directives.index.push_back("index.html");
 	if (_directives.methods.empty()) {
 		_directives.methods.push_back("GET");
 		_directives.methods.push_back("POST");
@@ -59,7 +63,7 @@ void	Server::defaultConfiguration()
 		_locations.insert(make_pair("/", newDirectives));
 	}
 	for (map<string, t_directives>::iterator it = _locations.begin(); it != _locations.end(); it++)
-		defaultConfiguration(_directives, it->second);
+		defaultLocConfiguration(_directives, (it->second));
 }
 
 
@@ -198,10 +202,8 @@ int	Server::setOneDirective(const string &type, const vector<string> &arg, t_dir
 		return (setIndex(arg, *container), OK);
 	else if (type == "allow_methods")
 		return (setMethods(arg, *container), OK);
-	else if (type == "return" && container->redirection.empty()) {
-		container->redirection.insert(make_pair(atoi(arg[0].c_str()), arg[1]));
-		return (OK);
-	}
+	else if (type == "return" && container->redirection.empty())
+		return (setRedirection(arg, *container));
 	else if (type == "error_page") {
 		vector<string>::const_iterator it = arg.begin();
 		string uri = arg.back();
@@ -236,11 +238,33 @@ int	Server::setLocation(const string &loc_path, const string &type, const vector
 		t_directives	newDirectives;
 		newDirectives.autoindex = INVALID;
 		newDirectives.client_max_body_size = 0;
-		if (!arg.empty())
-			return (setOneDirective(type, arg, &newDirectives));
 		_locations.insert(make_pair(loc_path, newDirectives));
+		map<string, t_directives>::iterator it = _locations.find(loc_path);
+		if (!arg.empty())
+			return (setOneDirective(type, arg, &it->second));
 	}
 	return OK;
+}
+
+int	Server::setRedirection(const vector<string> &arg, t_directives &dir)
+{
+	if (arg.size() == 0)
+		return (ERROR);
+	if (arg.size() == 2 && !arg[0].empty() && !arg[1].empty()) {
+		for (size_t i = 0; i < arg[0].size(); i++) {
+			if (!isdigit(arg[0][i]))
+				return (ERROR);
+		}
+		dir.redirection.insert(make_pair(atoi(arg[0].c_str()), arg[1]));
+		return (OK);
+	}
+	if (arg.size() == 1) {
+		if (arg[0].compare(0, 7, "http://"))
+			return (ERROR);
+		dir.redirection.insert(make_pair(302, arg[0]));
+		return (OK);
+	}
+	return (ERROR);
 }
 
 void	Server::setClientMaxBodySize(const string &value, t_directives &dir)

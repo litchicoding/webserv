@@ -39,15 +39,20 @@ int	Client::handleMultipartForm(const map<string, string>::const_iterator &heade
 	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
 	if (filename.size() > 0) {
-		if (uploadFile(path + "/" + filename, boundary) != OK)
+		if (isValidPostRequest(path + filename) != OK)
+			return (_request.code);
+		if (uploadFile(path + filename, boundary) != OK)
 			return (500);
 	}
 	else {
-		filename = extractName() + ".txt";
-		if (saveData(path + "/" + filename, boundary) != OK)
+		if (path[path.length() - 1] == '/') {
+			if (saveData(path + extractName() + ".txt", boundary) != OK)
+				return (500);
+		}
+		else if (saveData(path, boundary) != OK)
 			return (500);
 	}
-	filename = _request.getURI() + "/" + filename;
+	filename = _request.getURI() + filename;
 	_request.response.body = "File creation succeeded. Location : " + filename + "\n";
 	_request.response.content_type = "text/plain";
 	_request.response.location = filename;

@@ -137,7 +137,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>return jd test;</td>
+					<td>return &p test;</td>
 					<!-- Valid ? -->
 					<td>NO, invalid format</td>
 				</tr>
@@ -208,6 +208,30 @@
 					<!-- Nginx -->
 					<td>403 Forbidden | 405 Not Allowed</td>
 				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET http://127.0.0.2:8080/images/</td>
+					<!-- Config -->
+					<td>location /images { return 200 "Im a test";}</td>
+					<!-- Nginx -->
+					<td>"Im a test"</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET http://127.0.0.2:8080/images/</td>
+					<!-- Config -->
+					<td>location /images { return 301 http://localhost:3000/;}</td>
+					<!-- Nginx -->
+					<td>301 Moved Permanently</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET http://127.0.0.2:8080/images/</td>
+					<!-- Config -->
+					<td>location /images { return http://localhost:3000/;}</td>
+					<!-- Nginx -->
+					<td>301 Moved Permanently</td>
+				</tr>
 			</table>
 		</div>
 
@@ -216,42 +240,83 @@
 			<table>
 				<tr>
 					<td><h3>Command</h3></td>
-					<td><h3>Config</h3></td>
 					<td><h3>Nginx</h3></td>
+					<td><h3>Config / Comment</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
 					<td>echo -e "GET / HTTP/1.1\r\nContent-Length 100\r\n" | nc localhost 3000</td>
-					<!-- Config -->
-					<td> </td>
 					<!-- Nginx -->
 					<td>400 Bad Request</td>
+					<!-- Config -->
+					<td>Wrong Header syntax (miss :)</td>
 				</tr>
 				<tr>
 					<!-- Command -->
 					<td>echo -e "GET / HTTP/1.1\r\Host: \r\n" | nc localhost 3000</td>
-					<!-- Config -->
-					<td> </td>
 					<!-- Nginx -->
 					<td>400 Bad Request</td>
+					<!-- Config -->
+					<td>Miss argument for the Header</td>
 				</tr>
 				<tr>
 					<!-- Command -->
 					<td>curl "http://localhost:8080/path%00with%00nulls"</td>
-					<!-- Config -->
-					<td> </td>
 					<!-- Nginx -->
 					<td>400 Bad Request</td>
+					<!-- Config -->
+					<td>Wrong URL</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl "http://localhost:8080/path%00with%00nulls"</td>
+					<td>echo -e "POST /images HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\n" | nc localhost 3000</td>
+					<!-- Nginx -->
+					<td>400 Bad Request </td>
+					<!-- Config -->
+					<td>Content-Length is incorect, no body here</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "POST /images HTTP/1.1\r\nHost: localhost\r\n\r\n123456" | nc localhost 3000</td>
+					<!-- Nginx -->
+					<td>411 Length Required | 400 Bad Request</td>
+					<!-- Config -->
+					<td>Content-Length is absent but mandatory</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X PATCH http://localhost:8080/</td>
+					<!-- Nginx -->
+					<td>501 Not Implemented</td>
+					<!-- Config -->
+					<td>Method is not implemented in this server</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "GET / HTTP/2.0\r\n\r\n" | nc localhost 8080</td>
+					<!-- Nginx -->
+					<td>505 HTTP Version Not Supported</td>
 					<!-- Config -->
 					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "GET / HTTP/1.1\r\n\r\n" | nc localhost 8080</td>
 					<!-- Nginx -->
-					<td>400 Bad Request</td>
+					<td>400 Bad request</td>
+					<!-- Config -->
+					<td>Header Host is missing but mandatory</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -I http://localhost:3000/data/test.txt</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+					<!-- Config -->
+					<td>Check all headers are correct in the response.</td>
 				</tr>
 			</table>
+			<p>Est-ce que si "Accept = text/html", si j'envoie du css doit etre une erreur ?</p>
 		</div>
 
 		<div class="test-section">
@@ -274,20 +339,28 @@
 		</div>
 
 		<div class="test-section">
-			<h2>POST - DOWNLOAD</h2>
+			<h2>DOWNLOAD</h2>
 			<table>
 				<tr>
 					<td><h3>Command</h3></td>
-					<td><h3>Config</h3></td>
 					<td><h3>Nginx</h3></td>
+					<td><h3>Config / Comment</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td> </td>
-					<!-- Config -->
-					<td> </td>
+					<td>curl -v -o test_image.jpg http://localhost:8080/images/image_1.jpg</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK</td>
+					<!-- Config / Comment -->
+					<td>compare both images</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -o downloaded_test.txt http://localhost:8080/data/test.txt</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+					<!-- Config / Comment -->
+					<td>diff ./data/test.txt downloaded_test.txt == should return nothing</td>
 				</tr>
 			</table>
 		</div>
@@ -298,15 +371,31 @@
 				<tr>
 					<td><h3>Command</h3></td>
 					<td><h3>Config</h3></td>
-					<td><h3>Nginx</h3></td>
+					<td><h3>Return</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td> </td>
+					<td>echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 8080</td>
 					<!-- Config -->
-					<td> </td>
-					<!-- Nginx -->
-					<td> </td>
+					<td>In our server we handle POST of data in native way, according to some rules</td>
+					<!-- Return -->
+					<td> 403 Forbidden | 201 Created | 204 No Content</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "POST /images/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 8080</td>
+					<!-- Config -->
+					<td>POST method is not allowed in this route</td>
+					<!-- Return -->
+					<td> 405 Method Not Allowed</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 8080</td>
+					<!-- Config -->
+					<td>Remove right on the file or directory</td>
+					<!-- Return -->
+					<td>403 Forbidden</td>
 				</tr>
 			</table>
 		</div>
@@ -321,9 +410,9 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td> </td>
+					<td>echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 8080echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 3000</td>
 					<!-- Config -->
-					<td> </td>
+					<td></td>
 					<!-- Nginx -->
 					<td> </td>
 				</tr>

@@ -269,11 +269,11 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e "POST /images HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\n" | nc localhost 3000</td>
+					<td>echo -e "POST /images HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2\r\n\r\n1234" | nc localhost 3000</td>
 					<!-- Nginx -->
 					<td>400 Bad Request </td>
 					<!-- Config -->
-					<td>Content-Length is incorect, no body here</td>
+					<td>Content-Length is incorect</td>
 				</tr>
 				<tr>
 					<!-- Command -->

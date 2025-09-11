@@ -180,10 +180,14 @@ int	Client::isRequestWellChunked(const map<string, string> &headers)
 {
 	map<string, string>::const_iterator transfer;
 	map<string, string>::const_iterator content_len;
+	map<string, string>::const_iterator hostIt;
 	int									code = 0;
 
 	transfer = headers.find("Transfer-Encoding");
 	content_len = headers.find("Content-Length");
+	hostIt = headers.find("Host");
+	if (hostIt == headers.end())
+		code = 400;
 	if (transfer != headers.end() && transfer->second != "chunked") // can be gzip etc CHECK RFC
 		code = 501;
 	else if (transfer != headers.end() && content_len != headers.end()) // both present

@@ -41,7 +41,7 @@ int	HTTPRequest::parsingHeaders(const string &data)
 				code = 400;
 				return (OK);
 			}
-			if (key == "Content-Length" || key == "Transfer-Encodigin" || key == "Authorization")
+			if (key == "Content-Length" || key == "Transfer-Encoding" || key == "Authorization")
 			{
 				if (_headers.find(key) != _headers.end())
 				{

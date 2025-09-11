@@ -99,3 +99,5 @@ int Client::delete_all_folder_content(std::string dirPath)
 	closedir(dir);
 	return OK;
 }
+
+// est-ce que tu test bien avec la commande "echo -e "GET / HTTP/1.1\r\n\r\n" | nc localhost 8080" parce quand tu tests avec `curl` j'ai découvert que ca reconstruit tes headers si il sont mal formés

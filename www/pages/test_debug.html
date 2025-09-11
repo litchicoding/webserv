@@ -329,9 +329,57 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td> </td>
+					<td>curl -X GET localhost:8080/ </td>
 					<!-- Config -->
+					<td>200 OK</td>
+					<!-- Nginx -->
 					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET locahost:8080/Non_existant</td>
+					<!-- Config -->
+					<td>404 Not Found</td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET locahost:8080/upload</td>
+					<!-- Config -->
+					<td>301 Moved Permanently</td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET locahost:8080/upload/ [Autoindex On]</td>
+					<!-- Config -->
+					<td>200 OK / Listing</td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET locahost:8080/upload/ [Autoindex Off]</td>
+					<!-- Config -->
+					<td>403 Forbidden</td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET locahost:8080/upload/test.txt</td>
+					<!-- Config -->
+					<td>200 OK</td>
+					<!-- Nginx -->
+					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X GET locahost:8080/upload/not_permission.txt</td>
+					<!-- Config -->
+					<td>403 Forbidden</td>
 					<!-- Nginx -->
 					<td> </td>
 				</tr>

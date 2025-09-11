@@ -29,6 +29,7 @@ typedef struct	s_directives
 	size_t				client_max_body_size;
 	string				root;
 	string				full_path;
+	string				locationBlocName;
 	string				query_string;
 	vector<string>		index;
 	vector<string>		methods;

@@ -62,7 +62,7 @@ int	Client::handleText(const string &path)
 
 	struct stat st;
 	if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
-		filename = path + "/nonamefile.txt";
+		filename = path + "nonamefile.txt";
 	}
 	else
 		filename = path;

@@ -130,7 +130,7 @@ int	Client::processRequest()
 
 int	Client::isRequestWellFormedOptimized() {
 
-	string	URI, clean_URI;
+	string	URI, clean_URI, method;
 	
 	URI = _request.getURI();
 	clean_URI = stripQueryString(URI);
@@ -162,7 +162,12 @@ int	Client::isRequestWellFormedOptimized() {
 		_request.code = 413;
 		return (ERROR);
 	}
-	if (find(_config->methods.begin(), _config->methods.end(), _request.getMethod()) == _config->methods.end()) {
+	method = _request.getMethod();
+	if (method != "POST" && method != "DELETE" && method != "GET") {
+		_request.code = 501;
+		return (ERROR);
+	}
+	if (find(_config->methods.begin(), _config->methods.end(), method) == _config->methods.end()) {
 		_request.code = 405;
 		return (ERROR);
 	}
@@ -186,7 +191,7 @@ int	Client::isRequestWellChunked(const map<string, string> &headers)
 	else if (transfer != headers.end())  // just transfer-encoding
 		return (OK);
 	if (content_len == headers.end() && _request.getMethod() == "POST")
-		code = 400;
+		code = 411;
 	else if (content_len != headers.end()) {
 		if (content_len->second.empty() || content_len->second.length() > 19)
 			code = 400;
@@ -375,8 +380,9 @@ string	Client::getCodeMessage(int code)
 		case 400: return ("400 Bad Request");
 		case 403: return ("403 Forbidden");
 		case 404: return ("404 Not Found");
-		case 406: return ("405 Method Not Allowed");
+		case 405: return ("405 Method Not Allowed");
 		case 409: return ("409 Conflict");
+		case 411: return ("411 Length Required");
 		case 413: return ("413 Playload Too Large");
 		case 415: return ("415 Unsupported Media Type");
 		case 500: return ("500 Internal Server Error");

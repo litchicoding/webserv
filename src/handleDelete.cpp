@@ -43,6 +43,20 @@ int	Client::isDirectoryDelete()
 			return (403);
 		return (500);
 	}
+	string	result;
+	string	locationName = _config->locationBlocName;
+	size_t	last_occ = URI.rfind('/');
+	if (last_occ != string::npos)
+	{
+		size_t	prev_occ = URI.rfind('/', last_occ - 1);
+		if (prev_occ != string::npos) {
+			result = URI.substr(prev_occ);
+			result.erase(remove(result.begin(), result.end(), '/'), result.end());
+			locationName.erase(remove(locationName.begin(), locationName.end(), '/'), locationName.end());
+		}
+	}
+	if (result == locationName)
+		return (403);
 	if (remove(clean_path.c_str()) != OK)
 		return (500);
 	return (204);

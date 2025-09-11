@@ -15,10 +15,12 @@ static int	parse_directive(vector<t_tokenConfig>::iterator &token, t_tokenType t
 		token++;
 	}
 	if (type == SERVER)
-		server.setOneDirective(directive_type, directive_arg, &server.getDirectives());
+		return (server.setOneDirective(directive_type, directive_arg, &server.getDirectives()));
 	else if (type == LOCATION)
-		server.setLocation(loc_path, directive_type, directive_arg);
-	return OK;
+		return (server.setLocation(loc_path, directive_type, directive_arg));
+	else
+		return (ERROR);
+	return (OK);
 }
 
 static int	parse_location_block(vector<t_tokenConfig>::iterator &token, Server &server)
@@ -107,8 +109,10 @@ int	parse_config_file(string config_file, Listen &listenPorts)
 	vector<t_tokenConfig>::iterator	it = tokenList.begin();
 	while (it->type != END)
 	{
-		if (parse_server_block(it, serv_blocks) != OK)
+		if (parse_server_block(it, serv_blocks) != OK) {
+			cout << RED << "Error: config_file: invalid format flaged in configuration file\n" << RESET;
 			return ERROR;
+		}
 		it++;
 	}
 	listenPorts.setServerBlocks(serv_blocks);

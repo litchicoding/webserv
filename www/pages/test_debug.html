@@ -66,7 +66,7 @@
 			<h2>FILE CONFIG PARSING</h2>
 			<table>
 				<tr>
-					<td><h3>Command</h3></td>
+					<td><h3>Command / Config</h3></td>
 					<td><h3>Valid ?</h3></td>
 				</tr>
 				<tr>
@@ -92,6 +92,48 @@
 					<td>./webserv ./nonexistent.conf</td>
 					<!-- Valid ? -->
 					<td> NO, can't open file</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>no location block</td>
+					<!-- Valid ? -->
+					<td>YES, default location block</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>no port/address configured</td>
+					<!-- Valid ? -->
+					<td>YES, default port or address</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>no index</td>
+					<!-- Valid ? -->
+					<td>YES, default index</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>no autoindex</td>
+					<!-- Valid ? -->
+					<td>YES, default autoindex is off</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>listen ;</td>
+					<!-- Valid ? -->
+					<td>NO, invalid format</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>listen rr;</td>
+					<!-- Valid ? -->
+					<td>NO, invalid listen format</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>autoindex on off;</td>
+					<!-- Valid ? -->
+					<td>NO, invalid format</td>
 				</tr>
 			</table>
 		</div>
@@ -151,6 +193,14 @@
 					<td>listen 8080; autoindex on; index inexistent.html;</td>
 					<!-- Nginx -->
 					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -X DELETE http://127.0.0.2:8080/images/image_1.jpg</td>
+					<!-- Config -->
+					<td>allow_methods GET;</td>
+					<!-- Nginx -->
+					<td>403 Forbidden | 405 Not Allowed</td>
 				</tr>
 			</table>
 		</div>

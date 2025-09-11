@@ -118,16 +118,15 @@ bool	Listen::isClientTimeOut(int client_fd)
 		return false;
 	else if (client->second->last_activity == 0)
 		return false;
-	double timeout = 1.0;
 	time_t start = _clients[client_fd]->last_activity;
 	time_t end;
 	time(&end);
 	double diff = difftime(end, start);
-	// cout << "TimeOut Limit (seconds): " << timeout << endl;
+	// cout << "TimeOut Limit (seconds): " << TIMEOUT << endl;
 	// cout << "start: " << start << endl;
 	// cout << "end: " << end << endl;
-	// cout << "Elapsed seconds: " << diff << " / Limit: " << timeout << endl;
-	if (diff > timeout) {
+	// cout << "Elapsed seconds: " << diff << " / Limit: " << TIMEOUT << endl;
+	if (diff > TIMEOUT) {
 		cout << GREEN << "--- timeout for client [socket:" << client_fd << "]" RESET << endl;
 		return true;
 	}

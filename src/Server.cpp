@@ -150,6 +150,8 @@ int	Server::setListen(const string &arg)
 	size_t			pos;
 	stringstream	ss;
 
+	if (arg.empty())
+		return (ERROR);
 	pos = arg.find(":", 0);
 	if (pos != string::npos) {
 		listen.ip = arg.substr(0, pos);
@@ -162,7 +164,7 @@ int	Server::setListen(const string &arg)
 	else {
 		for (size_t i = 0; i < arg.size(); i++) {
 			if (!isdigit(arg[i])) {
-				cout << RED << "Error: setListen: invalid format" << RESET << endl;
+				cout << RED << "Error: setListen: invalid listen format" << RESET << endl;
 				return ERROR;
 			}
 		}
@@ -177,26 +179,29 @@ int	Server::setListen(const string &arg)
 
 int	Server::setOneDirective(const string &type, const vector<string> &arg, t_directives *container)
 {
-	if (type.empty())
+	if (type.empty() || arg.empty())
 		return ERROR;
-	if (type == "listen")
-		setListen(arg[0]);
-	if (type == "autoindex") {
+	if (type == "listen" && arg.size() == 1)
+		return (setListen(arg[0]));
+	if (type == "autoindex" && arg.size() == 1) {
 		if (arg[0] == "on")
 			container->autoindex = AUTO_ON;
 		else if (arg[0] == "off")
 			container->autoindex = AUTO_OFF;
+		return (OK);
 	}
-	else if (type == "client_max_body_size")
-		setClientMaxBodySize(arg[0], *container);
-	else if (type == "root")
-		setRoot(arg[0], *container);
+	else if (type == "client_max_body_size" && arg.size() == 1)
+		return (setClientMaxBodySize(arg[0], *container), OK);
+	else if (type == "root" && arg.size() == 1)
+		return (setRoot(arg[0], *container), OK);
 	else if (type == "index")
-		setIndex(arg, *container);
+		return (setIndex(arg, *container), OK);
 	else if (type == "allow_methods")
-		setMethods(arg, *container);
-	else if (type == "return" && container->redirection.empty())
+		return (setMethods(arg, *container), OK);
+	else if (type == "return" && container->redirection.empty()) {
 		container->redirection.insert(make_pair(atoi(arg[0].c_str()), arg[1]));
+		return (OK);
+	}
 	else if (type == "error_page") {
 		vector<string>::const_iterator it = arg.begin();
 		string uri = arg.back();
@@ -214,8 +219,9 @@ int	Server::setOneDirective(const string &type, const vector<string> &arg, t_dir
 			else
 				container->error_page.insert(make_pair(atoi(code.c_str()), uri));
 		}
+		return (OK);
 	}
-	return OK;
+	return (ERROR);
 }
 
 int	Server::setLocation(const string &loc_path, const string &type, const vector<string> &arg)
@@ -225,13 +231,13 @@ int	Server::setLocation(const string &loc_path, const string &type, const vector
 
 	map<string, t_directives>::iterator it = _locations.find(loc_path);
 	if (it != _locations.end())
-		setOneDirective(type, arg, &it->second);
+		return (setOneDirective(type, arg, &it->second));
 	else {
 		t_directives	newDirectives;
 		newDirectives.autoindex = INVALID;
 		newDirectives.client_max_body_size = 0;
 		if (!arg.empty())
-			setOneDirective(type, arg, &newDirectives);
+			return (setOneDirective(type, arg, &newDirectives));
 		_locations.insert(make_pair(loc_path, newDirectives));
 	}
 	return OK;

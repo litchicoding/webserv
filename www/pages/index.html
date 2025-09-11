@@ -122,6 +122,7 @@
         <div class="test-section">
             <h2>📝 Test POST - Send Data</h2>
             <form id="dataForm">
+                <input type="text" id="fileNameInput" name="name" placeholder="Filename" required>
                 <input type="text" id="nameInput" name="name" placeholder="Name" required>
                 <input type="text" id="messageInput" name="message" placeholder="Message" required>
                 <button type="submit">Send</button>
@@ -181,8 +182,7 @@
             }
             
             formData.append('file', fileInput.files[0]);
-            
-            fetch('/upload', {
+            fetch('/upload/' ,{
                 method: 'POST',
                 body: formData
             })
@@ -199,10 +199,12 @@
         document.getElementById('dataForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData();
+			const filename = document.getElementById('fileNameInput').value;
+            formData.append('filename', filename);
             formData.append('name', document.getElementById('nameInput').value);
             formData.append('message', document.getElementById('messageInput').value);
             
-            fetch('/data', {
+            fetch('/data/' + encodeURIComponent(filename), {
                 method: 'POST',
                 body: formData
             })

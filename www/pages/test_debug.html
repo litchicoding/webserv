@@ -273,7 +273,7 @@
 					<!-- Nginx -->
 					<td>400 Bad Request </td>
 					<!-- Config -->
-					<td>Content-Length is incorect</td>
+					<td>Content-Length is incorrect</td>
 				</tr>
 				<tr>
 					<!-- Command -->
@@ -337,9 +337,9 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -v -X -X GET localhost:8080/Non_existant</td>
+					<td>curl -v -X -X GET localhost:8080/Non_existent</td>
 					<!-- Config / Comment -->
-					<td>Ressource doesn't exists</td>
+					<td>Resource doesn't exists</td>
 					<!-- Nginx -->
 					<td>404 Not Found</td>
 				</tr>
@@ -371,45 +371,45 @@
 					<!-- Command -->
 					<td>curl -v -X GET localhost:8080/upload/test.txt</td>
 					<!-- Config / Comment -->
-					<td>Returns the ressource</td>
+					<td>Returns the corresponding resource</td>
 					<!-- Nginx -->
 					<td>200 OK</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -v -X GET localhost:8080/upload/not_permission.txt</td>
+					<td>curl -v -X GET localhost:8080/pages/forbidden.html</td>
 					<!-- Config / Comment -->
-					<td>403 Forbidden</td>
+					<td>Remove rights on the resource</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>403 Forbidden</td>
 				</tr>
 				<tr>
 					<!-- Command -->
 					<td>curl -v -X GET localhost:8080/images/image_2.png --output test.png</td>
 					<!-- Config / Comment -->
-					<td>200 OK</td>
+					<td>Check response headers too</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK | Content-Type: image/png | Content-Length: 1842505</td>
 				</tr>
 				<tr>
 					<!-- Command -->
 					<td>curl -v -X GET localhost:8080//upload///test.txt</td>
 					<!-- Config / Comment -->
-					<td>200 OK</td>
+					<td></td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK | Content-Type: text/plain | Content-Length: 125</td>
 				</tr>
 				<tr>
 					<!-- Command -->
 					<td>curl -v -X GET localhost:8080/data/éèàç.txt</td>
 					<!-- Config / Comment -->
-					<td>400 Bad Request</td>
+					<td></td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>404 Not Found</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -v -X GET localhost:8080/data/very_large_file.zip</td>
+					<td>curl -v -X GET localhost:8080/data/large_file.txt</td>
 					<!-- Config / Comment -->
 					<td></td>
 					<!-- Nginx -->

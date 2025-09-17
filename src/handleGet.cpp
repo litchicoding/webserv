@@ -23,6 +23,7 @@ int	Client::handleFileRequest()
 		return (403);
 	if (isCgi())
 		return (handleCGI());
+	cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
 	std::ifstream	file(clean_path.c_str());
 	if (!file.is_open())
 		return (500);

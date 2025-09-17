@@ -106,6 +106,8 @@ int	Client::processRequest()
 	if (_config == NULL)
 		_request.code = 500;
 	isRedirectionNeeded();
+	cout << YELLOW << _request.getBodyLen() << endl;
+	cout << _server->getDirectives().client_max_body_size << endl << endl << RESET << endl;
 	if (_request.code <= 0 && isRequestWellFormedOptimized() == OK) {
 		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";

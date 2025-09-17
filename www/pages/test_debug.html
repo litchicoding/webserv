@@ -395,7 +395,7 @@
 					<!-- Command -->
 					<td>curl -v -X GET localhost:8080//upload///test.txt</td>
 					<!-- Config / Comment -->
-					<td></td>
+					<td>Check response headers too</td>
 					<!-- Nginx -->
 					<td>200 OK | Content-Type: text/plain | Content-Length: 125</td>
 				</tr>
@@ -411,9 +411,9 @@
 					<!-- Command -->
 					<td>curl -v -X GET localhost:8080/data/large_file.txt</td>
 					<!-- Config / Comment -->
-					<td></td>
+					<td>yes "Test." | head -c 1104658150 >> ./42/webserv/www/data/very_large_file.txt</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK</td>
 				</tr>
 			</table>
 		</div>
@@ -502,15 +502,55 @@
 				<tr>
 					<td><h3>Command</h3></td>
 					<td><h3>Config</h3></td>
-					<td><h3>Nginx</h3></td>
+					<td><h3>Response</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td></td>
+					<td>curl -v -X DELETE http://localhost:8080/pages/gallery_page.html</td>
 					<!-- Config -->
-					<td></td>
-					<!-- Nginx -->
-					<td> </td>
+					<td>allow_methods GET;</td>
+					<!-- Response -->
+					<td>405 Not Allowed</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X DELETE http://localhost:8080/upload/nonexistent.html</td>
+					<!-- Config -->
+					<td>allow_methods POST DELETE;</td>
+					<!-- Response -->
+					<td>404 Not Found</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X DELETE http://localhost:8080/upload/forbidden.html</td>
+					<!-- Config -->
+					<td>Remove rights of the resource</td>
+					<!-- Response -->
+					<td>403 Forbidden</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X DELETE http://localhost:8080/upload/file.txt</td>
+					<!-- Config -->
+					<td>Create the resource before</td>
+					<!-- Response -->
+					<td>204 No Content</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X DELETE http://localhost:8080/upload/test/</td>
+					<!-- Config -->
+					<td>Create the directory with resources in it</td>
+					<!-- Response -->
+					<td>204 No Content</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X DELETE http://localhost:8080/upload/file.txt & curl -v -X DELETE http://localhost:8080/upload/file.txt</td>
+					<!-- Config -->
+					<td>Delete the same file twice</td>
+					<!-- Response -->
+					<td>204 No Content && 404 Not Found</td>
 				</tr>
 			</table>
 		</div>
@@ -520,16 +560,49 @@
 			<table>
 				<tr>
 					<td><h3>Command</h3></td>
-					<td><h3>Config</h3></td>
-					<td><h3>Nginx</h3></td>
+					<td><h3>Response</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td> </td>
-					<!-- Config -->
-					<td> </td>
+					<td>curl -v http://localhost:8080/cgi-bin/form.php</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v http://localhost:8080/cgi-bin/hello.py</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v http://localhost:8080/form.php</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v http://localhost:8080/hello.py</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X POST -d "name=Jean" -d "email=jean@example.com" http://localhost:8080/process.php</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v "http://localhost:8080/test.php?data=Bonjour%20a%20tous"</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v "http://localhost:8080/test_strict.php?data=Bonjour%20a%20tous"</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
 				</tr>
 			</table>
 		</div>
@@ -539,16 +612,48 @@
 			<table>
 				<tr>
 					<td><h3>Command</h3></td>
-					<td><h3>Config</h3></td>
-					<td><h3>Nginx</h3></td>
+					<td><h3>Return</h3></td>
+					<td><h3>Comment</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
+					<td>curl -v -H "Connection: keep-alive" http://localhost:8080/ http://localhost:8080/data/test.txt</td>
+					<!-- Return -->
+					<td>200 OK | Connection: keep-alive</td>
+					<!-- Comment -->
+					<td>Connection should be left intact (except by timeout)</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -H "Connection: close" http://localhost:8080/ http://localhost:8080/data/test.txt</td>
+					<!-- Return -->
+					<td>200 OK | Connection: close</td>
+					<!-- Comment -->
+					<td>Connection should be closed</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X GET http://localhost:8080/</td>
+					<!-- Return -->
+					<td>200 OK</td>
+					<!-- Comment -->
+					<td>Try to TIMEOUT the client and check if the connection is closed</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>siege -b -c 25 -t 2m http://localhost:8080/</td>
+					<!-- Return -->
+					<td>Availability: 99.50% or more, Failed transactions: 0 </td>
+					<!-- Comment -->
 					<td> </td>
-					<!-- Config -->
-					<td> </td>
-					<!-- Nginx -->
-					<td> </td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>watch -n 2 'echo "=== Connexions actives ==="; ss -tuln | grep :8080; echo "=== Connexions établies ==="; ss -t | grep :8080'</td>
+					<!-- Return -->
+					<td>Connection are closed at the end and don't accumulate</td>
+					<!-- Comment -->
+					<td>Test monitoring</td>
 				</tr>
 			</table>
 		</div>

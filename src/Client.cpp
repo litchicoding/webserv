@@ -53,7 +53,6 @@ int	Client::readData()
 
 int Client::processBuffer()
 {
-	// Traitement des headers (une seule fois)
 	if (state == READ_HEADERS) {
 		size_t pos = _buffer.find("\r\n\r\n");
 		if (pos != string::npos) {
@@ -64,33 +63,28 @@ int Client::processBuffer()
 			state = READ_BODY;
 		}
 		else {
-			// Pas encore tous les headers, on attend plus de données
+			state = READ_END;
+			_request.code = 400;
 			return (OK);
 		}
 	}
-	// Traitement du body (peut être appelé plusieurs fois)
 	if (state == READ_BODY) {
 		if (_request.isChunked() == true) {
-			// Pour les chunks, on traite autant qu'on peut à chaque fois
 			if (!_buffer.empty()) {
 				if (parseChunked(_buffer) == static_cast<size_t>(ERROR)) {
+					state = READ_END;
 					return ERROR;
 				}
 			}
-			// Si parseChunked a tout traité et mis state=READ_END, c'est fini
-			// Sinon on attend plus de données dans le prochain readData()
 		}
 		else if (!_buffer.empty()) {
-			// Body classique avec Content-Length
 			size_t remaining_len = _request.getExpectedBodyLen() - _request.getBodyLen();
 			size_t to_copy = min(_buffer.length(), remaining_len);
 			_request.appendBodyData(_buffer.c_str(), to_copy);
 			_buffer = _buffer.substr(to_copy);
 			
-			// Vérifier si on a tout reçu
-			if (_request.getBodyLen() >= _request.getExpectedBodyLen()) {
+			if (_request.getBodyLen() >= _request.getExpectedBodyLen())
 				state = READ_END;
-			}
 		}
 		else
 			state = READ_END;
@@ -103,7 +97,7 @@ int	Client::processRequest()
 	// cout << "[ DEBUG ] :\n" << _request;
 	string	method = _request.getMethod();
 	setConfig(_request.getURI());
-	if (_config == NULL)
+	if (_request.code == 0 && _config == NULL)
 		_request.code = 500;
 	isRedirectionNeeded();
 	if (_request.code <= 0 && isRequestWellFormedOptimized() == OK) {
@@ -354,7 +348,7 @@ void	Client::resetRequest()
 {
 	state = READ_HEADERS;
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("close") != string::npos)
+	if (_request.code >= 300 || (header != _request.getHeaders().end() && header->second.find("close") != string::npos))
 		_keep_alive = false;
 	else
 		_keep_alive = true;
@@ -420,7 +414,7 @@ void	Client::buildResponse(int code)
 			response << "Location: " << _request.response.location << "\r\n";
 	}
 	header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("close") != string::npos)
+	if (_request.code >= 300 || (header != _request.getHeaders().end() && header->second.find("close") != string::npos))
 		response << "Connection: close\r\n";
 	else
 		response << "Connection: keep-alive\r\n";
@@ -466,7 +460,7 @@ void	Client::setConfig(const string &URI)
 	if (_server == NULL)
 		return ;
 	_config = _server->searchLocationMatch(URI);
-	if (_config == NULL) {
+	if (_config == NULL && _request.code == 0) {
 		cout << RED << "Error: setLocationMatch(): no match found with URI(" << URI;
 		cout << ")" << RESET << endl;
 		return ;

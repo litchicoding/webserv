@@ -220,7 +220,7 @@
 					<!-- Command -->
 					<td>curl -X GET http://127.0.0.2:8080/images/</td>
 					<!-- Config -->
-					<td>location /images { return 301 http://localhost:3000/;}</td>
+					<td>location /images { return 301 http://localhost:8080/;}</td>
 					<!-- Nginx -->
 					<td>301 Moved Permanently</td>
 				</tr>
@@ -228,7 +228,7 @@
 					<!-- Command -->
 					<td>curl -X GET http://127.0.0.2:8080/images/</td>
 					<!-- Config -->
-					<td>location /images { return http://localhost:3000/;}</td>
+					<td>location /images { return http://localhost:8080/;}</td>
 					<!-- Nginx -->
 					<td>301 Moved Permanently</td>
 				</tr>
@@ -245,7 +245,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e "GET / HTTP/1.1\r\nContent-Length 100\r\n" | nc localhost 3000</td>
+					<td>echo -e "GET / HTTP/1.1\r\nContent-Length 100\r\n" | nc localhost 8080</td>
 					<!-- Nginx -->
 					<td>400 Bad Request</td>
 					<!-- Config -->
@@ -253,7 +253,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e "GET / HTTP/1.1\r\Host: \r\n" | nc localhost 3000</td>
+					<td>echo -e "GET / HTTP/1.1\r\Host: \r\n" | nc localhost 8080</td>
 					<!-- Nginx -->
 					<td>400 Bad Request</td>
 					<!-- Config -->
@@ -266,10 +266,11 @@
 					<td>400 Bad Request</td>
 					<!-- Config -->
 					<td>Wrong URL</td>
+					<td> TO FIX - BUG</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e "POST /images HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2\r\n\r\n1234" | nc localhost 3000</td>
+					<td>echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2\r\n\r\n1234" | nc localhost 8080</td>
 					<!-- Nginx -->
 					<td>400 Bad Request </td>
 					<!-- Config -->
@@ -277,7 +278,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e "POST /images HTTP/1.1\r\nHost: localhost\r\n\r\n123456" | nc localhost 3000</td>
+					<td>echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\n\r\n123456" | nc localhost 8080</td>
 					<!-- Nginx -->
 					<td>411 Length Required | 400 Bad Request</td>
 					<!-- Config -->
@@ -309,7 +310,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -I http://localhost:3000/data/test.txt</td>
+					<td>curl -I -X GET http://localhost:8080/data/test.txt</td>
 					<!-- Nginx -->
 					<td>200 OK</td>
 					<!-- Config -->

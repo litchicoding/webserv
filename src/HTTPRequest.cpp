@@ -52,6 +52,11 @@ int	HTTPRequest::parsingHeaders(const string &data)
 			// Store data in headers map
 			_headers[key] = value;
 		}
+		else {
+			code = 400;
+			return (OK);
+		}
+
 	}
 	map<string, string>::iterator header = _headers.find("Content-Length");
 	if (header != _headers.end() && !header->second.empty())

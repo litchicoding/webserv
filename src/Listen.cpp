@@ -173,29 +173,16 @@ int	Listen::update_connexion()
 	return OK;
 }
 
-bool	Listen::isListeningSocket(int fd)
-{
-	map<int, t_port>::iterator port = _listeningPorts.find(fd);
-	if (port != _listeningPorts.end())
-		return true;
-	return false;
-}
-
-
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
 	time(&(_clients[client_fd]->last_activity));
-	if (_clients[client_fd]->readData() != OK) {
+	if (_clients[client_fd]->readData() != OK && _clients[client_fd]->getRequest().code == 0) {
 		closeClientConnection(client_fd);
 		return (ERROR);
 	}
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
-	if (_clients[client_fd]->getServerConfig() == NULL) {
-		stop("no match for server configuration");
-		return (ERROR);
-	}
 	if (debug == true)
 		cout << YELLOW << "[ DEBUG ] :" << _clients[client_fd]->getRequest() << RESET << endl;
 	_clients[client_fd]->processRequest();
@@ -204,6 +191,14 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	if (_clients[client_fd]->isKeepAliveConnection() == false)
 		closeClientConnection(client_fd);
 	return (OK);
+}
+
+bool	Listen::isListeningSocket(int fd)
+{
+	map<int, t_port>::iterator port = _listeningPorts.find(fd);
+	if (port != _listeningPorts.end())
+		return true;
+	return false;
 }
 
 void	Listen::closeClientConnection(int client_fd)

@@ -20,7 +20,7 @@ int	main(int ac, char **av)
 	g_global_instance = &listenPorts;
 	listenPorts.configuration();
 	// cout << listenPorts;
-	listenPorts.debug = true;
+	listenPorts.debug = false;
 	if (listenPorts.start_connexion() != OK)
 		return ERROR;
 	listenPorts.update_connexion();

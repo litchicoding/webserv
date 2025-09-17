@@ -113,11 +113,11 @@ bool	Listen::isClientTimeOut(int client_fd)
 {
 	map<int, Client*>::iterator client = _clients.find(client_fd);
 	if (client == _clients.end())
-		return false;
+		return (false);
 	else if (client->second == NULL)
-		return false;
+		return (false);
 	else if (client->second->last_activity == 0)
-		return false;
+		return (false);
 	time_t start = _clients[client_fd]->last_activity;
 	time_t end;
 	time(&end);
@@ -126,7 +126,7 @@ bool	Listen::isClientTimeOut(int client_fd)
 	// cout << "start: " << start << endl;
 	// cout << "end: " << end << endl;
 	// cout << "Elapsed seconds: " << diff << " / Limit: " << TIMEOUT << endl;
-	if (diff > TIMEOUT) {
+	if (diff >= TIMEOUT) {
 		cout << GREEN << "--- timeout for client [socket:" << client_fd << "]" RESET << endl;
 		return true;
 	}
@@ -282,7 +282,6 @@ void	Listen::setServerBlocks(const vector<Server> &serv_blocks)
 void	Listen::addNewClient(int listen_fd, int epoll_fd)
 {
 	Client	*newClient = new Client(listen_fd, epoll_fd);
-	time(&newClient->last_activity);
 	_clients.insert(make_pair(newClient->getClientFd(), newClient));
 }
 

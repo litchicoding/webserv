@@ -36,7 +36,6 @@ private:
 	HTTPRequest			_request;
 	string				_buffer;
 	bool				_keep_alive;
-	time_t				_last_activity;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();

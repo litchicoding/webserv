@@ -5,11 +5,9 @@ bool Client::isCgi()
 	string path =_config->full_path;
 	if (path.rfind(".php") == path.size() - 4)
 		return true;
-		
-	if (path.rfind(".py") == path.size() - 3)
+	else if (path.rfind(".py") == path.size() - 3)
 		return true;
-
-	if (path.find("/cgi-bin/") != std::string::npos)
+	else if (path.find("/cgi-bin/") != std::string::npos)
  		return true;
 	return false;
 }

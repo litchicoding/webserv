@@ -18,15 +18,14 @@ int	Client::handleGet() {
 int	Client::handleFileRequest()
 {
 	string clean_path = urlDecode(_config->full_path);
+
 	if (access(clean_path.c_str(), R_OK) != 0)
 		return (403);
 	if (isCgi())
 		return (handleCGI());
-
 	std::ifstream	file(clean_path.c_str());
 	if (!file.is_open())
 		return (500);
-
 	std::ostringstream	body;
 	body << file.rdbuf();
 	file.close();

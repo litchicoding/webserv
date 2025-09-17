@@ -324,93 +324,93 @@
 			<table>
 				<tr>
 					<td><h3>Command</h3></td>
-					<td><h3>Config</h3></td>
+					<td><h3>Config / Comment</h3></td>
 					<td><h3>Nginx</h3></td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/ </td>
-					<!-- Config -->
-					<td>200 OK</td>
+					<td>curl -v -X GET localhost:8080/ </td>
+					<!-- Config / Comment -->
+					<td>index index.html /pages/index.html;</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/Non_existant</td>
-					<!-- Config -->
+					<td>curl -v -X -X GET localhost:8080/Non_existant</td>
+					<!-- Config / Comment -->
+					<td>Ressource doesn't exists</td>
+					<!-- Nginx -->
 					<td>404 Not Found</td>
-					<!-- Nginx -->
-					<td> </td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/upload</td>
-					<!-- Config -->
-					<td>301 Moved Permanently</td>
+					<td>curl -v -X GET localhost:8080/upload</td>
+					<!-- Config / Comment -->
+					<td>Must send back a new URL in Location</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>301 Moved Permanently | Location:http://localhost:8080/upload/</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/upload/ [Autoindex On]</td>
-					<!-- Config -->
-					<td>200 OK / Listing</td>
+					<td>curl -v -X GET localhost:8080/upload/</td>
+					<!-- Config / Comment -->
+					<td>autoindex on</td>
 					<!-- Nginx -->
-					<td> </td>
+					<td>200 OK | Listing directory</td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/upload/ [Autoindex Off]</td>
-					<!-- Config -->
+					<td>curl -v -X GET localhost:8080/upload/</td>
+					<!-- Config / Comment -->
+					<td>autoindex off</td>
+					<!-- Nginx -->
+					<td>403 Forbidden</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X GET localhost:8080/upload/test.txt</td>
+					<!-- Config / Comment -->
+					<td>Returns the ressource</td>
+					<!-- Nginx -->
+					<td>200 OK</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X GET localhost:8080/upload/not_permission.txt</td>
+					<!-- Config / Comment -->
 					<td>403 Forbidden</td>
 					<!-- Nginx -->
 					<td> </td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/upload/test.txt</td>
-					<!-- Config -->
+					<td>curl -v -X GET localhost:8080/images/image_2.png --output test.png</td>
+					<!-- Config / Comment -->
 					<td>200 OK</td>
 					<!-- Nginx -->
 					<td> </td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/upload/not_permission.txt</td>
-					<!-- Config -->
-					<td>403 Forbidden</td>
-					<!-- Nginx -->
-					<td> </td>
-				</tr>
-				<tr>
-					<!-- Command -->
-					<td>curl -X GET localhost:8080/images/image_2.png --output test.png</td>
-					<!-- Config -->
+					<td>curl -v -X GET localhost:8080//upload///test.txt</td>
+					<!-- Config / Comment -->
 					<td>200 OK</td>
 					<!-- Nginx -->
 					<td> </td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080//upload///test.txt</td>
-					<!-- Config -->
-					<td>200 OK</td>
-					<!-- Nginx -->
-					<td> </td>
-				</tr>
-				<tr>
-					<!-- Command -->
-					<td>curl -X GET localhost:8080/data/éèàç.txt</td>
-					<!-- Config -->
+					<td>curl -v -X GET localhost:8080/data/éèàç.txt</td>
+					<!-- Config / Comment -->
 					<td>400 Bad Request</td>
 					<!-- Nginx -->
 					<td> </td>
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>curl -X GET localhost:8080/data/very_large_file.zip</td>
-					<!-- Config -->
+					<td>curl -v -X GET localhost:8080/data/very_large_file.zip</td>
+					<!-- Config / Comment -->
 					<td></td>
 					<!-- Nginx -->
 					<td> </td>

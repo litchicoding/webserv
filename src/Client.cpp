@@ -14,7 +14,6 @@ Client::Client(int listen_fd, int epoll_fd)
 		return ;
 	}
 	add_fd_to_epoll(epoll_fd, _client_fd);
-	_last_activity = time(NULL);
 }
 
 Client::~Client()
@@ -355,10 +354,10 @@ void	Client::resetRequest()
 {
 	state = READ_HEADERS;
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		_keep_alive = true;
-	else
+	if (header != _request.getHeaders().end() && header->second.find("close") != string::npos)
 		_keep_alive = false;
+	else
+		_keep_alive = true;
 	_config = NULL;
 	_request.resetRequest();
 	_buffer.clear();
@@ -400,6 +399,7 @@ string	Client::getCodeMessage(int code)
 
 void	Client::buildResponse(int code)
 {
+	map<string, string>::const_iterator header;
 	ostringstream	response;
 
 	if (code == 0)
@@ -412,13 +412,18 @@ void	Client::buildResponse(int code)
 	if (!_request.response.body.empty())
 		response << "Content-Type: " << _request.response.content_type << "\r\n";
 	response << "Content-Length: " << _request.response.body.size() << "\r\n";
-	if ((code >= 301 && code <= 308) || _request.getMethod() == "POST")
-		response << "Location: " << _request.response.location << "\r\n";
-	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (header != _request.getHeaders().end() && header->second.find("keep-alive") != string::npos)
-		response << "Connection: keep-alive\r\n";
-	else
+	if ((code >= 301 && code <= 308) || _request.getMethod() == "POST") {
+		header = _request.getHeaders().find("Host");
+		if (header != _request.getHeaders().end() && !header->second.empty())
+			response << "Location: http://" << header->second << _request.response.location << "\r\n";
+		else
+			response << "Location: " << _request.response.location << "\r\n";
+	}
+	header = _request.getHeaders().find("Connection");
+	if (header != _request.getHeaders().end() && header->second.find("close") != string::npos)
 		response << "Connection: close\r\n";
+	else
+		response << "Connection: keep-alive\r\n";
 	response << "\r\n";
 	if (!_request.response.body.empty())
 		response << _request.response.body;

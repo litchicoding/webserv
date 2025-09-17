@@ -459,7 +459,7 @@
 					<!-- Config -->
 					<td>In our server we handle POST of data in native way, according to some rules</td>
 					<!-- Return -->
-					<td> 403 Forbidden | 201 Created | 204 No Content</td>
+					<td>201 Created | 204 No Content</td>
 				</tr>
 				<tr>
 					<!-- Command -->
@@ -477,6 +477,22 @@
 					<!-- Return -->
 					<td>403 Forbidden</td>
 				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X POST -F "name=André" -F "file=/www/images/image_1.jpg" -F "description=Test file upload" http://localhost:8080/upload/</td>
+					<!-- Config -->
+					<td>Directory must allow POST and the request body correct</td>
+					<!-- Return -->
+					<td>201 Created</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>curl -v -X POST -F "name=Karine" -F "file=@./www/data/test.txt" -F "description=Test file upload" http://localhost:8080/upload/</td>
+					<!-- Config -->
+					<td>Directory must allow POST and the request body correct</td>
+					<!-- Return -->
+					<td>201 Created</td>
+				</tr>
 			</table>
 		</div>
 
@@ -490,7 +506,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 8080echo -e "POST /data/ HTTP/1.1\r\nHost: localhost\r\nContent-Type: text/plain\r\nContent-Length: 6\r\n\r\n123456" | nc localhost 3000</td>
+					<td></td>
 					<!-- Config -->
 					<td></td>
 					<!-- Nginx -->

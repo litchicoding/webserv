@@ -138,21 +138,17 @@ int	Client::uploadFile(const string &filename, const string &boundary)
 {
 	const vector<char>&	body_original = _request.getBody();
 	string		body(body_original.begin(), body_original.end());
-	string		start_boundary, end_boundary;
+	string		start_boundary;
 	ofstream	file;
 	size_t		pos, start, end;
 
 	file.open(filename.c_str(), ofstream::out | ofstream::binary);
 	if (!file.is_open())
 		return (ERROR);
-	start_boundary = "--" + boundary;
-	end_boundary = "--" + boundary + "--";
-	pos = 0;
-	while (true)
+	start_boundary = "filename=\"" + findFileName() + '"';
+	pos = body.find(start_boundary, 0);
+	while (pos != string::npos)
 	{
-		pos = body.find(start_boundary, pos);
-		if (pos == string::npos)
-			break ;
 		pos = body.find("\r\n\r\n", (pos + start_boundary.length()));
 		if (pos == string::npos)
 			break ;
@@ -160,17 +156,10 @@ int	Client::uploadFile(const string &filename, const string &boundary)
 		pos = body.find("\r\n--" + boundary, start);
 		if (pos != string::npos)
 			end = pos;
-		else {
-			pos = body.find("\r\n" + end_boundary, start);
-			if (pos != string::npos) {
-				end = pos;
-				end -= 2;
-			}
-			else
-				end = body_original.size();
-		}
+		else
+			break ;
 		file.write(&body_original[start], end - start);
-		pos = end + 2 + boundary.length();
+		pos = string::npos;
 	}
 	file.close();
 	return (OK);

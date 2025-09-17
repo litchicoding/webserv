@@ -29,6 +29,8 @@ public:
 	Listen();
 	~Listen();
 
+	bool					debug;
+
 	void					configuration();
 	int						start_connexion();
 	int						update_connexion();

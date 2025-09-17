@@ -3,7 +3,7 @@
 /**************************************************************************************************/
 /* Constructor and Deconstructor ******************************************************************/
 
-Listen::Listen() : _epoll_fd(INVALID)
+Listen::Listen() : _epoll_fd(INVALID), debug(false)
 {
 	cout << GREEN << "***  Listening ports Configuration   ***" << RESET << endl;
 }
@@ -196,6 +196,8 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 		stop("no match for server configuration");
 		return (ERROR);
 	}
+	if (debug == true)
+		cout << YELLOW << "[ DEBUG ] :" << _clients[client_fd]->getRequest() << RESET << endl;
 	_clients[client_fd]->processRequest();
 	_clients[client_fd]->sendResponse();
 	_clients[client_fd]->resetRequest();

@@ -348,7 +348,7 @@ void	Client::resetRequest()
 {
 	state = READ_HEADERS;
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos))
+	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos)  || _request.getHeaders().find("User-Agent") == _request.getHeaders().end())
 		_keep_alive = false;
 	else
 		_keep_alive = true;
@@ -414,7 +414,7 @@ void	Client::buildResponse(int code)
 		response << "Location: " << _request.response.location << "\r\n";
 	}
 	header = _request.getHeaders().find("Connection");
-	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos))
+	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos) || _request.getHeaders().find("User-Agent") == _request.getHeaders().end())
 		response << "Connection: close\r\n";
 	else
 		response << "Connection: keep-alive\r\n";

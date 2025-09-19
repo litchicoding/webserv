@@ -36,7 +36,6 @@
 # define DEFAULT_CONFIG_FILE "./config/webserv.conf"
 
 # define OK 0
-# define SUCCESS 0
 # define ERROR -1
 # define INVALID -1
 # define MAX_EVENTS 10

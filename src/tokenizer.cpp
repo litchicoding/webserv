@@ -38,8 +38,10 @@ static int	tokenize_server_line(string &line, size_t start, vector<t_tokenConfig
 
 	if (line[i] == '{' && line[i + 1] == '\0')
 		tokenList->push_back(create_token("{", O_BRACE));
+	else if (line[i] == '{' && line[i + 1] != '\0')
+		return parsing_error(line, INVALID_ARG);
 	else
-		return parsing_error("tokenize_server_line", MISSING_ARG);
+		return parsing_error("opening brace", MISSING_ARG);
 	return OK;
 }
 
@@ -56,8 +58,10 @@ static int	tokenize_location_line(string &line, size_t start, vector<t_tokenConf
 	i = skip_white_spaces(line, i);
 	if (line[i] == '{' && line[i + 1] == '\0')
 		tokenList->push_back(create_token("{", O_BRACE));
+	else if (line[i] == '{' && line[i + 1] != '\0')
+		return parsing_error(line, INVALID_ARG);
 	else
-		return parsing_error("tokenize_location_line", MISSING_ARG);
+		return parsing_error("opening brace", MISSING_ARG);
 	return OK;
 }
 
@@ -81,11 +85,21 @@ static int	tokenize_directive_line(string &line, size_t start, vector<t_tokenCon
 		return ERROR;
 
 	tokenList->push_back(create_token(line.substr(start, end - start), IDENTIFIER));
+	int	special_case = NO;
+	if (tokenList->back().data == "return")
+		special_case = YES;
 	start = skip_white_spaces(line, end);
 	end = start;
 	while (line[end] && line[end] != ';')
 	{
-		if (isspace(line[end])) {
+		if (isspace(line[end]) && special_case == YES) {
+			string	args = line.substr(start, end - start);
+			tokenList->push_back(create_token(args, ARG));
+			start = end + 1;
+			end = skip_white_spaces(line, end);
+			special_case = DONE;
+		}
+		if (isspace(line[end]) && !special_case) {
 			string	args = line.substr(start, end - start);
 			tokenList->push_back(create_token(args, ARG));
 			start = end + 1;
@@ -104,7 +118,7 @@ static int	tokenize_directive_line(string &line, size_t start, vector<t_tokenCon
 	if (line[end] && line[end] == ';')
 		tokenList->push_back(create_token(";", SEMICOLON));
 	else
-		return parsing_error("configuration file ", MISSING_ARG);
+		return parsing_error("semicolon", MISSING_ARG);
 	return OK;
 }
 
@@ -125,8 +139,8 @@ int	tokenize_config_file(ifstream &file, vector<t_tokenConfig> *tokenList)
 			status = tokenize_directive_line(line, pos, tokenList);
 		else if (line[pos] == '}')
 			tokenList->push_back(create_token("}", C_BRACE));
-		else if (line[pos] != '#' && line.empty() && line[pos] != '\0')
-			return parsing_error("tokenize_config_file", INVALID_ARG);
+		else if (line[pos] != '#' && !line.empty() && line[pos] != '\0')
+			return parsing_error(line, INVALID_ARG);
 		if (status != OK)
 			return ERROR;
 	}

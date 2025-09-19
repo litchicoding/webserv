@@ -5,15 +5,24 @@ static int	parse_directive(vector<t_tokenConfig>::iterator &token, t_tokenType t
 	string			directive_type = token->data;
 	vector<string>	directive_arg;
 
+	if (token->type != IDENTIFIER)
+		return (parsing_error("directive type", MISSING_ARG));
 	token++;
 	while (token->type != SEMICOLON)
 	{
-		if (token->type == ARG && !token->data.empty())
+		if (token->type == ARG && !token->data.empty()) {
+			if (directive_type == "return" 
+				&& ((token->data[0] == '"' && token->data[token->data.length() - 1] == '"')
+				|| (token->data[0] == '\'' && token->data[token->data.length() - 1] == '\'')))
+					token->data = token->data.substr(1, token->data.length() - 2);
 			directive_arg.push_back(token->data);
-		else
-			return parsing_error("parse_directive", MISSING_ARG);
+		}
+		else if (token->type == ARG && token->data.empty())
+			return parsing_error("directive argument is empty", MISSING_ARG);
 		token++;
 	}
+	if (token->type != SEMICOLON)
+		return (parsing_error("directive argument", MISSING_ARG));
 	if (type == SERVER)
 		return (server.setOneDirective(directive_type, directive_arg, &server.getDirectives()));
 	else if (type == LOCATION)
@@ -26,43 +35,48 @@ static int	parse_directive(vector<t_tokenConfig>::iterator &token, t_tokenType t
 static int	parse_location_block(vector<t_tokenConfig>::iterator &token, Server &server)
 {
 	if (token->data.empty())
-		return ERROR;
+		return (parsing_error("location path argument is empty", INVALID_ARG));
 		
 	string	loc_path = token->data;
 	token++;
 	if (token->type != O_BRACE)
-		return parsing_error("parse_location_block", MISSING_ARG);
+		return (parsing_error("opening brace", MISSING_ARG));
 	while (token->type != C_BRACE)
 	{
 		if (token->type == IDENTIFIER && parse_directive(token, LOCATION, server, loc_path) != OK)
-			return ERROR;
+			return (ERROR);
 		token++;
 	}
 	if (server.getLocations().find(loc_path) == server.getLocations().end())
 		server.setLocation(loc_path, "", std::vector<std::string>());
-	return OK;
+	if (token->type != C_BRACE)
+		return (parsing_error("closing brace", MISSING_ARG));
+	return (OK);
 }
 
 static int	parse_server_block(vector<t_tokenConfig>::iterator &token, vector<Server> &serv_blocks)
 {
 	if (token->type != SERVER)
-		return parsing_error("parse_server_block", MISSING_ARG);
+		return parsing_error("server block", MISSING_ARG);
 
 	Server	newServer = Server();
 	token++;
 	if (token->type != O_BRACE)
-		return parsing_error("parse_server_block", MISSING_ARG);
+		return parsing_error("opening brace", MISSING_ARG);
+	token++;
 	while (token->type != C_BRACE)
 	{
 		if (token->type == LOCATION && parse_location_block(token, newServer) != OK)
-			return ERROR;
+			return (ERROR);
 		else if (token->type == IDENTIFIER && parse_directive(token, SERVER, newServer, "") != OK)
-			return ERROR;
+			return (ERROR);
 		token++;
 	}
+	if (token->type != C_BRACE)
+		return parsing_error("closing brace", MISSING_ARG);
 	newServer.defaultConfiguration();
 	serv_blocks.push_back(newServer);
-	return OK;
+	return (OK);
 }
 
 static bool isNameExtensionValid(const string &config_file, size_t len)
@@ -110,17 +124,11 @@ int	parse_config_file(string config_file, Listen &listenPorts)
 	while (it->type != END)
 	{
 		if (parse_server_block(it, serv_blocks) != OK) {
-			cout << RED << "Error: config_file: invalid format flaged in configuration file\n" << RESET;
+			cout << RED << "Can't continue: invalid format flagged in configuration file\n" << RESET;
 			return ERROR;
 		}
 		it++;
 	}
-	// for (vector<Server>::iterator it = serv_blocks.begin(); it != serv_blocks.end(); it++)
-	// {
-	// 	it->defaultConfiguration();
-	// 	cout << *it;
-	// }
-	// cout << "------------------------------" << endl << endl;
 	listenPorts.setServerBlocks(serv_blocks);
 	return OK;
 }
@@ -131,12 +139,24 @@ int	parsing_error(const string &msg, int code_error)
 	switch (code_error)
 	{
 		case MISSING_ARG:
-			cout << msg << " - missing an argument" << endl;
+			if (msg.size() > 0)
+				cout  << "missing an argument -> " << msg;
+			else
+				cout  << "missing an argument";
 			break ;
 		case INVALID_ARG:
-			cout << msg << " - invalid argument detected" << endl;
+			if (msg.size() > 0)
+				cout << "invalid argument detected in -> \"" << msg << "\"";
+			else
+				cout << "invalid argument detected in ";
+			break ;
+		case INVALID_FORMAT:
+			if (msg.size() > 0)
+				cout << "invalid argument detected in -> " << msg;
+			else
+				cout << "invalid argument detected in ";
 			break ;
 	}
-	cout << RESET;
+	cout << endl << RESET;
 	return ERROR;
 }

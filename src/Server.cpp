@@ -25,15 +25,20 @@ Server::~Server()
 
 void	Server::defaultLocConfiguration(t_directives &serv, t_directives &location)
 {
-	if (location.autoindex == INVALID) location.autoindex = serv.autoindex;
+	if (location.autoindex == INVALID)
+		location.autoindex = serv.autoindex;
 	if (location.client_max_body_size == 0)
 		location.client_max_body_size = serv.client_max_body_size;
-	if (location.root.empty()) location.root = serv.root;
-	if (location.index.empty()) location.index = serv.index;
-	if (location.methods.empty()) location.methods = serv.methods;
+	if (location.root.empty())
+		location.root = serv.root;
+	if (location.index.empty())
+		location.index = serv.index;
+	if (location.methods.empty())
+		location.methods = serv.methods;
 	if (location.redirection.empty())
 		location.redirection = serv.redirection;
-	if (location.error_page.empty()) location.error_page = serv.error_page;
+	if (location.error_page.empty())
+		location.error_page = serv.error_page;
 }
 
 void	Server::defaultConfiguration()
@@ -169,23 +174,28 @@ int	Server::setListen(const string &arg)
 	else {
 		for (size_t i = 0; i < arg.size(); i++) {
 			if (!isdigit(arg[i])) {
-				cout << RED << "Error: setListen: invalid listen format" << RESET << endl;
-				return ERROR;
+				return (parsing_error(arg, INVALID_ARG));
 			}
 		}
 		listen.port = atoi(arg.c_str());
 		listen.ip = "0.0.0.0";
 	}
+	for (size_t i = 0; i < listen.ip.size(); i++) {
+		if (!isdigit(listen.ip[i]) && listen.ip[i] != '.')
+			return (parsing_error(listen.ip, INVALID_ARG));
+	}
 	ss << listen.port;
 	listen.address_port = listen.ip + ":" + ss.str();
 	_listen.push_back(listen);
-	return OK;
+	return (OK);
 }
 
 int	Server::setOneDirective(const string &type, const vector<string> &arg, t_directives *container)
 {
-	if (type.empty() || arg.empty())
-		return ERROR;
+	if (type.empty())
+		return (parsing_error("directive type is empty", MISSING_ARG));
+	else if (arg.size() <= 0)
+		return (parsing_error("directive argument is empty", MISSING_ARG));
 	if (type == "listen" && arg.size() == 1)
 		return (setListen(arg[0]));
 	if (type == "autoindex" && arg.size() == 1) {
@@ -224,48 +234,49 @@ int	Server::setOneDirective(const string &type, const vector<string> &arg, t_dir
 		}
 		return (OK);
 	}
-	return (ERROR);
+	return (parsing_error("directive " + type, INVALID_ARG));
 }
 
 int	Server::setLocation(const string &loc_path, const string &type, const vector<string> &arg)
 {
 	if (loc_path.empty())
-		return ERROR;
+		return (parsing_error("location path argument is empty", INVALID_ARG));
 
 	map<string, t_directives>::iterator it = _locations.find(loc_path);
 	if (it != _locations.end())
 		return (setOneDirective(type, arg, &it->second));
 	else {
 		t_directives	newDirectives;
-		newDirectives.autoindex = INVALID;
-		newDirectives.client_max_body_size = 0;
 		_locations.insert(make_pair(loc_path, newDirectives));
+		_locations[loc_path].autoindex = INVALID;
+		_locations[loc_path].client_max_body_size = 0;
 		map<string, t_directives>::iterator it = _locations.find(loc_path);
 		if (!arg.empty())
 			return (setOneDirective(type, arg, &it->second));
 	}
-	return OK;
+	return (OK);
 }
 
 int	Server::setRedirection(const vector<string> &arg, t_directives &dir)
 {
 	if (arg.size() == 0)
-		return (ERROR);
+		return (parsing_error("directive return is empty", INVALID_FORMAT));
 	if (arg.size() == 2 && !arg[0].empty() && !arg[1].empty()) {
 		for (size_t i = 0; i < arg[0].size(); i++) {
 			if (!isdigit(arg[0][i]))
-				return (ERROR);
+				return (parsing_error(arg[0], INVALID_ARG));
 		}
 		dir.redirection.insert(make_pair(atoi(arg[0].c_str()), arg[1]));
 		return (OK);
 	}
-	if (arg.size() == 1) {
+	if (arg.size() == 1 && !arg[0].empty()) {
 		if (arg[0].compare(0, 7, "http://"))
-			return (ERROR);
+			return (parsing_error(arg[0], INVALID_ARG));
 		dir.redirection.insert(make_pair(302, arg[0]));
 		return (OK);
 	}
-	return (ERROR);
+	cout << arg[0] << " " << arg[1] << endl;
+	return (parsing_error("directive return, invalid argument", INVALID_FORMAT));
 }
 
 void	Server::setClientMaxBodySize(const string &value, t_directives &dir)

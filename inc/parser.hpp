@@ -4,11 +4,16 @@
 # include <iostream>
 # include <string>
 
+# define NO 0
+# define YES 1
+# define DONE 2
+
 # define SERV_LEN 6
 # define LOC_LEN 8
 
 # define MISSING_ARG 10
 # define INVALID_ARG 11
+# define INVALID_FORMAT 12
 
 class	Server;
 class	Listen;

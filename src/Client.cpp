@@ -348,7 +348,7 @@ void	Client::resetRequest()
 {
 	state = READ_HEADERS;
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if (_request.code >= 300 || (header != _request.getHeaders().end() && header->second.find("close") != string::npos))
+	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos))
 		_keep_alive = false;
 	else
 		_keep_alive = true;
@@ -408,13 +408,13 @@ void	Client::buildResponse(int code)
 	response << "Content-Length: " << _request.response.body.size() << "\r\n";
 	if ((code >= 301 && code <= 308) || _request.getMethod() == "POST") {
 		header = _request.getHeaders().find("Host");
-		if (header != _request.getHeaders().end() && !header->second.empty())
+		if (header != _request.getHeaders().end() && !header->second.empty() && _request.response.location.find("http://") == string::npos)
 			response << "Location: http://" << header->second << _request.response.location << "\r\n";
 		else
-			response << "Location: " << _request.response.location << "\r\n";
+		response << "Location: " << _request.response.location << "\r\n";
 	}
 	header = _request.getHeaders().find("Connection");
-	if (_request.code >= 300 || (header != _request.getHeaders().end() && header->second.find("close") != string::npos))
+	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos))
 		response << "Connection: close\r\n";
 	else
 		response << "Connection: keep-alive\r\n";

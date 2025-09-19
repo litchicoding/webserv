@@ -5,7 +5,7 @@
 
 Listen::Listen() : _epoll_fd(INVALID), debug(false)
 {
-	cout << GREEN << "***  Listening ports Configuration   ***" << RESET << endl;
+	cout << GREEN << "***  Listening ports Creation  ***" << RESET << endl;
 }
 
 Listen::~Listen()

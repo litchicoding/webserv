@@ -96,6 +96,7 @@ int	parse_config_file(string config_file, Listen &listenPorts)
 {
 	if (config_file.empty())
 		config_file = DEFAULT_CONFIG_FILE;
+	cout << CYAN << "---  Checking configuration file, wait for validation..." << RESET << endl;
 	if (!isNameExtensionValid(config_file, config_file.length()))
 		return ERROR;
 	// open file
@@ -123,10 +124,8 @@ int	parse_config_file(string config_file, Listen &listenPorts)
 	vector<t_tokenConfig>::iterator	it = tokenList.begin();
 	while (it->type != END)
 	{
-		if (parse_server_block(it, serv_blocks) != OK) {
-			cout << RED << "Can't continue: invalid format flagged in configuration file\n" << RESET;
+		if (parse_server_block(it, serv_blocks) != OK)
 			return ERROR;
-		}
 		it++;
 	}
 	if (serv_blocks.empty()) {

@@ -79,7 +79,7 @@ private:
 	int					uploadFile(const string &filename, const string &boundary);
 	int					saveData(const string &root,  const string &boundary);
 	string				searchBoundary(const string &arg);
-	int					isMultipartWellFormed(const string &boundary);
+	int					isMultipartWellFormed(const string &boundary, bool isFilename);
 	int					isValidPostRequest(const string &path);
 
 	/* CGI ***************************************************************************************/

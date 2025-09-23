@@ -31,16 +31,18 @@ int	Client::handleMultipartForm(const map<string, string>::const_iterator &heade
 
 	boundary = searchBoundary(header->second);
 	string	body(_request.getBody().begin(), _request.getBody().end());
-	if (boundary.size() <= 0 || body.find(boundary) == string::npos || isMultipartWellFormed(boundary) != OK)
+	if (boundary.size() <= 0 || body.find(boundary) == string::npos)
 		return (400);
 	filename = urlDecode(findFileName());
 	if (filename.size() > 0) {
-		if (isValidPostRequest(path + filename) != OK)
+		if (isValidPostRequest(path + filename) != OK || isMultipartWellFormed(boundary, true) != OK)
 			return (_request.code);
 		if (uploadFile(path + filename, boundary) != OK)
 			return (500);
 	}
 	else {
+		if (isMultipartWellFormed(boundary, false) != OK)
+			return (_request.code);
 		if (path[path.length() - 1] == '/') {
 			if (saveData(path + extractName() + ".txt", boundary) != OK)
 				return (500);
@@ -230,7 +232,7 @@ int    Client::isDirectoryPost()
 		return (OK);
 }
 
-int	Client::isMultipartWellFormed(const string &boundary)
+int	Client::isMultipartWellFormed(const string &boundary, bool isFilename)
 {
 	size_t	pos, start, end;
 	string	name, filename;
@@ -247,23 +249,23 @@ int	Client::isMultipartWellFormed(const string &boundary)
 			return (ERROR);
 		}
 		pos += name.size();
-		start = pos + filename.size();
-		end = body.find("\"", start);
-		if (end == string::npos) {
-			_request.code = 400;
-			return (ERROR);
+		end = pos;
+		if (isFilename) {
+			start = pos + filename.size();
+			end = body.find("\"", start);
+			if (end == string::npos) {
+				_request.code = 400;
+				return (ERROR);
+			}
 		}
-		// \n
 		pos = body.find("\r\n\r\n", end);
 		if (pos == string::npos)
 			break ;
-		// data = value
 		start = pos + 4;
 		end = body.find("--" + boundary, pos);
 		if (end == string::npos)
 			break ;
 		end -= 1;
-		// boundary
 		pos = end + 2 + boundary.size();
 	}
 	return (OK);

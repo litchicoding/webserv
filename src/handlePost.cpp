@@ -4,21 +4,19 @@ int	Client::handlePost()
 {
 	string clean_path, message, URI;
 	map<string, string>::const_iterator header;
+	map<string, string>	headerMap;
 	ostringstream response;
 	
 	clean_path = urlDecode(_config->full_path);
+	/*** 1. Check validity : if ok, handle the request according to the content type ***/
 	if (isValidPostRequest(clean_path) != OK)
 		return (_request.code);
 	if (isCgi())
 		return (handleCGI());
-	/*** 1. Vérifications: ***/
-	// Content-Type= multipart/form-data
-	map<string, string>	headerMap = _request.getHeaders();
+	headerMap = _request.getHeaders();
 	header = headerMap.find("Content-Type");
 	if (header == headerMap.end() || header->second.empty())
 		return (400);
-	// else if (header->second.find("application/x-www-form-urlencoded") != string::npos)
-	// 	return (handleCGI());
 	else if (header->second.find("multipart/form-data") != string::npos)
 		return (handleMultipartForm(header, clean_path));
 	else if (header->second.find("text/plain") != string::npos)
@@ -33,10 +31,8 @@ int	Client::handleMultipartForm(const map<string, string>::const_iterator &heade
 
 	boundary = searchBoundary(header->second);
 	string	body(_request.getBody().begin(), _request.getBody().end());
-	if (boundary.size() <= 0 || body.find(boundary) == string::npos)
+	if (boundary.size() <= 0 || body.find(boundary) == string::npos || isMultipartWellFormed(boundary) != OK)
 		return (400);
-	// Cas 1 : header-body = filename -> upload de fichier
-	// Cas 2 : != filename donc diviser par clé-valeur (ex: name=name=Yannick, name=message=bonjour)
 	filename = urlDecode(findFileName());
 	if (filename.size() > 0) {
 		if (isValidPostRequest(path + filename) != OK)
@@ -188,10 +184,10 @@ string	Client::findFileName()
 	string	filename, target;
 	size_t	start, end;
 
-	start = body.find("filename=\"");
+	target = "filename=\"";
+	start = body.find(target);
 	if (start == string::npos)
 		return ("");
-	target = "filename=\"";
 	if (body.compare(start, target.size(), target))
 		return ("");
 	start = start + target.size();
@@ -234,24 +230,60 @@ int    Client::isDirectoryPost()
 		return (OK);
 }
 
+int	Client::isMultipartWellFormed(const string &boundary)
+{
+	size_t	pos, start, end;
+	string	name, filename;
+	
+	string	body(_request.getBody().begin(), _request.getBody().end());
+	pos = 0;
+	name = "name=\"";
+	filename = "filename=\"";
+	while (pos != string::npos && pos <= body.size() - boundary.size())
+	{
+		pos = body.find(name, pos);
+		if (pos == string::npos) {
+			_request.code = 400;
+			return (ERROR);
+		}
+		pos += name.size();
+		start = pos + filename.size();
+		end = body.find("\"", start);
+		if (end == string::npos) {
+			_request.code = 400;
+			return (ERROR);
+		}
+		// \n
+		pos = body.find("\r\n\r\n", end);
+		if (pos == string::npos)
+			break ;
+		// data = value
+		start = pos + 4;
+		end = body.find("--" + boundary, pos);
+		if (end == string::npos)
+			break ;
+		end -= 1;
+		// boundary
+		pos = end + 2 + boundary.size();
+	}
+	return (OK);
+}
+
 int	Client::isValidPostRequest(const string &path)
 {
 	struct stat st;
 
 	if (access(path.c_str(), F_OK) != 0) {
 		string parent = path.substr(0, path.find_last_of('/'));
-		if (parent.empty())
-		{
+		if (parent.empty()) {
 			_request.code = 403;
 			return (ERROR);	
 		}
-		if (access(parent.c_str(), F_OK) != OK)
-		{
+		if (access(parent.c_str(), F_OK) != OK) {
 			_request.code = 404;
 			return (ERROR);
 		}
-		if (access(parent.c_str(), W_OK) != OK)
-		{
+		if (access(parent.c_str(), W_OK) != OK) {
 			_request.code = 403;
 			return (ERROR);
 		}

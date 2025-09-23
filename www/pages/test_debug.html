@@ -53,7 +53,8 @@
 			}
 			th, td {
 				border: 2px solid black;
-				padding: 10px;
+				padding: 2px;
+				border-radius: 5px;
 				vertical-align: middle;
 			}
 		</style>
@@ -333,8 +334,16 @@
 					<!-- Config -->
 					<td>Check all headers are correct in the response.</td>
 				</tr>
+				<tr>
+					<!-- Command -->
+					<td>echo -e 'POST /upload/ HTTP/1.1\r\nContent-Length: 318\r\nContent-Type: multipart/form-data; boundary=------------------------051r66PIPjzW7cqaiuonAE\r\nHost: localhost:8080\r\n\r\n--------------------------051r66PIPjzW7cqaiuonAE\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nCeci est un fichier texte de test pour le serveur HTTP.\nIl permet de tester le Content-Type: text/plain\nFin du fichier texte.\n--------------------------051r66PIPjzW7cqaiuonAE--\r\n' | nc localhost 8080</td>
+					<!-- Nginx -->
+					<td>201 Created</td>
+					<!-- Config -->
+					<td>Well formed post request</td>
+					<td>TRY WITH MALFORMED HEADER CHUNKED OR CONTENT-LENGTH</td>
+				</tr>
 			</table>
-			<p>Est-ce que si "Accept = text/html", si j'envoie du css doit etre une erreur ?</p>
 		</div>
 
 		<div class="test-section">

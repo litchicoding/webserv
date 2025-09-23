@@ -110,7 +110,7 @@ int Client::processBuffer()
 			if (!_buffer.empty()) {
 				if (parseChunked(_buffer) == static_cast<size_t>(ERROR)) {
 					state = READ_END;
-					return ERROR;
+					return (ERROR);
 				}
 			}
 		}
@@ -124,6 +124,11 @@ int Client::processBuffer()
 		}
 		else
 			state = READ_END;
+		if (_buffer.empty() && _request.getBodyLen() < _request.getExpectedBodyLen()) {
+			state = READ_END;
+			_request.code = 400;
+			return (ERROR);
+		}
 	}
 	return (OK);
 }

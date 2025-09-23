@@ -116,6 +116,13 @@ char** Client::buildCgiEnv()
 int Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 {
 	size_t pos = cgiOutput.find("\r\n\r\n");
+	size_t sepLen = 4;
+	if (pos == std::string::npos)
+	{
+		pos = cgiOutput.find("\n\n");
+		sepLen = 2;
+	}
+	
 	string headers, body;
 	int statusCode = 200;
 	string contentType = "text/html; charset=UTF-8";
@@ -123,7 +130,7 @@ int Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 	if (pos != string::npos)
 	{
 		headers = cgiOutput.substr(0, pos);
-		body = cgiOutput.substr(pos + 4);
+		body = cgiOutput.substr(pos + sepLen);
 
 		size_t statusPos = headers.find("Status:");
 		if (statusPos != string::npos)

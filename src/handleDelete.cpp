@@ -22,13 +22,8 @@ int	Client::handleDelete()
 int	Client::isFileDelete()
 {
 	string clean_path = urlDecode(_config->full_path);
-	cout << "File after urlDecode in FileDelete: " << clean_path << endl;
 	if (std::remove(clean_path.c_str()) != OK)
-	{
-		cout << "bbbbb\n";
-		cout << "Cleanpath = " << clean_path << endl;
 		return (500);
-	}
 	return (204);
 }
 
@@ -89,7 +84,6 @@ int Client::delete_all_folder_content(std::string dirPath)
 				return ERROR;
 			}
 		}
-		// cout << "exemple : " << fullpath.c_str() << endl;
 		if (remove(fullpath.c_str()) != OK)
 		{
 			closedir(dir);

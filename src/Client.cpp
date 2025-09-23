@@ -141,7 +141,7 @@ int	Client::isRequestWellFormedOptimized() {
 	clean_URI = stripQueryString(URI);
 
 	// VALIDATION DE L'URI
-	if (URI.empty() || URI[0] != '/' || URI_Not_Printable(clean_URI)) {
+	if (URI.empty() || URI[0] != '/' || URI_Not_Printable(clean_URI) || URI.find("%00") != string::npos) {
 		_request.code = 400;
 		return (ERROR);
 	}

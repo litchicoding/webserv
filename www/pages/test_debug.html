@@ -336,7 +336,7 @@
 				</tr>
 				<tr>
 					<!-- Command -->
-					<td>echo -e 'POST /upload/ HTTP/1.1\r\nContent-Length: 318\r\nContent-Type: multipart/form-data; boundary=------------------------051r66PIPjzW7cqaiuonAE\r\nHost: localhost:8080\r\n\r\n--------------------------051r66PIPjzW7cqaiuonAE\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nCeci est un fichier texte de test pour le serveur HTTP.\nIl permet de tester le Content-Type: text/plain\nFin du fichier texte.\n--------------------------051r66PIPjzW7cqaiuonAE--\r\n' | nc localhost 8080</td>
+					<td></td>
 					<!-- Nginx -->
 					<td>201 Created</td>
 					<!-- Config -->
@@ -344,6 +344,8 @@
 					<td>TRY WITH MALFORMED HEADER CHUNKED OR CONTENT-LENGTH</td>
 				</tr>
 			</table>
+			<p>request model :</p>
+			<h6><b>echo -e 'POST /upload/ HTTP/1.1\r\nContent-Length: 318\r\nContent-Type: multipart/form-data; boundary=------------------------051r66PIPjzW7cqaiuonAE\r\nHost: localhost:8080\r\n\r\n--------------------------051r66PIPjzW7cqaiuonAE\r\nContent-Disposition: form-data; name="file"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nCeci est un fichier texte de test pour le serveur HTTP.\nIl permet de tester le Content-Type: text/plain\nFin du fichier texte.\n--------------------------051r66PIPjzW7cqaiuonAE--\r\n' | nc localhost 8080</b></h6>
 		</div>
 
 		<div class="test-section">

@@ -129,6 +129,10 @@ int	parse_config_file(string config_file, Listen &listenPorts)
 		}
 		it++;
 	}
+	if (serv_blocks.empty()) {
+		serv_blocks.push_back(Server());
+		serv_blocks.back().defaultConfiguration();
+	}
 	listenPorts.setServerBlocks(serv_blocks);
 	return OK;
 }

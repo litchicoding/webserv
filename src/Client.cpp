@@ -47,8 +47,45 @@ int	Client::readData()
 	}
 	if (bytes_read == 0)
 		return (OK);
+	time(&last_activity);
 	_buffer.append(buffer, bytes_read);
 	return (processBuffer());
+}
+
+int	Client::processRequest()
+{
+	string	method = _request.getMethod();
+	setConfig(_request.getURI());
+	if (_request.code == 0 && _config == NULL)
+		_request.code = 500;
+	isRedirectionNeeded();
+	if (_request.code <= 0 && isRequestWellFormedOptimized() == OK) {
+		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
+		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
+		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
+		if (_config)
+			cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
+		else
+			cout << "\e[34m]\e[0m" << endl;
+		if (method == "GET")
+			_request.code = handleGet();
+		else if (method == "POST")
+			_request.code = handlePost();
+		else if (method == "DELETE")
+			_request.code = handleDelete();
+		else
+			_request.code = 501;
+	}
+	buildResponse(_request.code);
+	return (OK);
+}
+
+void	Client::resetRequest()
+{
+	state = READ_HEADERS;
+	_config = NULL;
+	_request.resetRequest();
+	_buffer.clear();
 }
 
 int Client::processBuffer()
@@ -82,42 +119,12 @@ int Client::processBuffer()
 			size_t to_copy = min(_buffer.length(), remaining_len);
 			_request.appendBodyData(_buffer.c_str(), to_copy);
 			_buffer = _buffer.substr(to_copy);
-			
 			if (_request.getBodyLen() >= _request.getExpectedBodyLen())
 				state = READ_END;
 		}
 		else
 			state = READ_END;
 	}
-	return (OK);
-}
-
-int	Client::processRequest()
-{
-	// cout << "[ DEBUG ] :\n" << _request;
-	string	method = _request.getMethod();
-	setConfig(_request.getURI());
-	if (_request.code == 0 && _config == NULL)
-		_request.code = 500;
-	isRedirectionNeeded();
-	if (_request.code <= 0 && isRequestWellFormedOptimized() == OK) {
-		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
-		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
-		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
-		if (_config)
-			cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
-		else
-			cout << "\e[34m]\e[0m" << endl;
-		if (method == "GET")
-			_request.code = handleGet();
-		else if (method == "POST")
-			_request.code = handlePost();
-		else if (method == "DELETE")
-			_request.code = handleDelete();
-		else
-			_request.code = 501;
-	}
-	buildResponse(_request.code);
 	return (OK);
 }
 
@@ -344,17 +351,16 @@ size_t Client::parseChunked(std::string &buffer)
     return OK;
 }
 
-void	Client::resetRequest()
+string	Client::findHeaderConnection()
 {
-	state = READ_HEADERS;
 	map<string, string>::const_iterator header = _request.getHeaders().find("Connection");
-	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos)  || _request.getHeaders().find("User-Agent") == _request.getHeaders().end())
-		_keep_alive = false;
-	else
-		_keep_alive = true;
-	_config = NULL;
-	_request.resetRequest();
-	_buffer.clear();
+	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos) 
+		|| _request.getHeaders().find("User-Agent") == _request.getHeaders().end()) {
+			_keep_alive = false;
+			return ("close");
+	}
+	_keep_alive = true;
+	return ("keep-alive");
 }
 
 /*************************************************************************************************/
@@ -403,6 +409,7 @@ void	Client::buildResponse(int code)
 	else if (code >= 301 && code <= 308)
 		_request.response.location = _request.getRedirectURI();
 	response << "HTTP/1.1 " << getCodeMessage(code) << "\r\n";
+	response << "Date: " << obtainDateHeader() << "\r\n";
 	if (!_request.response.body.empty())
 		response << "Content-Type: " << _request.response.content_type << "\r\n";
 	response << "Content-Length: " << _request.response.body.size() << "\r\n";
@@ -413,11 +420,12 @@ void	Client::buildResponse(int code)
 		else
 		response << "Location: " << _request.response.location << "\r\n";
 	}
-	header = _request.getHeaders().find("Connection");
-	if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos) || _request.getHeaders().find("User-Agent") == _request.getHeaders().end())
-		response << "Connection: close\r\n";
-	else
-		response << "Connection: keep-alive\r\n";
+	// header = _request.getHeaders().find("Connection");
+	// if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos) || _request.getHeaders().find("User-Agent") == _request.getHeaders().end())
+	// 	response << "Connection: close\r\n";
+	// else
+	// 	response << "Connection: keep-alive\r\n";
+	response << "Connection: " << findHeaderConnection() << "\r\n";
 	response << "\r\n";
 	if (!_request.response.body.empty())
 		response << _request.response.body;
@@ -451,6 +459,15 @@ void	Client::handleError(int code)
 	_request.response.content_type = "text/html";
 	_request.response.body = body.str();
 }
+
+string	Client::obtainDateHeader()
+{
+	char buf[128];
+	struct tm *timeinfo = localtime(&last_activity);
+	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
+	return string(buf);
+}
+
 
 /*************************************************************************************************/
 /* Setters ***************************************************************************************/

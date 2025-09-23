@@ -22,9 +22,9 @@ public:
 	
 	time_t				last_activity;
 	int					state;
+	void				sendResponse();
 	int					readData();
 	int					processRequest();
-	void				sendResponse();
 	void				resetRequest();
 	
 private:
@@ -39,18 +39,20 @@ private:
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
-	void				isRedirectionNeeded();
 	int	    			isRequestWellFormedOptimized();
 	int					isRequestWellChunked(const map<string, string> &headers);
-	size_t				parseChunked(string &data);
+	void				isRedirectionNeeded();
 	string				getMIME(string& URI);
 	bool				URI_Not_Printable(string& URI);
 	string				urlDecode(const string &str);
+	size_t				parseChunked(string &data);
+	string				findHeaderConnection();
 
 	/* Response Function *************************************************************************/
 	void				buildResponse(int code);
 	string				getCodeMessage(int code);
 	void				handleError(int code);
+	string				obtainDateHeader();	
 	
 	/* Delete Method *****************************************************************************/
 	int					handleDelete();
@@ -96,8 +98,8 @@ public:
 	int					getClientFd() const { return _client_fd; }
 	Server*				getServerConfig() const { return _server; }
 	int					getListenFd() const { return _listen_fd; }
-	bool				isKeepAliveConnection() const { return _keep_alive; }
 	HTTPRequest&		getRequest() { return _request; }
+	bool				isKeepAliveConnection() const { return _keep_alive; }
 };
 
 #endif

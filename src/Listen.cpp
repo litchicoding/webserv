@@ -157,9 +157,9 @@ int	Listen::update_connexion()
 		for (int i = 0; i < nfds; ++i)
 		{
 			signal(SIGINT, &signal_handler);
-			if (isListeningSocket(events[i].data.fd)) //cas 1 : evenement sur le socket du serveur -> nouvelle connexion prete a etre acceptee
+			if (isListeningSocket(events[i].data.fd)) // case 1 : event on socket -> new connection, ready to accept
 				addNewClient(events[i].data.fd, _epoll_fd);
-			else //cas 2 : evenement sur le socket d'un client existant ->pret a etre lu
+			else //cas 2 : event on existing socket -> ready to read
 			{
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
@@ -175,7 +175,6 @@ int	Listen::update_connexion()
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	time(&(_clients[client_fd]->last_activity));
 	if (_clients[client_fd]->readData() != OK && _clients[client_fd]->getRequest().code == 0) {
 		closeClientConnection(client_fd);
 		return (ERROR);

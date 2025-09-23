@@ -5,7 +5,7 @@
 
 Listen::Listen() : _epoll_fd(INVALID), debug(false)
 {
-	cout << GREEN << "***  Listening ports Creation  ***" << RESET << endl;
+	// cout << GREEN << "***  Listening ports Creation  ***" << RESET << endl;
 }
 
 Listen::~Listen()
@@ -82,7 +82,7 @@ void	Listen::configuration()
 	}
 }
 
-int	Listen::start_connexion()
+int	Listen::start_connection()
 {
 	map<int, t_port>::iterator current_port = _listeningPorts.begin();
 	int								listen_fd;
@@ -97,7 +97,7 @@ int	Listen::start_connexion()
 		if (bind(listen_fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != OK) {
 			cout << RED << "Error: while trying to bind() to IP:" << address.sin_addr.s_addr;
 			cout << " Port: " << ntohs(address.sin_port) << RESET << endl;
-			perror("bind");
+			// perror("bind");
 			return ERROR;
 		}
 		if (listen(listen_fd, MAX_CLIENT_WAITING) != OK) {
@@ -122,18 +122,14 @@ bool	Listen::isClientTimeOut(int client_fd)
 	time_t end;
 	time(&end);
 	double diff = difftime(end, start);
-	// cout << "TimeOut Limit (seconds): " << TIMEOUT << endl;
-	// cout << "start: " << start << endl;
-	// cout << "end: " << end << endl;
-	// cout << "Elapsed seconds: " << diff << " / Limit: " << TIMEOUT << endl;
 	if (diff >= TIMEOUT) {
-		cout << GREEN << "--- timeout for client [socket:" << client_fd << "]" RESET << endl;
+		cout << CYAN << "---  timeout for client [socket:" << client_fd << "]" RESET << endl;
 		return true;
 	}
 	return false;
 }
 
-int	Listen::update_connexion()
+int	Listen::update_connection()
 {
 	map<int, Client*>::iterator it;
 	map<int, t_port>::iterator	current_port;
@@ -159,7 +155,7 @@ int	Listen::update_connexion()
 			signal(SIGINT, &signal_handler);
 			if (isListeningSocket(events[i].data.fd)) // case 1 : event on socket -> new connection, ready to accept
 				addNewClient(events[i].data.fd, _epoll_fd);
-			else //cas 2 : event on existing socket -> ready to read
+			else //case 2 : event on existing socket -> ready to read
 			{
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
@@ -181,6 +177,12 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	}
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);
+	if (_listeningPorts.find(listen_fd) != _listeningPorts.end()) {
+		cout << BLUE << "📨 - REQUEST RECEIVED [on port: " << ntohs(_listeningPorts.find(listen_fd)->second.port_addr.sin_port);
+		cout << " - client socket:" << client_fd << "]";
+	}
+	else
+		return (ERROR);
 	_clients[client_fd]->setServerConfig(findServerConfig(listen_fd));
 	if (debug == true)
 		cout << YELLOW << "[ DEBUG ] :" << _clients[client_fd]->getRequest() << RESET << endl;
@@ -243,15 +245,8 @@ Server*	Listen::findServerConfig(const int &listen_fd)
 
 void	Listen::stop(const string &msg)
 {
-	// must close, clear and delete every thing
 	if (!msg.empty())
 		cout << RED << "Error: " << msg << "()" << RESET << endl;
-	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); it++)
-	{
-		// epoll_ctl(it->second.epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-		it->second.listen_fd = INVALID;
-		_epoll_fd = INVALID;
-	}
    	cout << PURPLE << endl << "🛑 - CONNECTION CLOSED." << RESET << endl;
 }
 

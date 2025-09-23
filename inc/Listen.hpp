@@ -32,8 +32,8 @@ public:
 	bool					debug;
 
 	void					configuration();
-	int						start_connexion();
-	int						update_connexion();
+	int						start_connection();
+	int						update_connection();
 	bool					isClientTimeOut(int client_fd);
 	void					closeClientConnection(int client_fd);
 	bool					isListeningSocket(int fd);

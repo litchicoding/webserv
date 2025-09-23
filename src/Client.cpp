@@ -6,7 +6,7 @@
 Client::Client(int listen_fd, int epoll_fd)
 : last_activity(0), state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(true)
 {
-	cout << GREEN << "***   Client Connection   ***" << RESET << endl;
+	cout << GREEN << "***  Client Connection  ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
 	_client_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&_client_addr), &client_addr_len);
 	if (_client_fd == INVALID) {
@@ -18,7 +18,7 @@ Client::Client(int listen_fd, int epoll_fd)
 
 Client::~Client()
 {
-	cout << GREEN << "***   Client Deconstruction   ***" << RESET << endl << endl;
+	cout << GREEN << "***  Client Deconstruction  ***" << RESET << endl << endl;
 	if (_client_fd >= 0)
 		close(_client_fd);
 }
@@ -60,13 +60,12 @@ int	Client::processRequest()
 		_request.code = 500;
 	isRedirectionNeeded();
 	if (_request.code <= 0 && isRequestWellFormedOptimized() == OK) {
-		cout << BLUE << "📨 - REQUEST RECEIVED [socket:" << _client_fd << "]";
 		cout << endl << "     Method:[\e[0m" << method << "\e[34m] URI:[\e[0m";
-		cout << _request.getURI() << "\e[34m] Version:[\e[0m" << _request.getVersion();
+		cout << _request.getURI() << "\e[34m]";
 		if (_config)
-			cout << "\e[34m] FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
+			cout << "FullPath:[\e[0m" << _config->full_path << "\e[34m]\e[0m" << endl;
 		else
-			cout << "\e[34m]\e[0m" << endl;
+			cout << RESET << endl;
 		if (method == "GET")
 			_request.code = handleGet();
 		else if (method == "POST")
@@ -124,11 +123,6 @@ int Client::processBuffer()
 		}
 		else
 			state = READ_END;
-		if (_buffer.empty() && _request.getBodyLen() < _request.getExpectedBodyLen()) {
-			state = READ_END;
-			_request.code = 400;
-			return (ERROR);
-		}
 	}
 	return (OK);
 }

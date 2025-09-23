@@ -4,7 +4,6 @@ int	Client::handleDelete()
 {
 	struct stat st;
 	string clean_path = urlDecode(_config->full_path);
-	cout << "File after urlDecode in Delete: " << clean_path << endl;
 	if (access(clean_path.c_str(), F_OK) != 0)
 		return (404);
 	if (stat(clean_path.c_str(), &st) != 0)

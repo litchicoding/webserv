@@ -40,7 +40,7 @@
 # define INVALID -1
 # define MAX_EVENTS 10
 # define TIMEOUT_EPOLL 10000
-# define TIMEOUT 10.0
+# define TIMEOUT 5.0
 
 # define RED "\e[31m"
 # define GREEN "\e[32m"

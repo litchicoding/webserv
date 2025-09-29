@@ -523,6 +523,22 @@
 					<!-- Return -->
 					<td>201 Created</td>
 				</tr>
+				<tr>
+					<!-- Command -->
+					<td>printf "POST /upload/ HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\n0\r\n\r\n" | nc localhost 8080</td>
+					<!-- Config -->
+					<td>Transfer-Encoding</td>
+					<!-- Return -->
+					<td>201 Created</td>
+				</tr>
+				<tr>
+					<!-- Command -->
+					<td>printf "POST /upload/ HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: text/plain\r\nContent-Length: 11\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\n0\r\n\r\n" | nc localhost 8080</td>
+					<!-- Config -->
+					<td>Transfer-Encoding + Content-Length forbidden</td>
+					<!-- Return -->
+					<td>400 Bad Request</td>
+				</tr>
 			</table>
 		</div>
 

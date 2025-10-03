@@ -31,6 +31,8 @@ int	Client::isDirectoryDelete()
 	string URI = _request.getURI();
 	if (URI.empty() || URI[URI.size() - 1] != '/')
 		return (409);
+	else if (URI[URI.size() - 1] == '/' && URI[URI.size() - 2] == '/')
+		return (400);
 	string clean_path = urlDecode(_config->full_path);
 	if (delete_all_folder_content(clean_path) != OK) {
 		if (access(clean_path.c_str(), W_OK) != OK)

@@ -46,6 +46,7 @@ public:
 	std::map<int, t_port>&	getListeningPorts();
 	std::map<int, Client*>&	getClients();
 	std::vector<Server>&	getServerBlocks();
+	int						getEpollFd() const { return _epoll_fd; }
 	
 	/* Setters ************************************************************************************/
 	void					setServerBlocks(const std::vector<Server> &serv_blocks);

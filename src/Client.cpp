@@ -28,10 +28,25 @@ Client::~Client()
 
 void	Client::sendResponse()
 {
-	write(_client_fd, _request.response.res.c_str(), _request.response.res.size());
-	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << _client_fd << "] : " << RESET;
+
+	_writeBuffer = _request.response.res;
+	ssize_t bytes_sent = send(_client_fd, _writeBuffer.c_str(), _writeBuffer.size(), 0);
+	if (bytes_sent < 0)
+		return; // erreur à gérer si nécessaire
+	_writeBuffer = _writeBuffer.substr(bytes_sent);
+
 	size_t pos = _request.response.res.find("\n");
-	cout << _request.response.res.substr(0, pos) << endl << endl;
+	cout << CYAN << "   - RESPONSE TO REQUEST [socket:" << _client_fd << "] : " << RESET;
+	cout << _request.response.res.substr(0, pos) << endl;
+	
+	if (!_writeBuffer.empty())
+	{
+		// on active EPOLLOUT uniquement si tout n'a pas été envoyé
+		epoll_event ev;
+		ev.events = EPOLLIN | EPOLLOUT; // IN toujours actif
+		ev.data.fd = _client_fd;
+		epoll_ctl(g_global_instance->getEpollFd(), EPOLL_CTL_MOD, _client_fd, &ev);
+    }
 }
 
 int	Client::readData()

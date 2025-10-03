@@ -160,8 +160,21 @@ int	Listen::update_connection()
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
-				if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
-					closeClientConnection(events[i].data.fd);
+
+				if (events[i].events & EPOLLIN)
+				{
+					if (handleClientRequest(events[i].data.fd, listen_fd) == ERROR)
+						closeClientConnection(events[i].data.fd);
+				}
+				if (events[i].events & EPOLLOUT) // socket prête à écrire
+                {
+                    _clients[events[i].data.fd]->sendResponse();
+                    // désactiver EPOLLOUT si tout est envoyé pour éviter les boucles inutiles
+                    epoll_event ev;
+                    ev.events = EPOLLIN; // revenir à lecture uniquement
+                    ev.data.fd = events[i].data.fd;
+                    epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
+                }
 			}
 		}
 	}

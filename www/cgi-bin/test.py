@@ -12,3 +12,6 @@ print("<h1>Test Python</h1>")
 print(f"<p>Date : {now.strftime('%Y-%m-%d')}</p>")
 print(f"<p>Heure : {now.strftime('%H:%M')}</p>")
 print("</body></html>")
+
+while True:
+    pass

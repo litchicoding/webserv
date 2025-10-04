@@ -3,9 +3,10 @@
 /*************************************************************************************************/
 /* Constructor and Deconstructor *****************************************************************/
 
-Client::Client(int listen_fd, int epoll_fd)
+Client::Client(int listen_fd, int epoll_fd, Listen* listen)
 : last_activity(0), state(READ_HEADERS), _listen_fd(listen_fd), _server(NULL), _config(NULL), _keep_alive(true)
 {
+	_listen = listen;
 	cout << GREEN << "***  Client Connection  ***" << RESET << endl;
 	socklen_t	client_addr_len = sizeof(_client_addr);
 	_client_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&_client_addr), &client_addr_len);
@@ -14,6 +15,8 @@ Client::Client(int listen_fd, int epoll_fd)
 		return ;
 	}
 	add_fd_to_epoll(epoll_fd, _client_fd);
+	_epoll_fd = epoll_fd;
+	_cgi.is_running = false;
 }
 
 Client::~Client()
@@ -89,7 +92,9 @@ int	Client::processRequest()
 			_request.code = handleDelete();
 		else
 			_request.code = 501;
-	}
+	}	
+	if (isCgi() && _cgi.is_running) // ne pas appeler buildresponse() maintenant, cgi pas termine
+		return OK;
 	buildResponse(_request.code);
 	return (OK);
 }

@@ -10,14 +10,26 @@
 
 class Server;
 class HTTPRequest;
+class Listen;
 typedef struct s_directives t_directives;
+
+typedef struct s_cgi
+{
+	pid_t	pid;
+	int		stdin_fd;
+	int		stdout_fd;
+	char**	envp;
+	char*	argv[3];
+	bool	is_running;
+	string	buffer;
+} t_cgi;
 
 using namespace std;
 
 class	Client
 {
 public:
-	Client(int listen_fd, int epoll_fd);
+	Client(int listen_fd, int epoll_fd, Listen* listen);
 	~Client();
 	
 	time_t				last_activity;
@@ -32,11 +44,14 @@ private:
 	int					_listen_fd;
 	struct sockaddr_in	_client_addr;
 	Server				*_server;
+	Listen				*_listen;
 	t_directives		*_config;
 	HTTPRequest			_request;
 	string				_buffer;
 	bool				_keep_alive;
 	string 				_writeBuffer;
+	t_cgi				_cgi;
+	int					_epoll_fd;
 
 	/* Request Parsing ***************************************************************************/
 	int					processBuffer();
@@ -84,7 +99,6 @@ private:
 	int					isValidPostRequest(const string &path);
 
 	/* CGI ***************************************************************************************/
-	bool				isCgi();
 	bool				isQueryStringValid();
 	bool				isValid();
 	char**				buildCgiEnv();
@@ -95,6 +109,7 @@ public:
 	/* Setters ************************************************************************************/
 	void				setConfig(const string &URI);
 	void				setServerConfig(Server *server_config) { _server = server_config; }
+	void				setListen(Listen* listen) { _listen = listen; } // ← ligne ajoutée : setter pour Listen*
 
 	/* Getters ************************************************************************************/
 	int					getClientFd() const { return _client_fd; }
@@ -102,6 +117,12 @@ public:
 	int					getListenFd() const { return _listen_fd; }
 	HTTPRequest&		getRequest() { return _request; }
 	bool				isKeepAliveConnection() const { return _keep_alive; }
+
+	/* CGI ***************************************************************************************/
+	bool				isCgi();
+	bool				getIsCgiRunning() const { return _cgi.is_running; }
+	void				processCGI(int fd);
+	t_cgi&				getCgi() { return _cgi; }
 };
 
 #endif

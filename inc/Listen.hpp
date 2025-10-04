@@ -30,6 +30,7 @@ public:
 	~Listen();
 
 	bool					debug;
+	std::map<int, Client*>	_cgi_fds; // <cgi_fd, client class>
 
 	void					configuration();
 	int						start_connection();

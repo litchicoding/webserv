@@ -154,9 +154,26 @@ int	Listen::update_connection()
 		{
 			signal(SIGINT, &signal_handler);
 			if (isListeningSocket(events[i].data.fd)) // case 1 : event on socket -> new connection, ready to accept
+			{
+				cout << "ICI1\n";
 				addNewClient(events[i].data.fd, _epoll_fd);
+			}
 			else //case 2 : event on existing socket -> ready to read
 			{
+				if (_cgi_fds.find(events[i].data.fd) != _cgi_fds.end())
+				{
+					cout << "ICI2\n";
+					Client* client = _cgi_fds[events[i].data.fd];
+					client->processCGI(events[i].data.fd);
+					// Si le CGI a fini, on supprime le FD de la map
+					if (!client->getIsCgiRunning())
+					{
+						cout << "ICI4\n";
+						_cgi_fds.erase(events[i].data.fd);
+					}
+
+					continue; // passer au prochain event
+				}
 				if (_clients.find(events[i].data.fd) == _clients.end())
 					continue ;
 				int listen_fd = _clients[events[i].data.fd]->getListenFd();
@@ -167,14 +184,14 @@ int	Listen::update_connection()
 						closeClientConnection(events[i].data.fd);
 				}
 				if (events[i].events & EPOLLOUT) // socket prête à écrire
-                {
-                    _clients[events[i].data.fd]->sendResponse();
-                    // désactiver EPOLLOUT si tout est envoyé pour éviter les boucles inutiles
-                    epoll_event ev;
-                    ev.events = EPOLLIN; // revenir à lecture uniquement
-                    ev.data.fd = events[i].data.fd;
-                    epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
-                }
+				{
+					_clients[events[i].data.fd]->sendResponse();
+					// désactiver EPOLLOUT si tout est envoyé pour éviter les boucles inutiles
+					epoll_event ev;
+					ev.events = EPOLLIN; // revenir à lecture uniquement
+					ev.data.fd = events[i].data.fd;
+					epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, events[i].data.fd, &ev);
+				}
 			}
 		}
 	}
@@ -200,8 +217,11 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	if (debug == true)
 		cout << YELLOW << "[ DEBUG ] :" << _clients[client_fd]->getRequest() << RESET << endl;
 	_clients[client_fd]->processRequest();
-	_clients[client_fd]->sendResponse();
-	_clients[client_fd]->resetRequest();
+	if (!_clients[client_fd]->isCgi() || !_clients[client_fd]->getIsCgiRunning())
+	{
+		_clients[client_fd]->sendResponse();
+		_clients[client_fd]->resetRequest();
+	}
 	if (_clients[client_fd]->isKeepAliveConnection() == false)
 		closeClientConnection(client_fd);
 	return (OK);
@@ -283,7 +303,7 @@ void	Listen::setServerBlocks(const vector<Server> &serv_blocks)
 
 void	Listen::addNewClient(int listen_fd, int epoll_fd)
 {
-	Client	*newClient = new Client(listen_fd, epoll_fd);
+	Client	*newClient = new Client(listen_fd, epoll_fd, this);
 	_clients.insert(make_pair(newClient->getClientFd(), newClient));
 }
 

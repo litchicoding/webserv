@@ -2,6 +2,8 @@
 
 bool Client::isCgi()
 {
+	  if (!_config)
+        return false;
 	string path =_config->full_path;
 	if (path.rfind(".php") == path.size() - 4)
 		return true;
@@ -153,6 +155,41 @@ int Client::buildHttpResponseFromCgiOutput(const std::string& cgiOutput)
 	return (statusCode);
 }
 
+void	Client::processCGI(int fd)
+{
+	if (!_cgi.is_running)
+		return;
+	// POST
+	if (fd == _cgi.stdin_fd)
+	{
+		for (vector<char>::const_iterator it = _request.getBody().begin(); it != _request.getBody().end(); it++)
+			write(fd, &(*it), 1);
+		close (fd);
+	}
+	//lecture du cgi
+	char buf[4096];
+	ssize_t n;
+	while ((n = read(fd, buf, sizeof(buf))) > 0)
+		_cgi.buffer.append(buf, n);
+	
+	if (n == 0) //fin du flux
+	{
+		cout << "ICI3\n";
+		close(fd);
+		_cgi.is_running = false;
+		int status_code = buildHttpResponseFromCgiOutput(_cgi.buffer);
+		buildResponse(status_code);
+
+		for (int i = 0; _cgi.envp && _cgi.envp[i]; ++i)
+        	free(_cgi.envp[i]);
+    	delete[] _cgi.envp;
+
+    	for (int i = 0; i < 3 && _cgi.argv[i]; ++i)
+        	free(_cgi.argv[i]);
+	}
+}
+
+
 
 int Client::handleCGI()
 {
@@ -199,51 +236,51 @@ int Client::handleCGI()
 		close(requestPipe[1]);
 		close(responsePipe[0]);
 		
-		dup2(requestPipe[0], STDIN_FILENO);
+		if (dup2(requestPipe[0], STDIN_FILENO) == -1)
+			exit (1);
 		close(requestPipe[0]);
 
-		dup2(responsePipe[1], STDOUT_FILENO);
+		if (dup2(responsePipe[1], STDOUT_FILENO) == -1)
+			exit (1);
 		close(responsePipe[1]);
 		
 		if (!interpreter.empty())
 		{
-			if (execve(interpreter.c_str(), argv, envp) == -1)
-				perror("execve");
-			return (500);
+			execve(interpreter.c_str(), argv, envp); 
+			perror("execve");
+			exit (1);
 		}
 		else
 		{
-			if (execve(path.c_str(), argv, envp) == -1)
-				perror("execve");
-			return (500);
+			execve(path.c_str(), argv, envp);
+			perror("execve");
+			exit (1);
 		}
 	}
 	
 	close(requestPipe[0]);
 	close(responsePipe[1]);
 
+	_cgi.pid = pid;
+	_cgi.stdin_fd = requestPipe[1];
+	_cgi.stdout_fd = responsePipe[0];
+	for (int i = 0; i < 3; ++i)
+		_cgi.argv[i] = argv[i];
+	_cgi.envp = envp;
+	_cgi.is_running = true;
+	_cgi.buffer.clear();
+
+	epoll_event ev;
 	if (_request.getMethod() == "POST")
 	{
-		for (vector<char>::const_iterator it = _request.getBody().begin(); it != _request.getBody().end(); it++)
-			write(requestPipe[1], &(*it), 1);
+		ev.events = EPOLLOUT;
+		ev.data.fd = _cgi.stdin_fd;
+		epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _cgi.stdin_fd, &ev);
+		_listen->_cgi_fds[_cgi.stdin_fd] = this;
 	}
-	close(requestPipe[1]);
-
-	string cgiOutput;
-	char buffer[4096];
-	ssize_t n;
-	while ((n = read(responsePipe[0], buffer, sizeof(buffer))) > 0)
-		cgiOutput.append(buffer,n);
-	close(responsePipe[0]);
-	
-	int status;
-	waitpid(pid, &status, 0);
-
-	for (size_t i = 0; argv[i]; ++i)
-		free(argv[i]);
-
-	for (size_t i = 0; envp[i]; ++i)
-		free(envp[i]);
-	delete[] envp;
-	return (buildHttpResponseFromCgiOutput(cgiOutput));
+	ev.events = EPOLLIN;
+	ev.data.fd = _cgi.stdout_fd;
+	epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _cgi.stdout_fd, &ev);
+	_listen->_cgi_fds[_cgi.stdout_fd] = this;
+	return (0);
 }

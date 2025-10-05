@@ -179,13 +179,6 @@ void	Client::processCGI(int fd)
 		int status_code = buildHttpResponseFromCgiOutput(_cgi.buffer);
 		buildResponse(status_code);
 		epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-
-		// for (int i = 0; _cgi.envp && _cgi.envp[i]; ++i)
-		// 	free(_cgi.envp[i]);
-		// delete[] _cgi.envp;
-
-		// for (int i = 0; i < 3 && _cgi.argv[i]; ++i)
-		// 	free(_cgi.argv[i]);
 	}
 }
 

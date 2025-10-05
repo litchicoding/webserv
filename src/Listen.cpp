@@ -260,22 +260,6 @@ void	Listen::closeClientConnection(int client_fd)
 				close(cgi.stdin_fd);
 			if (cgi.stdout_fd > 0)
 				close(cgi.stdout_fd);
-
-			if (cgi.envp)
-			{
-				for (int i = 0; cgi.envp[i]; ++i)
-					free(cgi.envp[i]);
-				delete[] cgi.envp;
-				cgi.envp = NULL;
-			}
-			for (int i = 0; i < 3; ++i)
-			{
-				if (cgi.argv[i])
-				{
-					free(cgi.argv[i]);
-					cgi.argv[i] = NULL;
-				}
-			}
 			
 			cgi.is_running = false;
 

@@ -180,12 +180,12 @@ void	Client::processCGI(int fd)
 		buildResponse(status_code);
 		epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 
-		for (int i = 0; _cgi.envp && _cgi.envp[i]; ++i)
-			free(_cgi.envp[i]);
-		delete[] _cgi.envp;
+		// for (int i = 0; _cgi.envp && _cgi.envp[i]; ++i)
+		// 	free(_cgi.envp[i]);
+		// delete[] _cgi.envp;
 
-		for (int i = 0; i < 3 && _cgi.argv[i]; ++i)
-			free(_cgi.argv[i]);
+		// for (int i = 0; i < 3 && _cgi.argv[i]; ++i)
+		// 	free(_cgi.argv[i]);
 	}
 }
 
@@ -261,12 +261,16 @@ int Client::handleCGI()
 	close(requestPipe[0]);
 	close(responsePipe[1]);
 
+	for (int i = 0; envp && envp[i]; ++i)
+			free(envp[i]);
+	delete[] envp;
+
+	for (int i = 0; i < 3 && argv[i]; ++i)
+		free(argv[i]);
+
 	_cgi.pid = pid;
 	_cgi.stdin_fd = requestPipe[1];
 	_cgi.stdout_fd = responsePipe[0];
-	for (int i = 0; i < 3; ++i)
-		_cgi.argv[i] = argv[i];
-	_cgi.envp = envp;
 	_cgi.is_running = true;
 	_cgi.buffer.clear();
 

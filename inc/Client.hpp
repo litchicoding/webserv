@@ -18,8 +18,6 @@ typedef struct s_cgi
 	pid_t	pid;
 	int		stdin_fd;
 	int		stdout_fd;
-	char**	envp;
-	char*	argv[3];
 	bool	is_running;
 	string	buffer;
 } t_cgi;

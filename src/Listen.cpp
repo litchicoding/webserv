@@ -245,6 +245,42 @@ void	Listen::closeClientConnection(int client_fd)
 	epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 	map<int, Client*>::iterator it = _clients.find(client_fd);
 	if (it != _clients.end()) {
+
+		Client* client = it->second;
+		t_cgi &cgi = client->getCgi();
+		if (cgi.is_running)
+		{
+			if (cgi.pid > 0)
+			{
+				kill(cgi.pid, SIGKILL);
+				waitpid(cgi.pid, NULL, 0);
+			}
+
+			if (cgi.stdin_fd > 0)
+				close(cgi.stdin_fd);
+			if (cgi.stdout_fd > 0)
+				close(cgi.stdout_fd);
+
+			if (cgi.envp)
+			{
+				for (int i = 0; cgi.envp[i]; ++i)
+					free(cgi.envp[i]);
+				delete[] cgi.envp;
+				cgi.envp = NULL;
+			}
+			for (int i = 0; i < 3; ++i)
+			{
+				if (cgi.argv[i])
+				{
+					free(cgi.argv[i]);
+					cgi.argv[i] = NULL;
+				}
+			}
+			
+			cgi.is_running = false;
+
+		}
+
 		close(client_fd);
 		delete it->second;
 		_clients.erase(it);
@@ -281,9 +317,34 @@ Server*	Listen::findServerConfig(const int &listen_fd)
 
 void	Listen::stop(const string &msg)
 {
+
 	if (!msg.empty())
 		cout << RED << "Error: " << msg << "()" << RESET << endl;
-   	cout << PURPLE << endl << "🛑 - CONNECTION CLOSED." << RESET << endl;
+	cout << PURPLE << endl << "🛑 - CONNECTION CLOSED." << RESET << endl;
+
+	// Nettoyer tous les clients encore ouverts, y compris CGI
+	for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); )
+	{
+		int fd = it->first;
+		closeClientConnection(fd);
+		it = _clients.begin(); // restart car map a changé
+	}
+
+	// Nettoyer les sockets de listening
+	for (map<int, t_port>::iterator it = _listeningPorts.begin(); it != _listeningPorts.end(); ++it)
+	{
+		if (it->first >= 0)
+			close(it->first);
+	}
+
+	// Fermer epoll
+	if (_epoll_fd >= 0)
+		close(_epoll_fd);
+
+	_clients.clear();
+	_listeningPorts.clear();
+	_serv_blocks.clear();
+
 }
 
 

@@ -2,8 +2,8 @@
 
 bool Client::isCgi()
 {
-	  if (!_config)
-        return false;
+	if (!_config)
+		return false;
 	string path =_config->full_path;
 	if (path.rfind(".php") == path.size() - 4)
 		return true;
@@ -181,11 +181,11 @@ void	Client::processCGI(int fd)
 		epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 
 		for (int i = 0; _cgi.envp && _cgi.envp[i]; ++i)
-        	free(_cgi.envp[i]);
-    	delete[] _cgi.envp;
+			free(_cgi.envp[i]);
+		delete[] _cgi.envp;
 
-    	for (int i = 0; i < 3 && _cgi.argv[i]; ++i)
-        	free(_cgi.argv[i]);
+		for (int i = 0; i < 3 && _cgi.argv[i]; ++i)
+			free(_cgi.argv[i]);
 	}
 }
 
@@ -243,7 +243,7 @@ int Client::handleCGI()
 		if (dup2(responsePipe[1], STDOUT_FILENO) == -1)
 			exit (1);
 		close(responsePipe[1]);
-		
+
 		if (!interpreter.empty())
 		{
 			execve(interpreter.c_str(), argv, envp); 

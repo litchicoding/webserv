@@ -174,11 +174,11 @@ void	Client::processCGI(int fd)
 	
 	if (n == 0) //fin du flux
 	{
-		cout << "ICI3\n";
 		close(fd);
 		_cgi.is_running = false;
 		int status_code = buildHttpResponseFromCgiOutput(_cgi.buffer);
 		buildResponse(status_code);
+		epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 
 		for (int i = 0; _cgi.envp && _cgi.envp[i]; ++i)
         	free(_cgi.envp[i]);

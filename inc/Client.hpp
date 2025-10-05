@@ -85,7 +85,6 @@ private:
 
 	/* Post Method *******************************************************************************/
 	int					handlePost();
-	void				isFilePost();
 	int					isDirectoryPost();
 	int					handleMultipartForm(const map<string, string>::const_iterator &header,
 											const string &path);
@@ -109,7 +108,7 @@ public:
 	/* Setters ************************************************************************************/
 	void				setConfig(const string &URI);
 	void				setServerConfig(Server *server_config) { _server = server_config; }
-	void				setListen(Listen* listen) { _listen = listen; } // ← ligne ajoutée : setter pour Listen*
+	void				setListen(Listen* listen) { _listen = listen; }
 
 	/* Getters ************************************************************************************/
 	int					getClientFd() const { return _client_fd; }

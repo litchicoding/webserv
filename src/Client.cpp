@@ -46,7 +46,7 @@ void	Client::sendResponse()
 	{
 		// on active EPOLLOUT uniquement si tout n'a pas été envoyé
 		epoll_event ev;
-		ev.events = EPOLLIN | EPOLLOUT; // IN toujours actif
+		ev.events = EPOLLIN | EPOLLOUT;
 		ev.data.fd = _client_fd;
 		epoll_ctl(g_global_instance->getEpollFd(), EPOLL_CTL_MOD, _client_fd, &ev);
     }
@@ -59,10 +59,8 @@ int	Client::readData()
 
 	memset(buffer, 0, sizeof(buffer));
 	bytes_read = recv(_client_fd, buffer, sizeof(buffer), 0);
-	if (bytes_read < 0) {
-		// cout << RED "Error: readData(): while reading request." RESET << endl;
+	if (bytes_read < 0)
 		return (ERROR);
-	}
 	if (bytes_read == 0)
 		return (OK);
 	time(&last_activity);
@@ -105,6 +103,8 @@ void	Client::resetRequest()
 	_config = NULL;
 	_request.resetRequest();
 	_buffer.clear();
+	_writeBuffer.clear();
+	_cgi.is_running = false;
 }
 
 int Client::processBuffer()

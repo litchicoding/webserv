@@ -250,9 +250,9 @@ int Client::handleCGI()
 			exit (1);
 		}
 	}
-	
 	close(requestPipe[0]);
 	close(responsePipe[1]);
+	close(requestPipe[1]);
 
 	for (int i = 0; envp && envp[i]; ++i)
 			free(envp[i]);

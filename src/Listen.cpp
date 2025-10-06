@@ -211,7 +211,10 @@ int	Listen::update_connection()
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	if (_clients[client_fd] &&_clients[client_fd]->readData() != OK && _clients[client_fd]->getRequest().code == 0) {
+	if (_clients.size() <= 0 || !_clients[client_fd])
+		return (ERROR);
+	HTTPRequest request = _clients[client_fd]->getRequest();
+	if (_clients[client_fd]->readData() != OK && request.code == 0) {
 		closeClientConnection(client_fd);
 		return (ERROR);
 	}

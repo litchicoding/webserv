@@ -67,7 +67,6 @@ private:
 	/* Response Function *************************************************************************/
 	string				getCodeMessage(int code);
 	void				handleError(int code);
-	string				obtainDateHeader();	
 	
 	/* Delete Method *****************************************************************************/
 	int					handleDelete();

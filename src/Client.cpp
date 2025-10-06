@@ -429,7 +429,6 @@ void	Client::buildResponse(int code)
 	else if (code >= 301 && code <= 308)
 		_request.response.location = _request.getRedirectURI();
 	response << "HTTP/1.1 " << getCodeMessage(code) << "\r\n";
-	response << "Date: " << obtainDateHeader() << "\r\n";
 	if (!_request.response.body.empty())
 		response << "Content-Type: " << _request.response.content_type << "\r\n";
 	response << "Content-Length: " << _request.response.body.size() << "\r\n";
@@ -440,11 +439,6 @@ void	Client::buildResponse(int code)
 		else
 		response << "Location: " << _request.response.location << "\r\n";
 	}
-	// header = _request.getHeaders().find("Connection");
-	// if ((header != _request.getHeaders().end() && header->second.find("close") != string::npos) || _request.getHeaders().find("User-Agent") == _request.getHeaders().end())
-	// 	response << "Connection: close\r\n";
-	// else
-	// 	response << "Connection: keep-alive\r\n";
 	response << "Connection: " << findHeaderConnection() << "\r\n";
 	response << "\r\n";
 	if (!_request.response.body.empty())
@@ -479,15 +473,6 @@ void	Client::handleError(int code)
 	_request.response.content_type = "text/html";
 	_request.response.body = body.str();
 }
-
-string	Client::obtainDateHeader()
-{
-	char buf[128];
-	struct tm *timeinfo = localtime(&last_activity);
-	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
-	return string(buf);
-}
-
 
 /*************************************************************************************************/
 /* Setters ***************************************************************************************/

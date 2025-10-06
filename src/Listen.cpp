@@ -206,7 +206,7 @@ int	Listen::update_connection()
 
 int	Listen::handleClientRequest(int client_fd, int listen_fd)
 {
-	if (_clients[client_fd]->readData() != OK && _clients[client_fd]->getRequest().code == 0) {
+	if (_clients[client_fd] &&_clients[client_fd]->readData() != OK && _clients[client_fd]->getRequest().code == 0) {
 		closeClientConnection(client_fd);
 		return (ERROR);
 	}

@@ -146,7 +146,7 @@ int	Listen::update_connection()
 		for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
 			if (isClientTimeOut(it->first) == true) {
-				if (it->second->getCgi().is_running == 0)
+				if (it->second->getCgi().is_running)
 				{
 					it->second->buildResponse(504);
 					it->second->sendResponse();

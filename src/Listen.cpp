@@ -146,6 +146,11 @@ int	Listen::update_connection()
 		for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
 			if (isClientTimeOut(it->first) == true) {
+				if (it->second->getCgi().is_running == 0)
+				{
+					it->second->buildResponse(504);
+					it->second->sendResponse();
+				}
 				closeClientConnection(it->first);
 				break ;
 			}
@@ -272,8 +277,6 @@ void	Listen::closeClientConnection(int client_fd)
 		t_cgi &cgi = client->getCgi();
 		if (cgi.is_running)
 		{
-			client->buildResponse(504);
-			client->sendResponse();
 			if (cgi.pid > 0)
 			{
 				kill(cgi.pid, SIGKILL);

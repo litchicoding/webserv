@@ -17,6 +17,12 @@ Client::Client(int listen_fd, int epoll_fd, Listen* listen)
 	add_fd_to_epoll(epoll_fd, _client_fd);
 	_epoll_fd = epoll_fd;
 	_cgi.is_running = false;
+	_cgi.pid = -1;
+    _cgi.stdin_fd = -1;
+    _cgi.stdout_fd = -1;
+    _cgi.is_running = false;
+    _cgi.buffer.clear();
+    _cgi.client_fd = -1;
 }
 
 Client::~Client()
@@ -105,6 +111,8 @@ void	Client::resetRequest()
 	_buffer.clear();
 	_writeBuffer.clear();
 	_cgi.is_running = false;
+	if (_cgi.stdout_fd > 0)
+		close(_cgi.stdout_fd);
 }
 
 int Client::processBuffer()

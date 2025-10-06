@@ -409,6 +409,7 @@ string	Client::getCodeMessage(int code)
 		case 415: return ("415 Unsupported Media Type");
 		case 500: return ("500 Internal Server Error");
 		case 501: return ("501 Not Implemented");
+		case 504: return ("504 Gateway Timeout");
 		case 505: return ("505 HTTP Version Not Supported");
 	}
 	ostringstream	tmp;

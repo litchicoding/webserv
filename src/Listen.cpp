@@ -161,6 +161,8 @@ int	Listen::update_connection()
 				{
 					Client* client = _cgi_fds[events[i].data.fd];
 					client->processCGI(events[i].data.fd);
+					int status;
+    				waitpid(client->getCgi().pid, &status, WNOHANG);
 
 					if (!client->getIsCgiRunning())
 					{
@@ -210,6 +212,26 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	}
 	if (_clients[client_fd]->state != READ_END)
 		return (OK);
+	if (_clients[client_fd]->getCgi().is_running)
+	{
+		std::cout << RED
+				  << "⚠️ Nouvelle requête détectée sur un socket déjà occupé par un CGI bloquant "
+				  << "(socket=" << client_fd
+				  << ", pid=" << _clients[client_fd]->getCgi().pid << "). Kill du process CGI..."
+				  << RESET << std::endl;
+
+		// 🔥 Kill du process CGI
+		kill(_clients[client_fd]->getCgi().pid, SIGKILL);
+		waitpid(_clients[client_fd]->getCgi().pid, NULL, WNOHANG);
+
+		// 🔄 Nettoyage complet de l’état CGI et de la requête
+		_clients[client_fd]->resetRequest();    // vide les buffers, headers, etc.
+
+		std::cout << GREEN << "✅ CGI tué et client reset, nouvelle requête traitée." << RESET << std::endl;
+		if (_clients[client_fd]->isKeepAliveConnection() == false)
+			closeClientConnection(client_fd);
+		return (OK);
+	}
 	if (_listeningPorts.find(listen_fd) != _listeningPorts.end()) {
 		cout << BLUE << "📨 - REQUEST RECEIVED [on port: " << ntohs(_listeningPorts.find(listen_fd)->second.port_addr.sin_port);
 		cout << " - client socket:" << client_fd << "]";
@@ -250,21 +272,30 @@ void	Listen::closeClientConnection(int client_fd)
 		t_cgi &cgi = client->getCgi();
 		if (cgi.is_running)
 		{
+			client->buildResponse(504);
+			client->sendResponse();
 			if (cgi.pid > 0)
 			{
 				kill(cgi.pid, SIGKILL);
 				waitpid(cgi.pid, NULL, 0);
 			}
-
 			if (cgi.stdin_fd > 0)
-				close(cgi.stdin_fd);
-			if (cgi.stdout_fd > 0)
-				close(cgi.stdout_fd);
+            {
+                epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, cgi.stdin_fd, NULL);
+                close(cgi.stdin_fd);
+                _cgi_fds.erase(cgi.stdin_fd);
+            }
+            if (cgi.stdout_fd > 0)
+            {
+                epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, cgi.stdout_fd, NULL);
+                close(cgi.stdout_fd);
+                _cgi_fds.erase(cgi.stdout_fd);
+            }
 			
 			cgi.is_running = false;
-
 		}
-
+		client->resetRequest();
+		epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
 		close(client_fd);
 		delete it->second;
 		_clients.erase(it);
@@ -310,7 +341,8 @@ void	Listen::stop(const string &msg)
 	for (map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); )
 	{
 		int fd = it->first;
-		closeClientConnection(fd);
+		if (fd >= 0)
+			closeClientConnection(fd);
 		it = _clients.begin(); // restart car map a changé
 	}
 

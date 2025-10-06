@@ -20,6 +20,7 @@ typedef struct s_cgi
 	int		stdout_fd;
 	bool	is_running;
 	string	buffer;
+	int		client_fd;
 } t_cgi;
 
 using namespace std;
@@ -36,7 +37,8 @@ public:
 	int					readData();
 	int					processRequest();
 	void				resetRequest();
-	
+	void				buildResponse(int code);
+
 private:
 	int					_client_fd;
 	int					_listen_fd;
@@ -63,7 +65,6 @@ private:
 	string				findHeaderConnection();
 
 	/* Response Function *************************************************************************/
-	void				buildResponse(int code);
 	string				getCodeMessage(int code);
 	void				handleError(int code);
 	string				obtainDateHeader();	

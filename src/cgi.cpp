@@ -266,6 +266,7 @@ int Client::handleCGI()
 	_cgi.stdout_fd = responsePipe[0];
 	_cgi.is_running = true;
 	_cgi.buffer.clear();
+	_cgi.client_fd = getClientFd();
 
 	epoll_event ev;
 	if (_request.getMethod() == "POST")

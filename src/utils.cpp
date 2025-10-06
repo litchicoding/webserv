@@ -6,7 +6,7 @@
 /*   By: sdeutsch <sdeutsch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/17 16:37:46 by sdeutsch          #+#    #+#             */
-/*   Updated: 2025/09/04 19:29:44 by sdeutsch         ###   ########.fr       */
+/*   Updated: 2025/10/06 20:34:38 by sdeutsch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,6 @@
 
 int add_fd_to_epoll(int epoll_fd, int fd)
 {
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) == INVALID)
-	{
-		std::cout << RED << "Error: fcntl()" << RESET << std::endl;
-		close(fd);
-		return -1;
-	}
 	epoll_event ev;
 	ev.events = EPOLLIN;
 	ev.data.fd = fd;

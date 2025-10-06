@@ -194,7 +194,6 @@ int	Listen::update_connection()
 				if (events[i].events & EPOLLOUT)
 				{
 					_clients[events[i].data.fd]->sendResponse();
-
 					_clients[events[i].data.fd]->resetRequest();
 
 					epoll_event ev;
@@ -231,7 +230,6 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 		// 🔥 Kill du process CGI
 		kill(_clients[client_fd]->getCgi().pid, SIGKILL);
 		waitpid(_clients[client_fd]->getCgi().pid, NULL, WNOHANG);
-
 		// 🔄 Nettoyage complet de l’état CGI et de la requête
 		_clients[client_fd]->resetRequest();    // vide les buffers, headers, etc.
 

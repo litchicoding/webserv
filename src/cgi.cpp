@@ -165,13 +165,14 @@ void	Client::processCGI(int fd)
 		for (vector<char>::const_iterator it = _request.getBody().begin(); it != _request.getBody().end(); it++)
 			write(fd, &(*it), 1);
 		close (fd);
+		epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, fd, NULL);
 	}
 	//lecture du cgi
 	char buf[4096];
 	ssize_t n;
 	while ((n = read(fd, buf, sizeof(buf))) > 0)
 		_cgi.buffer.append(buf, n);
-	
+
 	if (n == 0) //fin du flux
 	{
 		close(fd);
@@ -252,7 +253,6 @@ int Client::handleCGI()
 	}
 	close(requestPipe[0]);
 	close(responsePipe[1]);
-	close(requestPipe[1]);
 
 	for (int i = 0; envp && envp[i]; ++i)
 			free(envp[i]);
@@ -275,6 +275,11 @@ int Client::handleCGI()
 		ev.data.fd = _cgi.stdin_fd;
 		epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _cgi.stdin_fd, &ev);
 		_listen->_cgi_fds[_cgi.stdin_fd] = this;
+	}
+	else
+	{
+		close(_cgi.stdin_fd);
+		_cgi.stdin_fd = -1;
 	}
 	ev.events = EPOLLIN;
 	ev.data.fd = _cgi.stdout_fd;

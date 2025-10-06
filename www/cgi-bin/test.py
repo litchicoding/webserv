@@ -13,5 +13,5 @@ print(f"<p>Date : {now.strftime('%Y-%m-%d')}</p>")
 print(f"<p>Heure : {now.strftime('%H:%M')}</p>")
 print("</body></html>")
 
-while True:
-    pass
+# while True:
+#     pass

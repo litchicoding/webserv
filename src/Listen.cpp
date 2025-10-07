@@ -222,9 +222,9 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 	if (_clients[client_fd]->getCgi().is_running)
 	{
 		std::cout << RED
-				  << "⚠️ Nouvelle requête détectée sur un socket déjà occupé par un CGI bloquant "
+				  << "New request detected on an already occupied socket (CGI script still running) "
 				  << "(socket=" << client_fd
-				  << ", pid=" << _clients[client_fd]->getCgi().pid << "). Kill du process CGI..."
+				  << ", pid=" << _clients[client_fd]->getCgi().pid << "). CGI process killed"
 				  << RESET << std::endl;
 
 		// 🔥 Kill du process CGI
@@ -233,7 +233,6 @@ int	Listen::handleClientRequest(int client_fd, int listen_fd)
 		// 🔄 Nettoyage complet de l’état CGI et de la requête
 		_clients[client_fd]->resetRequest();    // vide les buffers, headers, etc.
 
-		std::cout << GREEN << "✅ CGI tué et client reset, nouvelle requête traitée." << RESET << std::endl;
 		if (_clients[client_fd]->isKeepAliveConnection() == false)
 			closeClientConnection(client_fd);
 		return (OK);

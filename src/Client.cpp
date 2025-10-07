@@ -22,7 +22,6 @@ Client::Client(int listen_fd, int epoll_fd, Listen* listen)
     _cgi.stdout_fd = -1;
     _cgi.is_running = false;
     _cgi.buffer.clear();
-    _cgi.client_fd = -1;
 }
 
 Client::~Client()

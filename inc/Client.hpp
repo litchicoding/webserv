@@ -20,7 +20,6 @@ typedef struct s_cgi
 	int		stdout_fd;
 	bool	is_running;
 	string	buffer;
-	int		client_fd;
 } t_cgi;
 
 using namespace std;
